@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="color-scheme" content="light dark">
+        <title>Configuration Required - {{ name }}</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/pico.min.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+        <link rel="stylesheet" href="{{ url_for('routes.pygments_css') }}">
+    </head>
+
+    <body>
+        <header class="container">
+            <hgroup>
+                <h1>{{ name }}</h1>
+                <p>Auth Playground</p>
+            </hgroup>
+        </header>
+
+        <main class="container">
+            <article>
+                <header>
+                    <h2>⚠ Configuration Required</h2>
+                </header>
+
+                <p>The application is not configured with OAuth/OIDC credentials. Please set the following environment variables:</p>
+
+                {% highlight 'bash' %}
+                    export OAUTH_CLIENT_ID="your-client-id"
+                    export OAUTH_CLIENT_SECRET="your-client-secret"
+                    export OAUTH_AUTH_SERVER="https://your-identity-provider.example.com"
+                {% endhighlight %}
+
+                <footer>
+                    <p><small>After setting these variables, restart the application.</small></p>
+                </footer>
+            </article>
+
+            <section>
+                <h3>Getting Started</h3>
+                <ol>
+                    <li>Register your application with your identity provider</li>
+                    <li>Get the client ID and client secret</li>
+                    <li>Set the environment variables listed above</li>
+                    <li>Restart the application with <code>auth-playground</code></li>
+                </ol>
+            </section>
+
+            <section>
+                <h3>Redirect URIs Configuration</h3>
+                <p>When registering this application with your identity provider, use the following redirect URIs:</p>
+                {% highlight %}
+                    {{ url_for('routes.login_callback', _external=True) }}
+                    {{ url_for('routes.logout_callback', _external=True) }}
+                {% endhighlight %}
+            </section>
+        </main>
+
+        <footer class="container">
+            <p><small>Auth Playground - Configuration Error</small></p>
+        </footer>
+    </body>
+</html>

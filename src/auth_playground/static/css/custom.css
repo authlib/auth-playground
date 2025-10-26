@@ -1,0 +1,11 @@
+/* Auth Playground Custom Styles */
+
+.buttons-right {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+.buttons-right > * {
+    width: auto;
+}

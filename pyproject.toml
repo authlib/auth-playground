@@ -1,0 +1,159 @@
+[project]
+name = "auth-playground"
+version = "0.1.0"
+description = "Demonstration OpenID Connect Client"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+keywords = ["oidc", "oauth", "oauth2", "openid", "identity", "authentication"]
+authors = [{name="Yaal Coop", email="contact@yaal.coop"}]
+maintainers = [{name="Éloi Rivard", email="eloi@yaal.coop"}]
+
+dependencies = [
+    "authlib>=1.6.5",
+    "flask>=3.1.2",
+    "flask-babel>=4.0.0",
+    "jinja2-highlight>=0.6.1",
+    "python-dotenv>=1.0.0",
+    "requests>=2.32.5",
+]
+
+[project.scripts]
+auth-playground = "auth_playground:main"
+
+[build-system]
+requires = ["uv_build>=0.9.5,<0.10.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "prek>=0.2.11",
+    "pytest>=8.4.2",
+    "pytest-coverage>=0.0",
+    "pytest-iam>=0.2.4",
+    "tox-uv>=1.29.0",
+]
+
+[tool.coverage.run]
+source = [
+    "auth_playground",
+    "tests",
+]
+omit = [".tox/*"]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+    "@pytest.mark.skip",
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "except ImportError",
+    "if app.debug",
+    "pass",
+    "if TYPE_CHECKING",
+]
+
+[tool.ruff.lint]
+select = [
+    "D", # pydocstyle
+    "B", # flake8-bugbear
+    "E", # pycodestyle
+    "F", # pyflakes
+    "I", # isort
+    "UP", # pyupgrade
+]
+ignore = [
+    "E501", # line-too-long
+    "E722", # bare-except
+    "D100", # public module
+    "D101", # public class
+    "D102", # public method
+    "D103", # public function
+    "D104", # public package
+    "D105", # magic method
+    "D106", # nested class
+    "D107", # public init
+    "D203", # no-blank-line-before-class
+    "D213", # multi-line-summary-second-line
+]
+
+[tool.ruff.lint.isort]
+force-single-line = true
+
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.tox]
+requires = ["tox>=4.19"]
+env_list = [
+    "style",
+    "py310",
+    "py311",
+    "py312",
+    "py313",
+    "minversions",
+    "coverage",
+]
+
+[tool.tox.env_run_base]
+runner = "uv-venv-lock-runner"
+dependency_groups = ["dev"]
+uv_sync_flags = ["--all-extras"]
+commands = [
+    ["pytest", "--showlocals", "--full-trace", "{posargs}"],
+]
+
+[tool.tox.env.style]
+skip_install = true
+runner = "uv-venv-runner"
+commands = [
+    ["prek", "run", "--all-files", "--show-diff-on-failure"],
+]
+
+[tool.tox.env.minversions]
+runner = "uv-venv-runner"
+uv_resolution = "lowest-direct"
+basepython = ["python3.10"]
+
+[tool.tox.env.coverage]
+commands = [
+    ["pytest", "--cov", "--cov-fail-under=100", "--cov-report", "term:skip-covered", "{posargs}"],
+    ["coverage", "html"],
+]
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore::joserfc.errors.SecurityWarning",
+]
+
+[[tool.babel.mappings]]
+method = "python"
+pattern = "**.py"
+
+[[tool.babel.mappings]]
+method = "jinja2"
+pattern = "**/templates/**.html"
+trimmed = "true"
+
+[[tool.babel.mappings]]
+method = "jinja2"
+pattern = "**/themes/**.html"
+trimmed = "true"
+
+[[tool.babel.mappings]]
+method = "jinja2"
+pattern = "**/templates/**.txt"
+trimmed = "true"
+
+[tool.codespell]
+ignore-words-list = "thirdparty"
+
+[tool.mypy]
+plugins = [
+  "pydantic.mypy"
+]
+warn_unused_ignores = true
+exclude = [
+  "tests/",
+  "conftest.py",
+]
