@@ -1,0 +1,109 @@
+{% extends "layout.html" %}
+
+{% block title %}Privacy Policy{% endblock %}
+
+{% block footer_text %}Auth Playground - Educational Tool{% endblock %}
+
+{% block content %}
+    <article>
+        <header>
+            <h2>Privacy Policy</h2>
+        </header>
+
+        <section>
+            <h3>Overview</h3>
+            <p>
+                Auth Playground is a <strong>demonstration tool</strong> for OpenID Connect authentication.
+                As this is a self-hosted application, you control all aspects of data handling.
+            </p>
+        </section>
+
+        <section>
+            <h3>What Data Is Handled</h3>
+            <p>
+                When you authenticate through Auth Playground, the following information is received from your
+                identity provider:
+            </p>
+            <ul>
+                <li><strong>Access Token:</strong> Used to access protected resources</li>
+                <li><strong>Refresh Token:</strong> Used to obtain new access tokens (if provided)</li>
+                <li><strong>ID Token:</strong> Contains your identity information in JWT format</li>
+                <li><strong>User Information:</strong> Profile data such as name, email, phone, address, groups, etc.</li>
+            </ul>
+            <p>
+                The exact data received depends on the scopes requested and what your identity provider shares.
+            </p>
+        </section>
+
+        <section>
+            <h3>How Data Is Stored</h3>
+            <p>
+                <mark>All authentication data is stored server-side in memory.</mark>
+            </p>
+            <ul>
+                <li>Data is stored in <strong>server memory</strong> (RAM) only</li>
+                <li>A secure session cookie is sent to your browser (containing only a session ID, not the actual data)</li>
+                <li>No database, files, or permanent storage is used</li>
+                <li>All session data is lost when the application restarts</li>
+                <li>Data is cleared when you log out</li>
+                <li>Sessions expire according to Flask's default session timeout</li>
+            </ul>
+        </section>
+
+        <section>
+            <h3>Data Sharing</h3>
+            <p>
+                Auth Playground does not:
+            </p>
+            <ul>
+                <li>Share your data with third parties</li>
+                <li>Send data to external services</li>
+                <li>Store data permanently</li>
+                <li>Track your usage</li>
+                <li>Use analytics or advertising</li>
+            </ul>
+            <p>
+                The only external communication is with your configured identity provider for authentication purposes.
+            </p>
+        </section>
+
+        <section>
+            <h3>Security Considerations</h3>
+            <p>
+                <strong>Important:</strong> Auth Playground is designed for development and testing.
+            </p>
+            <ul>
+                <li>Use only <strong>test accounts</strong>, not real user accounts</li>
+                <li>Do not use sensitive or production data</li>
+                <li>Ensure your deployment is properly secured (HTTPS, firewall, etc.)</li>
+                <li>Change the default <code>SECRET_KEY</code> environment variable</li>
+                <li>Review and understand the security implications of your setup</li>
+            </ul>
+        </section>
+
+        <section>
+            <h3>Your Rights</h3>
+            <p>
+                As this is a self-hosted application, you have complete control:
+            </p>
+            <ul>
+                <li>You can log out at any time to clear your session data</li>
+                <li>You control who has access to your deployment</li>
+                <li>You can review the source code to understand data handling</li>
+                <li>You can modify the application to suit your needs</li>
+            </ul>
+        </section>
+
+        <section>
+            <h3>Identity Provider's Privacy Policy</h3>
+            <p>
+                Your identity provider may have its own privacy policy regarding the data they collect and share.
+                Please review their privacy policy for information about how they handle your data.
+            </p>
+        </section>
+
+        <footer>
+            <a href="{{ url_for('routes.index') }}" role="button" class="secondary">Back to Home</a>
+        </footer>
+    </article>
+{% endblock %}

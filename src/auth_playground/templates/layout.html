@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="color-scheme" content="light dark">
+        <title>{% block title %}{{ config.NAME }}{% endblock %} - Auth Playground</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/pico.min.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+        {% block extra_css %}{% endblock %}
+    </head>
+
+    <body>
+        <header class="container">
+            <div class="grid">
+                <hgroup>
+                    <h1><a href="{{ url_for('routes.index') }}">{{ config.NAME }}</a></h1>
+                    <p>OAuth 2.0 Demonstration Client</p>
+                </hgroup>
+                {% if config.OAUTH_AUTH_SERVER %}
+                    <hgroup>
+                        <h1><a href="{{ config.OAUTH_AUTH_SERVER }}" target="_blank">{{ config.OAUTH_AUTH_SERVER|replace('https://', '')|replace('http://', '') }}</a></h1>
+                        <p>Identity Provider</p>
+                    </hgroup>
+                {% endif %}
+            </div>
+        </header>
+
+        <main class="container">
+            {% block content %}{% endblock %}
+        </main>
+
+        <footer class="container">
+            <p>
+                <small>{% block footer_text %}Powered by <a href="https://authlib.org" target="_blank">Authlib</a>{% endblock %}</small>
+                •
+                <small><a href="{{ url_for('routes.tos') }}">Terms of Service</a></small>
+                •
+                <small><a href="{{ url_for('routes.policy') }}">Privacy Policy</a></small>
+            </p>
+        </footer>
+
+        {% block scripts %}{% endblock %}
+    </body>
+</html>

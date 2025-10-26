@@ -1,0 +1,83 @@
+{% extends "layout.html" %}
+
+{% block title %}Terms of Service{% endblock %}
+
+{% block footer_text %}Auth Playground - Educational Tool{% endblock %}
+
+{% block content %}
+    <article>
+        <header>
+            <h2>Terms of Service</h2>
+        </header>
+
+        <section>
+            <h3>Purpose</h3>
+            <p>
+                Auth Playground is an <strong>educational and demonstration tool</strong> designed to help developers
+                understand OpenID Connect (OIDC) authentication flows. It is intended for:
+            </p>
+            <ul>
+                <li>Learning and understanding OAuth 2.0 and OpenID Connect protocols</li>
+                <li>Testing integration with identity providers</li>
+                <li>Demonstrating authentication flows in development environments</li>
+                <li>Debugging OIDC implementations</li>
+            </ul>
+        </section>
+
+        <section>
+            <h3>Not for Production Use</h3>
+            <p>
+                <mark>This application is NOT intended for production environments.</mark> It includes development-focused
+                features that may compromise security:
+            </p>
+            <ul>
+                <li>Default secret key (must be changed for production)</li>
+                <li>Debug mode enabled by default</li>
+                <li>Simplified security configurations</li>
+                <li>Verbose logging of sensitive information</li>
+            </ul>
+        </section>
+
+        <section>
+            <h3>Open Source Project</h3>
+            <p>
+                Auth Playground is an open source project. You are free to:
+            </p>
+            <ul>
+                <li>Use, modify, and distribute the software</li>
+                <li>Self-host the application</li>
+                <li>Contribute improvements and bug fixes</li>
+                <li>Review the source code for security and functionality</li>
+            </ul>
+            <p>
+                Please refer to the LICENSE file in the repository for detailed terms.
+            </p>
+        </section>
+
+        <section>
+            <h3>User Responsibility</h3>
+            <p>
+                When using Auth Playground, you are responsible for:
+            </p>
+            <ul>
+                <li>Using only test accounts and non-sensitive data</li>
+                <li>Securing your deployment appropriately for your environment</li>
+                <li>Configuring environment variables correctly</li>
+                <li>Understanding the security implications of your setup</li>
+                <li>Complying with your identity provider's terms of service</li>
+            </ul>
+        </section>
+
+        <section>
+            <h3>No Warranty</h3>
+            <p>
+                This software is provided "as is" without warranty of any kind, express or implied.
+                Use at your own risk.
+            </p>
+        </section>
+
+        <footer>
+            <a href="{{ url_for('routes.index') }}" role="button" class="secondary">Back to Home</a>
+        </footer>
+    </article>
+{% endblock %}

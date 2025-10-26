@@ -2,13 +2,18 @@ import os
 
 from authlib.integrations.flask_client import OAuth
 from authlib.oidc.discovery import get_well_known_url
+from cachelib.simple import SimpleCache
 from dotenv import load_dotenv
 from flask import Flask
+from flask_babel import Babel
+from flask_session import Session
 
 from auth_playground.endpoints import bp
 
 oauth = OAuth()
 oauth_configured = False
+sess = Session()
+babel = Babel()
 
 
 def setup_oauth(app):
@@ -45,9 +50,22 @@ def create_app():
     )
     app.config["NAME"] = os.environ.get("APP_NAME", "Auth Playground")
 
+    # Configure server-side session storage in memory
+    app.config["SESSION_TYPE"] = "cachelib"
+    app.config["SESSION_CACHELIB"] = SimpleCache()
+    app.config["SESSION_PERMANENT"] = False
+
+    # Configure Flask-Babel
+    app.config["BABEL_DEFAULT_LOCALE"] = "en"
+    app.config["BABEL_DEFAULT_TIMEZONE"] = "UTC"
+
     app.config["OAUTH_CLIENT_ID"] = os.environ.get("OAUTH_CLIENT_ID")
     app.config["OAUTH_CLIENT_SECRET"] = os.environ.get("OAUTH_CLIENT_SECRET")
     app.config["OAUTH_AUTH_SERVER"] = os.environ.get("OAUTH_AUTH_SERVER")
+
+    # Initialize extensions
+    sess.init_app(app)
+    babel.init_app(app)
 
     app.jinja_env.add_extension("jinja2_highlight.HighlightExtension")
 

@@ -11,8 +11,10 @@ maintainers = [{name="Éloi Rivard", email="eloi@yaal.coop"}]
 
 dependencies = [
     "authlib>=1.6.5",
+    "cachelib>=0.10.0",
     "flask>=3.1.2",
     "flask-babel>=4.0.0",
+    "flask-session>=0.8.0",
     "jinja2-highlight>=0.6.1",
     "python-dotenv>=1.0.0",
     "requests>=2.32.5",

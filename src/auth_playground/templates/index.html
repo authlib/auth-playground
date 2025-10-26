@@ -1,138 +1,40 @@
-<!doctype html>
-<html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="color-scheme" content="light dark">
-        <title>{{ name }} - Auth Playground</title>
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/pico.min.css') }}">
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
-        <link rel="stylesheet" href="{{ url_for('routes.pygments_css') }}">
-        {% block style %}{% endblock %}
-    </head>
+{% extends "layout.html" %}
 
-    <body>
-        <header class="container">
-            <hgroup>
-                <h1>{{ name }}</h1>
-                <p>Auth Playground</p>
-            </hgroup>
-        </header>
+{% block extra_css %}
+    <link rel="stylesheet" href="{{ url_for('routes.pygments_css') }}">
+{% endblock %}
 
-        <main class="container">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <article>
-                            <p>
-                                {% if category == 'success' %}✓{% elif category == 'error' %}✗{% else %}ℹ{% endif %}
-                                {{ message }}
-                            </p>
-                        </article>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
+{% block content %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <article role="alert" data-type="{{ category }}">
+                    {{ message }}
+                </article>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
 
-            <section>
-                <p>
-                    This is a demonstration OpenID Connect client.
-                    It illustrates how to integrate with an identity provider so users can register,
-                    log in, consent to share data, and then be redirected back to the service.
-                </p>
-            </section>
+    <section>
+        <p>
+            This is a demonstration OpenID Connect client.
+            It illustrates how to integrate with an identity provider so users can register,
+            log in, consent to share data, and then be redirected back to the service.
+        </p>
+    </section>
 
-            {% if user %}
-                <section>
-                    <h2>User Information</h2>
-                    <p>Here is the information this service has access to:</p>
+    {% if token %}
+        {% include "authenticated.html" %}
+    {% else %}
+        <div class="buttons-right">
+            <div role="group">
+                <a href="{{ url_for('routes.register') }}" role="button">Sign up</a>
+                <a href="{{ url_for('routes.login') }}" role="button">Sign in</a>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}
 
-                    <article>
-                        {% if user.picture %}
-                            <header>
-                                <img src="{{ user.picture }}" alt="User avatar" style="max-width: 150px; border-radius: 50%;">
-                            </header>
-                        {% endif %}
-
-                        <h3>{{ user.preferred_username or user.name }}</h3>
-                        <p><small>ID: {{ user.sub }}</small></p>
-
-                        {% if user.name %}
-                            <p><strong>Name:</strong> {{ user.name }}</p>
-                        {% endif %}
-
-                        {% if user.email %}
-                            <p><strong>Email:</strong> <a href="mailto:{{ user.email }}">{{ user.email }}</a></p>
-                        {% endif %}
-
-                        {% if user.phone_number %}
-                            <p><strong>Phone:</strong> <a href="tel:{{ user.phone_number }}">{{ user.phone_number }}</a></p>
-                        {% endif %}
-
-                        {% if user.address %}
-                            <p><strong>Address:</strong></p>
-                            <ul>
-                                {% if user.address.get("formatted") %}
-                                    <li>{{ user.address["formatted"] }}</li>
-                                {% else %}
-                                    {% if user.address.get("street_address") %}
-                                        <li>{{ user.address["street_address"] }}</li>
-                                    {% endif %}
-                                    {% if user.address.get("postal_code") %}
-                                        <li>{{ user.address["postal_code"] }}</li>
-                                    {% endif %}
-                                    {% if user.address.get("locality") %}
-                                        <li>{{ user.address["locality"] }}</li>
-                                    {% endif %}
-                                    {% if user.address.get("region") %}
-                                        <li>{{ user.address["region"] }}</li>
-                                    {% endif %}
-                                {% endif %}
-                            </ul>
-                        {% endif %}
-
-                        {% if user.preferred_language %}
-                            <p><strong>Preferred Language:</strong> {{ user.preferred_language }}</p>
-                        {% endif %}
-
-                        {% if user.groups %}
-                            <p><strong>Groups:</strong>
-                                {% for group in user.groups %}
-                                    <kbd>{{ group }}</kbd>{% if not loop.last %}, {% endif %}
-                                {% endfor %}
-                            </p>
-                        {% endif %}
-
-                        {% if user.website %}
-                            <footer>
-                                <a href="{{ user.website }}" role="button">Visit Website</a>
-                            </footer>
-                        {% endif %}
-                    </article>
-                </section>
-
-                <div class="buttons-right">
-                    <a href="{{ config.OAUTH_AUTH_SERVER }}" target="_blank" role="button" class="secondary">Identity Server</a>
-                    <div role="group">
-                        <a href="{{ url_for('routes.login') }}" role="button">Sign in again</a>
-                        <a href="{{ url_for('routes.consent') }}" role="button">Consent again</a>
-                        <a href="{{ url_for('routes.logout') }}" role="button" class="contrast">Log out</a>
-                    </div>
-                </div>
-            {% else %}
-                <div class="buttons-right">
-                    <a href="{{ config.OAUTH_AUTH_SERVER }}" target="_blank" role="button" class="secondary">Identity Server</a>
-                    <div role="group">
-                        <a href="{{ url_for('routes.register') }}" role="button">Sign up</a>
-                        <a href="{{ url_for('routes.login') }}" role="button">Sign in</a>
-                    </div>
-                </div>
-            {% endif %}
-        </main>
-
-        <footer class="container">
-            <p><small>Powered by OpenID Connect</small></p>
-        </footer>
-
-        {% block script %}{% endblock %}
-    </body>
-</html>
+{% block scripts %}
+    <script src="{{ url_for('static', filename='js/copy-token.js') }}"></script>
+{% endblock %}

@@ -45,7 +45,8 @@ def test_login_callback_stores_user_in_session(
 
     with test_client.session_transaction() as sess:
         assert "user" in sess
-        assert "id_token" in sess
+        assert "token" in sess
+        assert "id_token" in sess["token"]
         assert sess["user"]["sub"] == user.user_name
 
 
@@ -67,7 +68,7 @@ def test_logout_redirects_to_end_session(iam_server, iam_client, user, test_clie
 
     with test_client.session_transaction() as sess:
         assert "user" in sess
-        sess["id_token"] = "test_token"
+        assert "token" in sess
 
     res = test_client.get("/logout")
     assert res.status_code == 302
@@ -75,15 +76,17 @@ def test_logout_redirects_to_end_session(iam_server, iam_client, user, test_clie
 
 
 def test_logout_callback_clears_session(test_client):
-    """Test that logout callback clears user from session."""
+    """Test that logout callback clears user and token from session."""
     with test_client.session_transaction() as sess:
         sess["user"] = {"sub": "testuser"}
+        sess["token"] = {"id_token": "test_token"}
 
     res = test_client.get("/logout_callback")
     assert res.status_code == 302
 
     with test_client.session_transaction() as sess:
         assert "user" not in sess
+        assert "token" not in sess
 
 
 def test_authenticated_user_can_access_index(iam_server, iam_client, user, test_client):

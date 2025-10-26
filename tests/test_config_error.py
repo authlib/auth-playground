@@ -23,15 +23,15 @@ def test_config_error_shows_redirect_uris(unconfigured_test_client):
     assert b"logout_callback" in res.data
 
 
-def test_tos_redirects_when_unconfigured(unconfigured_test_client):
-    """Test that /tos redirects to config error when unconfigured."""
+def test_tos_accessible_when_unconfigured(unconfigured_test_client):
+    """Test that /tos is accessible even when OAuth is not configured."""
     res = unconfigured_test_client.get("/tos")
-    assert res.status_code == 302
-    assert "/config-error" in res.location
+    assert res.status_code == 200
+    assert b"Terms of Service" in res.data
 
 
-def test_policy_redirects_when_unconfigured(unconfigured_test_client):
-    """Test that /policy redirects to config error when unconfigured."""
+def test_policy_accessible_when_unconfigured(unconfigured_test_client):
+    """Test that /policy is accessible even when OAuth is not configured."""
     res = unconfigured_test_client.get("/policy")
-    assert res.status_code == 302
-    assert "/config-error" in res.location
+    assert res.status_code == 200
+    assert b"Privacy Policy" in res.data

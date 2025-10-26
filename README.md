@@ -51,8 +51,6 @@ auth-playground
 
 The application will be available at `http://localhost:4000`
 
-If the OAuth configuration is missing, the application will display a helpful configuration page.
-
 ## Development
 
 ### Running Tests
