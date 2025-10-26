@@ -1,4 +1,10 @@
 <div class="buttons-right">
+    {% if token.refresh_token %}
+        <form method="POST" action="{{ url_for('routes.refresh') }}">
+            {{ refresh_form.hidden_tag() }}
+            {{ refresh_form.submit() }}
+        </form>
+    {% endif %}
     <div role="group">
         <a href="{{ url_for('routes.login') }}" role="button">Sign in again</a>
         <a href="{{ url_for('routes.consent') }}" role="button">Consent again</a>
@@ -16,7 +22,7 @@
             <p><small>Contains user identity information in JWT format.</small></p>
             <div role="group">
                 <input type="text" value="{{ token.id_token }}" readonly aria-label="ID Token">
-                <button type="button" class="copy-token-btn">Copy</button>
+                <button type="button" class="copy-token-btn secondary">Copy</button>
             </div>
 
             <div class="grid">
@@ -189,7 +195,7 @@
                 <p><small>Used to access protected resources on behalf of the user.</small></p>
                 <div role="group">
                     <input type="text" value="{{ token.access_token }}" readonly aria-label="Access Token">
-                    <button type="button" class="copy-token-btn">Copy</button>
+                    <button type="button" class="copy-token-btn secondary">Copy</button>
                 </div>
                 <ul>
                     {% if token.token_type %}
@@ -214,7 +220,7 @@
                 <p><small>Used to obtain new access tokens without re-authentication.</small></p>
                 <div role="group">
                     <input type="text" value="{{ token.refresh_token }}" readonly aria-label="Refresh Token">
-                    <button type="button" class="copy-token-btn">Copy</button>
+                    <button type="button" class="copy-token-btn secondary">Copy</button>
                 </div>
             </article>
         {% endif %}

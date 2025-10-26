@@ -16,7 +16,7 @@ def iam_client(iam_server):
             "http://client.test/login_callback",
             "http://client.test/logout_callback",
         ],
-        grant_types=["authorization_code"],
+        grant_types=["authorization_code", "refresh_token"],
         response_types=["code"],
         token_endpoint_auth_method="client_secret_basic",
         scope=["openid", "profile", "email", "groups"],
@@ -40,6 +40,7 @@ def unconfigured_app():
     app.config["TESTING"] = True
     app.config["SERVER_NAME"] = "client.test"
     app.config["SECRET_KEY"] = "test-secret-key"
+    app.config["WTF_CSRF_ENABLED"] = False
     app.config["OAUTH_CLIENT_ID"] = None
     app.config["OAUTH_CLIENT_SECRET"] = None
     app.config["OAUTH_AUTH_SERVER"] = None

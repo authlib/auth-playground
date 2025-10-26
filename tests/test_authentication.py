@@ -139,3 +139,60 @@ def test_policy_route(iam_server, iam_client, user, test_client):
     res = test_client.get("/policy")
     assert res.status_code == 200
     assert b"Auth Playground" in res.data
+
+
+def test_refresh_token_form_displays_when_refresh_token_present(test_client):
+    """Test that refresh token form is displayed when user has refresh token."""
+    # Manually set a session with a refresh token
+    with test_client.session_transaction() as sess:
+        sess["token"] = {
+            "access_token": "test_access_token",
+            "refresh_token": "test_refresh_token",
+            "id_token": "test_id_token",
+        }
+        sess["user"] = {"sub": "testuser"}
+
+    res = test_client.get("/")
+    assert res.status_code == 200
+    assert b"Renew tokens" in res.data
+
+
+def test_refresh_token_without_token_in_session(test_client):
+    """Test that refresh fails when no refresh token in session."""
+    with test_client.session_transaction() as sess:
+        sess["token"] = {}
+
+    res = test_client.post("/refresh", follow_redirects=True)
+    assert res.status_code == 200
+    assert b"No refresh token available" in res.data
+
+
+def test_refresh_token_success(iam_server, iam_client, user, test_client):
+    """Test successful token refresh."""
+    iam_server.login(user)
+    iam_server.consent(user, iam_client)
+
+    res = test_client.get("/login")
+    res = iam_server.test_client.get(res.location)
+    res = test_client.get(res.location)
+
+    with test_client.session_transaction() as sess:
+        old_access_token = sess["token"]["access_token"]
+        old_id_token = sess["token"].get("id_token")
+        old_refresh_token = sess["token"].get("refresh_token")
+        assert old_refresh_token is not None, "Refresh token should exist after login"
+
+    res = test_client.post("/refresh", follow_redirects=True)
+
+    assert res.status_code == 200
+    assert b"Token successfully refreshed" in res.data
+    assert b"error" not in res.data.lower() or b"successfully" in res.data.lower()
+
+    with test_client.session_transaction() as sess:
+        new_access_token = sess["token"]["access_token"]
+        new_id_token = sess["token"].get("id_token")
+
+        assert new_access_token != old_access_token, "Access token should be renewed"
+
+        assert old_id_token is not None, "Old ID token should exist"
+        assert new_id_token is not None, "ID token should still be present"

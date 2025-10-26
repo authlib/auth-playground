@@ -10,6 +10,7 @@ from flask import url_for
 from pygments.formatters import HtmlFormatter
 
 import auth_playground
+from auth_playground.forms import RefreshTokenForm
 
 bp = Blueprint("routes", __name__)
 
@@ -40,10 +41,12 @@ def config_error():
 def index():
     if not auth_playground.oauth_configured:
         return redirect(url_for("routes.config_error"))
+    refresh_form = RefreshTokenForm()
     return render_template(
         "index.html",
         user=session.get("user"),
         token=session.get("token"),
+        refresh_form=refresh_form,
     )
 
 
@@ -160,4 +163,46 @@ def logout_callback():
         pass
 
     flash("You have been successfully logged out", "success")
+    return redirect(url_for("routes.index"))
+
+
+@bp.route("/refresh", methods=["POST"])
+def refresh():
+    """Refresh the access token using the refresh token."""
+    form = RefreshTokenForm()
+    if not form.validate_on_submit():
+        flash("Invalid request", "error")
+        return redirect(url_for("routes.index"))
+
+    refresh_token = session.get("token", {}).get("refresh_token")
+    if not refresh_token:
+        flash("No refresh token available", "error")
+        return redirect(url_for("routes.index"))
+
+    try:
+        # Fetch new tokens using refresh_token
+        # Use the original scope to avoid requesting unauthorized scopes
+        original_scope = session.get("token", {}).get("scope", "")
+        new_token = auth_playground.oauth.canaille.fetch_access_token(
+            grant_type="refresh_token",
+            refresh_token=refresh_token,
+            scope=original_scope,
+        )
+
+        # Update session with new tokens
+        # Keep existing user info and id_token if not returned in refresh response
+        old_token = session.get("token", {})
+        session["token"] = {
+            "access_token": new_token.get("access_token"),
+            "refresh_token": new_token.get("refresh_token") or refresh_token,
+            "id_token": new_token.get("id_token") or old_token.get("id_token"),
+            "token_type": new_token.get("token_type"),
+            "expires_in": new_token.get("expires_in"),
+            "expires_at": new_token.get("expires_at"),
+            "scope": new_token.get("scope"),
+        }
+        flash("Token successfully refreshed", "success")
+    except AuthlibBaseError as exc:
+        flash(f"An error happened during token refresh: {exc.description}", "error")
+
     return redirect(url_for("routes.index"))
