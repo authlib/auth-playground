@@ -29,6 +29,8 @@ Edit `.env` and set the required values:
 ```bash
 # Required
 export SECRET_KEY="your-secret-key"
+
+# Optional
 export OAUTH_CLIENT_ID="your-client-id"
 export OAUTH_CLIENT_SECRET="your-client-secret"
 export OAUTH_AUTH_SERVER="https://your-identity-provider.example.com"
