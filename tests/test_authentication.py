@@ -89,6 +89,22 @@ def test_logout_callback_clears_session(test_client):
         assert "token" not in sess
 
 
+def test_logout_local_clears_session_without_contacting_provider(test_client):
+    """Test that local logout clears session without redirecting to provider."""
+    with test_client.session_transaction() as sess:
+        sess["user"] = {"sub": "testuser"}
+        sess["token"] = {"id_token": "test_token", "access_token": "test_access"}
+
+    res = test_client.get("/logout/local")
+    assert res.status_code == 302
+    assert res.location.endswith("/")
+    assert "end" not in res.location.lower()
+
+    with test_client.session_transaction() as sess:
+        assert "user" not in sess
+        assert "token" not in sess
+
+
 def test_authenticated_user_can_access_index(iam_server, iam_client, user, test_client):
     """Test that authenticated users can access the index page."""
     iam_server.login(user)

@@ -15,6 +15,19 @@ from auth_playground.forms import RefreshTokenForm
 bp = Blueprint("routes", __name__)
 
 
+def clear_session():
+    """Clear user and token data from the session."""
+    try:
+        del session["user"]
+    except KeyError:
+        pass
+
+    try:
+        del session["token"]
+    except KeyError:
+        pass
+
+
 @bp.route("/pygments.css")
 def pygments_css():
     """Serve Pygments CSS for syntax highlighting with light/dark mode support."""
@@ -131,9 +144,17 @@ def login_callback():
     return redirect(url_for("routes.index"))
 
 
+@bp.route("/logout/local")
+def logout_local():
+    """Log out locally without contacting the Identity Provider."""
+    clear_session()
+    flash("You have been logged out locally from this application", "success")
+    return redirect(url_for("routes.index"))
+
+
 @bp.route("/logout")
 def logout():
-    """Redirect users to the Identity Provider logout page."""
+    """Redirect users to the Identity Provider logout page for global logout."""
     auth_playground.oauth.canaille.load_server_metadata()
     end_session_endpoint = auth_playground.oauth.canaille.server_metadata.get(
         "end_session_endpoint"
@@ -152,17 +173,8 @@ def logout():
 
 @bp.route("/logout_callback")
 def logout_callback():
-    try:
-        del session["user"]
-    except KeyError:
-        pass
-
-    try:
-        del session["token"]
-    except KeyError:
-        pass
-
-    flash("You have been successfully logged out", "success")
+    clear_session()
+    flash("You have been globally logged out", "success")
     return redirect(url_for("routes.index"))
 
 

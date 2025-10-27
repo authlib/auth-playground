@@ -8,7 +8,8 @@
     <div role="group">
         <a href="{{ url_for('routes.login') }}" role="button">Sign in again</a>
         <a href="{{ url_for('routes.consent') }}" role="button">Consent again</a>
-        <a href="{{ url_for('routes.logout') }}" role="button" class="contrast">Log out</a>
+        <a href="{{ url_for('routes.logout_local') }}" role="button" class="secondary">Local log out</a>
+        <a href="{{ url_for('routes.logout') }}" role="button" class="contrast">Global log out</a>
     </div>
 </div>
 
