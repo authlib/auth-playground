@@ -1,0 +1,49 @@
+{% extends "layout.html" %}
+
+{% block title %}Configure Identity Server{% endblock %}
+
+{% block content %}
+    <article>
+        <header>
+            <h2>Choose an identity provider</h2>
+        </header>
+
+        <p>Enter the URL of your OpenID Connect identity provider to validate it and discover configuration options.</p>
+
+        <form method="POST" action="{{ url_for('routes.configure_server') }}">
+            {{ form.hidden_tag() }}
+
+            <label for="{{ form.issuer_url.id }}">
+                {{ form.issuer_url.label }}
+            </label>
+
+            {% if form.issuer_url.errors %}
+                {% for error in form.issuer_url.errors %}
+                    <small class="error">{{ error }}</small>
+                {% endfor %}
+            {% endif %}
+
+            <div role="group">
+                {{ form.issuer_url(class="form-control") }}
+                {{ form.submit(class="primary") }}
+            </div>
+        </form>
+
+        <details>
+            <summary role="button" class="outline">What happens next?</summary>
+            <ol>
+                <li>Auth Playground will fetch the server's OIDC metadata from <code>/.well-known/openid-configuration</code></li>
+                <li>If valid, Auth Playground will show you multiple configuration options:
+                    <ul>
+                        <li>Automatic registration (if supported)</li>
+                        <li>Manual configuration via web form</li>
+                        <li>Environment variables setup</li>
+                    </ul>
+                </li>
+            </ol>
+        </details>
+    </article>
+
+
+    {% include "static-configuration.html" %}
+{% endblock %}

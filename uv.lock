@@ -37,7 +37,6 @@ dependencies = [
     { name = "flask-babel" },
     { name = "flask-session" },
     { name = "flask-wtf" },
-    { name = "jinja2-highlight" },
     { name = "python-dotenv" },
     { name = "requests" },
 ]
@@ -59,7 +58,6 @@ requires-dist = [
     { name = "flask-babel", specifier = ">=4.0.0" },
     { name = "flask-session", specifier = ">=0.8.0" },
     { name = "flask-wtf", specifier = ">=1.2.0" },
-    { name = "jinja2-highlight", specifier = ">=0.6.1" },
     { name = "python-dotenv", specifier = ">=1.0.0" },
     { name = "requests", specifier = ">=2.32.5" },
 ]
@@ -715,16 +713,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/df/bf/f7da0350254c0ed7c
 wheels = [
     { url = "https://files.pythonhosted.org/packages/62/a1/3d680cbfd5f4b8f15abc1d571870c5fc3e594bb582bc3b64ea099db13e56/jinja2-3.1.6-py3-none-any.whl", hash = "sha256:85ece4451f492d0c13c5dd7c13a64681a86afae63a5f347908daf103ce6d2f67", size = 134899, upload-time = "2025-03-05T20:05:00.369Z" },
 ]
-
-[[package]]
-name = "jinja2-highlight"
-version = "0.6.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "jinja2" },
-    { name = "pygments" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/c4/2e/98a1fc3c72fe8ed1be581797cf5d0178ec30b2617721d94eda367d964f58/jinja2-highlight-0.6.1.tar.gz", hash = "sha256:fad47890c12f1a270a45cd0783cad84cb8f9770071395df87be473ec6d611b09", size = 3369, upload-time = "2014-09-13T17:56:39.555Z" }
 
 [[package]]
 name = "joserfc"

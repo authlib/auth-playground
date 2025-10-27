@@ -14,12 +14,12 @@
 </div>
 
 <section>
-    <h2>Token Information</h2>
-    <p>Here are the tokens received from the identity provider:</p>
+    <h2>Token information</h2>
+    <p>Here are the tokens received from the Identity Provider:</p>
 
     {% if token.id_token and user %}
         <article>
-            <h3>ID Token & User Information</h3>
+            <h3>ID token & user information</h3>
             <p><small>Contains user identity information in JWT format.</small></p>
             <div role="group">
                 <input type="text" value="{{ token.id_token }}" readonly aria-label="ID Token">
@@ -28,7 +28,7 @@
 
             <div class="grid">
                 <div>
-                    <h4>User Claims</h4>
+                    <h4>User claims</h4>
 
                     {% if user.picture %}
                         <img src="{{ user.picture }}" alt="User avatar" class="user-avatar">
@@ -48,11 +48,11 @@
                         {% endif %}
 
                         {% if user.given_name %}
-                            <li><strong data-tooltip="given_name">Given Name:</strong> {{ user.given_name }}</li>
+                            <li><strong data-tooltip="given_name">Given name:</strong> {{ user.given_name }}</li>
                         {% endif %}
 
                         {% if user.family_name %}
-                            <li><strong data-tooltip="family_name">Family Name:</strong> {{ user.family_name }}</li>
+                            <li><strong data-tooltip="family_name">Family name:</strong> {{ user.family_name }}</li>
                         {% endif %}
 
                         {% if user.email %}
@@ -60,7 +60,7 @@
                         {% endif %}
 
                         {% if user.email_verified is defined %}
-                            <li><strong data-tooltip="email_verified">Email Verified:</strong> {{ user.email_verified }}</li>
+                            <li><strong data-tooltip="email_verified">Email verified:</strong> {{ user.email_verified }}</li>
                         {% endif %}
 
                         {% if user.phone_number %}
@@ -123,7 +123,7 @@
                 </div>
 
                 <div>
-                    <h4>Token Metadata</h4>
+                    <h4>Token metadata</h4>
 
                     <ul>
                         {% if user.iss %}
@@ -144,15 +144,15 @@
                         {% endif %}
 
                         {% if user.auth_time %}
-                            <li><strong data-tooltip="auth_time">Auth Time:</strong> {{ user.auth_time|datetimeformat }}</li>
+                            <li><strong data-tooltip="auth_time">Auth time:</strong> {{ user.auth_time|datetimeformat }}</li>
                         {% endif %}
 
                         {% if user.iat %}
-                            <li><strong data-tooltip="iat">Issued At:</strong> {{ user.iat|datetimeformat }}</li>
+                            <li><strong data-tooltip="iat">Issued at:</strong> {{ user.iat|datetimeformat }}</li>
                         {% endif %}
 
                         {% if user.exp %}
-                            <li><strong data-tooltip="exp">Expires At:</strong> {{ user.exp|datetimeformat }}</li>
+                            <li><strong data-tooltip="exp">Expires at:</strong> {{ user.exp|datetimeformat }}</li>
                         {% endif %}
 
                         {% if user.nonce %}
@@ -160,20 +160,20 @@
                         {% endif %}
 
                         {% if user.at_hash %}
-                            <li><strong data-tooltip="at_hash">Access Token Hash:</strong> <code>{{ user.at_hash }}</code></li>
+                            <li><strong data-tooltip="at_hash">Access token hash:</strong> <code>{{ user.at_hash }}</code></li>
                         {% endif %}
 
                         {% if user.c_hash %}
-                            <li><strong data-tooltip="c_hash">Code Hash:</strong> <code>{{ user.c_hash }}</code></li>
+                            <li><strong data-tooltip="c_hash">Code hash:</strong> <code>{{ user.c_hash }}</code></li>
                         {% endif %}
 
                         {% if user.acr %}
-                            <li><strong data-tooltip="acr">Auth Context Class:</strong> <code>{{ user.acr }}</code></li>
+                            <li><strong data-tooltip="acr">Auth context class:</strong> <code>{{ user.acr }}</code></li>
                         {% endif %}
 
                         {% if user.amr %}
                             <li>
-                                <strong data-tooltip="amr">Auth Methods:</strong>
+                                <strong data-tooltip="amr">Auth methods:</strong>
                                 {% for method in user.amr %}
                                     <code>{{ method }}</code>{% if not loop.last %}, {% endif %}
                                 {% endfor %}
@@ -181,7 +181,7 @@
                         {% endif %}
 
                         {% if user.azp %}
-                            <li><strong data-tooltip="azp">Authorized Party:</strong> <code>{{ user.azp }}</code></li>
+                            <li><strong data-tooltip="azp">Authorized party:</strong> <code>{{ user.azp }}</code></li>
                         {% endif %}
                     </ul>
                 </div>
@@ -192,7 +192,7 @@
     <div class="grid">
         {% if token.access_token %}
             <article>
-                <h3>Access Token</h3>
+                <h3>Access token</h3>
                 <p><small>Used to access protected resources on behalf of the user.</small></p>
                 <div role="group">
                     <input type="text" value="{{ token.access_token }}" readonly aria-label="Access Token">
@@ -200,13 +200,13 @@
                 </div>
                 <ul>
                     {% if token.token_type %}
-                        <li><strong>Token Type:</strong> {{ token.token_type }}</li>
+                        <li><strong>Token type:</strong> {{ token.token_type }}</li>
                     {% endif %}
                     {% if token.expires_in %}
-                        <li><strong>Expires In:</strong> {{ token.expires_in }} seconds</li>
+                        <li><strong>Expires in:</strong> {{ token.expires_in }} seconds</li>
                     {% endif %}
                     {% if token.expires_at %}
-                        <li><strong>Expires At:</strong> {{ token.expires_at|datetimeformat }}</li>
+                        <li><strong>Expires at:</strong> {{ token.expires_at|datetimeformat }}</li>
                     {% endif %}
                     {% if token.scope %}
                         <li><strong>Scope:</strong> {{ token.scope }}</li>
@@ -217,7 +217,7 @@
 
         {% if token.refresh_token %}
             <article>
-                <h3>Refresh Token</h3>
+                <h3>Refresh token</h3>
                 <p><small>Used to obtain new access tokens without re-authentication.</small></p>
                 <div role="group">
                     <input type="text" value="{{ token.refresh_token }}" readonly aria-label="Refresh Token">

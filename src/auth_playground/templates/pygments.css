@@ -1,9 +1,0 @@
-/* Light mode syntax highlighting */
-@media (prefers-color-scheme: light) {
-    {{ light_css }}
-}
-
-/* Dark mode syntax highlighting */
-@media (prefers-color-scheme: dark) {
-    {{ dark_css }}
-}

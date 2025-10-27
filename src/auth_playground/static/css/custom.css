@@ -1,5 +1,69 @@
 /* Auth Playground Custom Styles */
 
+/* Orange color theme */
+[data-theme="light"],
+:root:not([data-theme="dark"]) {
+    --pico-primary: var(--pico-color-orange-500);
+    --pico-primary-background: var(--pico-color-orange-500);
+    --pico-primary-hover: var(--pico-color-orange-600);
+    --pico-primary-hover-background: var(--pico-color-orange-600);
+    --pico-primary-focus: var(--pico-color-orange-200);
+    --pico-primary-inverse: #fff;
+    --pico-primary-underline: var(--pico-color-orange-500);
+}
+
+@media only screen and (prefers-color-scheme: dark) {
+    :root:not([data-theme]) {
+        --pico-primary: var(--pico-color-orange-400);
+        --pico-primary-background: var(--pico-color-orange-400);
+        --pico-primary-hover: var(--pico-color-orange-300);
+        --pico-primary-hover-background: var(--pico-color-orange-300);
+        --pico-primary-focus: var(--pico-color-orange-800);
+        --pico-primary-inverse: #000;
+        --pico-primary-underline: var(--pico-color-orange-400);
+    }
+}
+
+[data-theme="dark"] {
+    --pico-primary: var(--pico-color-orange-400);
+    --pico-primary-background: var(--pico-color-orange-400);
+    --pico-primary-hover: var(--pico-color-orange-300);
+    --pico-primary-hover-background: var(--pico-color-orange-300);
+    --pico-primary-focus: var(--pico-color-orange-800);
+    --pico-primary-inverse: #000;
+    --pico-primary-underline: var(--pico-color-orange-400);
+}
+
+/* Force orange hover on primary buttons */
+button.primary:hover,
+button.primary:focus,
+[role="button"].primary:hover,
+[role="button"].primary:focus,
+input[type="submit"]:hover,
+input[type="submit"]:focus {
+    background-color: var(--pico-primary-hover) !important;
+    border-color: var(--pico-primary-hover) !important;
+}
+
+@media only screen and (prefers-color-scheme: dark) {
+    button.primary:hover,
+    button.primary:focus,
+    [role="button"].primary:hover,
+    [role="button"].primary:focus,
+    input[type="submit"]:hover,
+    input[type="submit"]:focus {
+        background-color: var(--pico-primary-hover) !important;
+        border-color: var(--pico-primary-hover) !important;
+    }
+}
+
+/* Reduce margin bottom for titles in article headers */
+article header h2,
+article header h3,
+article header h4 {
+    margin-bottom: 0;
+}
+
 /* Header title link styling */
 header h1 a {
     color: inherit;

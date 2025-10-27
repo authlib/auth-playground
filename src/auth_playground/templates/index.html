@@ -1,20 +1,6 @@
 {% extends "layout.html" %}
 
-{% block extra_css %}
-    <link rel="stylesheet" href="{{ url_for('routes.pygments_css') }}">
-{% endblock %}
-
 {% block content %}
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <article role="alert" data-type="{{ category }}">
-                    {{ message }}
-                </article>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-
     <section>
         <p>
             This is a demonstration OpenID Connect client.

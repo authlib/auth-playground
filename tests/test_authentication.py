@@ -1,6 +1,6 @@
 def test_index_shows_signup_when_unauthenticated(test_client):
     """Test that unauthenticated users see signup and signin buttons."""
-    res = test_client.get("/")
+    res = test_client.get("/home")
     assert res.status_code == 200
     assert b"Sign up" in res.data
     assert b"Sign in" in res.data
@@ -97,7 +97,7 @@ def test_logout_local_clears_session_without_contacting_provider(test_client):
 
     res = test_client.get("/logout/local")
     assert res.status_code == 302
-    assert res.location.endswith("/")
+    assert res.location.endswith("/home")
     assert "end" not in res.location.lower()
 
     with test_client.session_transaction() as sess:
@@ -114,7 +114,7 @@ def test_authenticated_user_can_access_index(iam_server, iam_client, user, test_
     res = iam_server.test_client.get(res.location)
     res = test_client.get(res.location)
 
-    res = test_client.get("/")
+    res = test_client.get("/home")
     assert res.status_code == 200
     assert b"Auth Playground" in res.data
 
@@ -168,7 +168,7 @@ def test_refresh_token_form_displays_when_refresh_token_present(test_client):
         }
         sess["user"] = {"sub": "testuser"}
 
-    res = test_client.get("/")
+    res = test_client.get("/home")
     assert res.status_code == 200
     assert b"Renew tokens" in res.data
 

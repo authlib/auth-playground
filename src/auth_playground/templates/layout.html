@@ -6,6 +6,7 @@
         <meta name="color-scheme" content="light dark">
         <title>{% block title %}{{ config.NAME }}{% endblock %} - Auth Playground</title>
         <link rel="stylesheet" href="{{ url_for('static', filename='css/pico.min.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/pico.colors.min.css') }}">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
         {% block extra_css %}{% endblock %}
     </head>
@@ -17,16 +18,32 @@
                     <h1><a href="{{ url_for('routes.index') }}">{{ config.NAME }}</a></h1>
                     <p>OAuth 2.0 Demonstration Client</p>
                 </hgroup>
-                {% if config.OAUTH_AUTH_SERVER %}
-                    <hgroup>
+                <hgroup>
+                    {% if session.get('issuer_url') %}
+                        <h1><a href="{{ session.get('issuer_url') }}" target="_blank">{{ session.get('issuer_url')|replace('https://', '')|replace('http://', '') }}</a></h1>
+                        <p>Identity Provider • <a href="{{ url_for('routes.configure_server') }}">switch</a></p>
+                    {% elif config.OAUTH_AUTH_SERVER %}
                         <h1><a href="{{ config.OAUTH_AUTH_SERVER }}" target="_blank">{{ config.OAUTH_AUTH_SERVER|replace('https://', '')|replace('http://', '') }}</a></h1>
                         <p>Identity Provider</p>
-                    </hgroup>
-                {% endif %}
+                    {% else %}
+                        <h1>&nbsp;</h1>
+                        <p>&nbsp;</p>
+                    {% endif %}
+                </hgroup>
             </div>
         </header>
 
         <main class="container">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <article role="alert" data-type="{{ category }}">
+                            {{ message }}
+                        </article>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
             {% block content %}{% endblock %}
         </main>
 

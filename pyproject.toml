@@ -16,7 +16,6 @@ dependencies = [
     "flask-babel>=4.0.0",
     "flask-session>=0.8.0",
     "flask-wtf>=1.2.0",
-    "jinja2-highlight>=0.6.1",
     "python-dotenv>=1.0.0",
     "requests>=2.32.5",
 ]
