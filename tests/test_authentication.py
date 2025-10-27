@@ -1,8 +1,21 @@
-def test_index_shows_signup_when_unauthenticated(test_client):
-    """Test that unauthenticated users see signup and signin buttons."""
-    res = test_client.get("/home")
+def test_index_shows_signup_when_unauthenticated(iam_server, test_client):
+    """Test that unauthenticated users see signup button only if server supports prompt=create."""
+    import requests
+
+    res = test_client.get("/playground")
     assert res.status_code == 200
-    assert b"Sign up" in res.data
+
+    # Check if server supports prompt=create
+    metadata_url = f"{iam_server.url}/.well-known/openid-configuration"
+    metadata_response = requests.get(metadata_url)
+    metadata = metadata_response.json()
+    prompt_values = metadata.get("prompt_values_supported", [])
+
+    if "create" in prompt_values:
+        assert b"Sign up" in res.data
+    else:
+        assert b"Sign up" not in res.data
+
     assert b"Sign in" in res.data
 
 
@@ -97,7 +110,7 @@ def test_logout_local_clears_session_without_contacting_provider(test_client):
 
     res = test_client.get("/logout/local")
     assert res.status_code == 302
-    assert res.location.endswith("/home")
+    assert res.location.endswith("/playground")
     assert "end" not in res.location.lower()
 
     with test_client.session_transaction() as sess:
@@ -114,7 +127,7 @@ def test_authenticated_user_can_access_index(iam_server, iam_client, user, test_
     res = iam_server.test_client.get(res.location)
     res = test_client.get(res.location)
 
-    res = test_client.get("/home")
+    res = test_client.get("/playground")
     assert res.status_code == 200
     assert b"Auth Playground" in res.data
 
@@ -168,7 +181,7 @@ def test_refresh_token_form_displays_when_refresh_token_present(test_client):
         }
         sess["user"] = {"sub": "testuser"}
 
-    res = test_client.get("/home")
+    res = test_client.get("/playground")
     assert res.status_code == 200
     assert b"Renew tokens" in res.data
 

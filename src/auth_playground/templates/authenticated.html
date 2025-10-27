@@ -8,14 +8,16 @@
     <div role="group">
         <a href="{{ url_for('routes.login') }}" role="button">Sign in again</a>
         <a href="{{ url_for('routes.consent') }}" role="button">Consent again</a>
-        <a href="{{ url_for('routes.logout_local') }}" role="button" class="secondary">Local log out</a>
-        <a href="{{ url_for('routes.logout') }}" role="button" class="contrast">Global log out</a>
+        <a href="{{ url_for('routes.logout_local') }}" role="button" class="secondary">Log out</a>
+        {% if supports_rp_initiated_logout %}
+            <a href="{{ url_for('routes.logout') }}" role="button" class="contrast">Server log out</a>
+        {% endif %}
     </div>
 </div>
 
 <section>
     <h2>Token information</h2>
-    <p>Here are the tokens received from the Identity Provider:</p>
+    <p>Here are the tokens received from the {{ server_display_name }}:</p>
 
     {% if token.id_token and user %}
         <article>

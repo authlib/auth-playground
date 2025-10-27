@@ -6,23 +6,23 @@ def test_index_redirects_to_configure_server_when_no_config(unconfigured_app):
     test_client = unconfigured_app.test_client()
     res = test_client.get("/")
     assert res.status_code == 302
-    assert "/configure/server" in res.location
+    assert "/server" in res.location
 
 
 def test_configure_server_displays_form(unconfigured_app):
     """Test that configure server page displays the form."""
     test_client = unconfigured_app.test_client()
-    res = test_client.get("/configure/server")
+    res = test_client.get("/server")
     assert res.status_code == 200
     assert b"Identity Provider URL" in res.data
-    assert b"Validate server" in res.data
+    assert b"Continue" in res.data
 
 
 def test_configure_server_validates_url(unconfigured_app):
     """Test that server configuration validates URL format."""
     test_client = unconfigured_app.test_client()
     res = test_client.post(
-        "/configure/server",
+        "/server",
         data={"issuer_url": "not-a-url", "csrf_token": "test"},
         follow_redirects=False,
     )
@@ -34,17 +34,33 @@ def test_configure_server_blocks_when_env_configured(app, test_client):
     """Test that configure server is blocked when OAUTH_AUTH_SERVER is in env."""
     app.config["OAUTH_AUTH_SERVER"] = "https://env-configured.example.com"
 
-    res = test_client.get("/configure/server", follow_redirects=True)
+    res = test_client.get("/server", follow_redirects=True)
     assert res.status_code == 200
     assert b"environment variables" in res.data
+
+
+def test_playground_redirects_to_client_when_server_configured(unconfigured_app):
+    """Test that playground redirects to /client when server is configured but not client."""
+    test_client = unconfigured_app.test_client()
+    with test_client.session_transaction() as sess:
+        sess["issuer_url"] = "https://test.example.com"
+        sess["server_metadata"] = {
+            "issuer": "https://test.example.com",
+            "authorization_endpoint": "https://test.example.com/oauth/authorize",
+            "token_endpoint": "https://test.example.com/oauth/token",
+        }
+
+    res = test_client.get("/playground")
+    assert res.status_code == 302
+    assert "/client" in res.location
 
 
 def test_configure_client_redirects_without_server_metadata(unconfigured_app):
     """Test that configure client redirects when server metadata is not set."""
     test_client = unconfigured_app.test_client()
-    res = test_client.get("/configure/client", follow_redirects=True)
+    res = test_client.get("/client", follow_redirects=True)
     assert res.status_code == 200
-    assert b"configure the server first" in res.data
+    assert b"Please configure a server" in res.data
 
 
 def test_configure_client_displays_manual_form(unconfigured_app):
@@ -58,7 +74,7 @@ def test_configure_client_displays_manual_form(unconfigured_app):
         }
         sess["issuer_url"] = "https://test.example.com"
 
-    res = test_client.get("/configure/client")
+    res = test_client.get("/client")
     assert res.status_code == 200
     assert b"Manual configuration" in res.data
     assert b"Client ID" in res.data
@@ -77,7 +93,7 @@ def test_configure_client_shows_auto_registration_when_supported(unconfigured_ap
         }
         sess["issuer_url"] = "https://test.example.com"
 
-    res = test_client.get("/configure/client")
+    res = test_client.get("/client")
     assert res.status_code == 200
     assert b"Dynamic registration" in res.data
     assert b"Register client" in res.data
@@ -95,7 +111,7 @@ def test_configure_client_hides_auto_registration_when_not_supported(unconfigure
         }
         sess["issuer_url"] = "https://test.example.com"
 
-    res = test_client.get("/configure/client")
+    res = test_client.get("/client")
     assert res.status_code == 200
     assert b"Dynamic registration" not in res.data
     assert b"Register client" not in res.data
@@ -112,7 +128,7 @@ def test_configure_client_manual_setup_stores_in_session(unconfigured_app):
         }
         sess["issuer_url"] = "https://test.example.com"
 
-    res = test_client.get("/configure/client")
+    res = test_client.get("/client")
     assert res.status_code == 200
 
     import re
@@ -123,7 +139,7 @@ def test_configure_client_manual_setup_stores_in_session(unconfigured_app):
     csrf_token = csrf_match.group(1) if csrf_match else ""
 
     res = test_client.post(
-        "/configure/client",
+        "/client",
         data={
             "client_id": "test-client-id",
             "client_secret": "test-client-secret",
@@ -152,14 +168,14 @@ def test_auto_register_requires_registration_endpoint(unconfigured_app):
         }
         sess["issuer_url"] = "https://test.example.com"
 
-    res = test_client.get("/configure/client")
+    res = test_client.get("/client")
     csrf_match = re.search(
         r'name="csrf_token" value="([^"]+)"', res.data.decode(), re.DOTALL
     )
     csrf_token = csrf_match.group(1) if csrf_match else ""
 
     res = test_client.post(
-        "/configure/auto-register",
+        "/auto-register",
         data={"csrf_token": csrf_token, "initial_access_token": ""},
         follow_redirects=True,
     )
@@ -173,10 +189,10 @@ def test_flash_messages_displayed_in_layout(unconfigured_app):
     with test_client.session_transaction() as sess:
         sess["server_metadata"] = {}
 
-    res = test_client.get("/configure/client", follow_redirects=True)
+    res = test_client.get("/client", follow_redirects=True)
     assert res.status_code == 200
     assert b'role="alert"' in res.data
-    assert b"configure the server first" in res.data
+    assert b"Please configure a server" in res.data
 
 
 def test_switch_link_hidden_when_env_configured(app, iam_server, iam_client):
@@ -193,7 +209,9 @@ def test_switch_link_hidden_when_env_configured(app, iam_server, iam_client):
 
     res = test_client.get("/", follow_redirects=True)
     assert res.status_code == 200
-    assert b"Identity Provider" in res.data
+    assert (
+        b"OAuth 2.0 Authorization Server" in res.data or b"OpenID Provider" in res.data
+    )
     assert b"switch" not in res.data
 
 
@@ -223,14 +241,14 @@ def test_validate_issuer_url_accepts_http_in_debug(app, test_client):
     """Test that HTTP URLs are accepted when app is in debug mode."""
     app.debug = True
 
-    res = test_client.get("/configure/server")
+    res = test_client.get("/server")
     csrf_match = re.search(
         r'name="csrf_token" value="([^"]+)"', res.data.decode(), re.DOTALL
     )
     csrf_token = csrf_match.group(1) if csrf_match else ""
 
     res = test_client.post(
-        "/configure/server",
+        "/server",
         data={"issuer_url": "http://localhost:5000", "csrf_token": csrf_token},
         follow_redirects=False,
     )
@@ -250,7 +268,7 @@ def test_client_uri_included_in_auto_registration(unconfigured_app):
         }
         sess["issuer_url"] = "https://test.example.com"
 
-    res = test_client.get("/configure/client")
+    res = test_client.get("/client")
     assert res.status_code == 200
     assert b"Register client" in res.data
 
@@ -265,6 +283,52 @@ def test_initial_access_token_sent_in_authorization_header(unconfigured_app):
         }
         sess["issuer_url"] = "https://test.example.com"
 
-    res = test_client.get("/configure/client")
+    res = test_client.get("/client")
     assert res.status_code == 200
     assert b"Initial access token" in res.data
+
+
+def test_unregister_button_displayed_with_registration_token(unconfigured_app):
+    """Test that unregister button is displayed when registration token exists."""
+    test_client = unconfigured_app.test_client()
+    with test_client.session_transaction() as sess:
+        sess["issuer_url"] = "https://test.example.com"
+        sess["server_metadata"] = {
+            "issuer": "https://test.example.com",
+            "authorization_endpoint": "https://test.example.com/oauth/authorize",
+            "token_endpoint": "https://test.example.com/oauth/token",
+        }
+        sess["oauth_config"] = {
+            "client_id": "test-client",
+            "client_secret": "test-secret",
+            "auth_server": "https://test.example.com",
+        }
+        sess["registration_access_token"] = "test-registration-token"
+        sess["registration_client_uri"] = (
+            "https://test.example.com/oauth/register/client-123"
+        )
+
+    res = test_client.get("/playground")
+    assert res.status_code == 200
+    assert b"Unregister client" in res.data
+
+
+def test_unregister_button_hidden_without_registration_token(unconfigured_app):
+    """Test that unregister button is hidden when no registration token exists."""
+    test_client = unconfigured_app.test_client()
+    with test_client.session_transaction() as sess:
+        sess["issuer_url"] = "https://test.example.com"
+        sess["server_metadata"] = {
+            "issuer": "https://test.example.com",
+            "authorization_endpoint": "https://test.example.com/oauth/authorize",
+            "token_endpoint": "https://test.example.com/oauth/token",
+        }
+        sess["oauth_config"] = {
+            "client_id": "test-client",
+            "client_secret": "test-secret",
+            "auth_server": "https://test.example.com",
+        }
+
+    res = test_client.get("/playground")
+    assert res.status_code == 200
+    assert b"Unregister client" not in res.data

@@ -1,0 +1,40 @@
+{% extends "layout.html" %}
+
+{% block title %}Server Specifications{% endblock %}
+
+{% block content %}
+    <h2>Server Specifications</h2>
+
+    {% if supported_specs %}
+        <article>
+            <header><h3>Supported specifications ({{ supported_specs|length }})</h3></header>
+            <ul>
+                {% for spec_id, spec_name, spec_url in supported_specs %}
+                    <li><code>{{ spec_id }}</code>: <a href="{{ spec_url }}" target="_blank" rel="noopener noreferrer">{{ spec_name }}</a></li>
+                {% endfor %}
+            </ul>
+        </article>
+    {% endif %}
+
+    {% if unsupported_specs %}
+        <article>
+            <header><h3>Unsupported specifications ({{ unsupported_specs|length }})</h3></header>
+            <ul>
+                {% for spec_id, spec_name, spec_url in unsupported_specs %}
+                    <li><code>{{ spec_id }}</code>: <a href="{{ spec_url }}" target="_blank" rel="noopener noreferrer">{{ spec_name }}</a></li>
+                {% endfor %}
+            </ul>
+        </article>
+    {% endif %}
+
+    {% if unknown_specs %}
+        <article>
+            <header><h3>Unknown specifications ({{ unknown_specs|length }})</h3></header>
+            <ul>
+                {% for spec_id, spec_name, spec_url in unknown_specs %}
+                    <li><code>{{ spec_id }}</code>: <a href="{{ spec_url }}" target="_blank" rel="noopener noreferrer">{{ spec_name }}</a></li>
+                {% endfor %}
+            </ul>
+        </article>
+    {% endif %}
+{% endblock %}

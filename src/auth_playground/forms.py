@@ -45,7 +45,7 @@ class ServerConfigForm(FlaskForm):
         description="Enter the base URL of your OIDC/OAuth2 provider (e.g., https://auth.example.com)",
         render_kw={"placeholder": "https://auth.example.com", "type": "url"},
     )
-    submit = SubmitField("Validate server")
+    submit = SubmitField("Continue")
 
 
 class ClientConfigForm(FlaskForm):
@@ -83,3 +83,9 @@ class AutoRegisterForm(FlaskForm):
         render_kw={"placeholder": "Leave empty if not required"},
     )
     submit = SubmitField("Register client")
+
+
+class UnregisterClientForm(FlaskForm):
+    """Form to trigger client unregistration with CSRF protection."""
+
+    submit = SubmitField("Unregister client")

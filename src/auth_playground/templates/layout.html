@@ -21,10 +21,17 @@
                 <hgroup>
                     {% if session.get('issuer_url') %}
                         <h1><a href="{{ session.get('issuer_url') }}" target="_blank">{{ session.get('issuer_url')|replace('https://', '')|replace('http://', '') }}</a></h1>
-                        <p>Identity Provider • <a href="{{ url_for('routes.configure_server') }}">switch</a></p>
+                        <p>
+                            {{ server_display_name }}
+                            • <a href="{{ url_for('routes.playground') }}">playground</a>
+                            • <a href="{{ url_for('routes.specs') }}">specs</a>
+                            {% if not config.OAUTH_AUTH_SERVER %}
+                                • <a href="{{ url_for('routes.configure_server') }}">switch</a>
+                            {% endif %}
+                        </p>
                     {% elif config.OAUTH_AUTH_SERVER %}
                         <h1><a href="{{ config.OAUTH_AUTH_SERVER }}" target="_blank">{{ config.OAUTH_AUTH_SERVER|replace('https://', '')|replace('http://', '') }}</a></h1>
-                        <p>Identity Provider</p>
+                        <p>{{ server_display_name }}</p>
                     {% else %}
                         <h1>&nbsp;</h1>
                         <p>&nbsp;</p>
@@ -49,11 +56,13 @@
 
         <footer class="container">
             <p>
-                <small>{% block footer_text %}Powered by <a href="https://authlib.org" target="_blank">Authlib</a>{% endblock %}</small>
+                <small>Auth Playground <a href="{{ repository_url }}" target="_blank" rel="noopener noreferrer">v{{ app_version }}</a></small>
                 •
                 <small><a href="{{ url_for('routes.tos') }}">Terms of Service</a></small>
                 •
                 <small><a href="{{ url_for('routes.policy') }}">Privacy Policy</a></small>
+                •
+                <small>{% block footer_text %}Powered by <a href="https://authlib.org" target="_blank">Authlib</a>{% endblock %}</small>
             </p>
         </footer>
 

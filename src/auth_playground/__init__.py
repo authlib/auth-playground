@@ -1,3 +1,4 @@
+import importlib.metadata
 import os
 
 from authlib.integrations.flask_client import OAuth
@@ -5,10 +6,12 @@ from authlib.oidc.discovery import get_well_known_url
 from cachelib.simple import SimpleCache
 from dotenv import load_dotenv
 from flask import Flask
+from flask import session
 from flask_babel import Babel
 from flask_session import Session
 
 from auth_playground.endpoints import bp
+from auth_playground.endpoints import get_server_display_name
 
 oauth = OAuth()
 oauth_configured = False
@@ -120,6 +123,7 @@ def setup_oauth_runtime(app, client_id, client_secret, auth_server):
 
 
 def create_app():
+    """Create and configure the Flask application."""
     app = Flask(__name__)
 
     app.config["SECRET_KEY"] = os.environ.get(
@@ -146,6 +150,22 @@ def create_app():
 
     app.register_blueprint(bp)
     setup_oauth(app)
+
+    @app.context_processor
+    def inject_server_info():
+        """Inject server information into all templates."""
+        server_type = session.get("server_type")
+        pkg_metadata = importlib.metadata.metadata("auth-playground")
+        project_urls = dict(
+            [url.split(", ", 1) for url in pkg_metadata.get_all("Project-URL") or []]
+        )
+        return {
+            "server_type": server_type,
+            "server_display_name": get_server_display_name(server_type),
+            "app_version": importlib.metadata.version("auth-playground"),
+            "repository_url": project_urls.get("repository"),
+        }
+
     return app
 
 

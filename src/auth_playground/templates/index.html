@@ -3,18 +3,28 @@
 {% block content %}
     <section>
         <p>
-            This is a demonstration OpenID Connect client.
-            It illustrates how to integrate with an identity provider so users can register,
-            log in, consent to share data, and then be redirected back to the service.
+            Sign in to explore OAuth 2.0 and OpenID Connect flows.
+            Test registration, authentication, token refresh, and logout operations.
         </p>
     </section>
+
+    {% if has_registration_token %}
+        <div class="buttons-right">
+            <form method="POST" action="{{ url_for('routes.unregister_client') }}">
+                {{ unregister_form.hidden_tag() }}
+                {{ unregister_form.submit() }}
+            </form>
+        </div>
+    {% endif %}
 
     {% if token %}
         {% include "authenticated.html" %}
     {% else %}
         <div class="buttons-right">
             <div role="group">
-                <a href="{{ url_for('routes.register') }}" role="button">Sign up</a>
+                {% if supports_prompt_create %}
+                    <a href="{{ url_for('routes.register') }}" role="button">Sign up</a>
+                {% endif %}
                 <a href="{{ url_for('routes.login') }}" role="button">Sign in</a>
             </div>
         </div>

@@ -20,6 +20,9 @@ dependencies = [
     "requests>=2.32.5",
 ]
 
+[project.urls]
+repository = "https://github.com/yaal-coop/auth-playground"
+
 [project.scripts]
 auth-playground = "auth_playground:main"
 
