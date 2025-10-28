@@ -1,6 +1,3 @@
-"""Server metadata analysis and specification detection."""
-
-
 class ServerSpecs:
     """Detects which OAuth 2.0 and OpenID Connect specifications a server implements."""
 

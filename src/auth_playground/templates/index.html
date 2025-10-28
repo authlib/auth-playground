@@ -8,7 +8,7 @@
         </p>
     </section>
 
-    {% if has_registration_token %}
+    {% if g.server_config and g.server_config.registration_access_token %}
         <div class="buttons-right">
             <form method="POST" action="{{ url_for('routes.unregister_client') }}">
                 {{ unregister_form.hidden_tag() }}
@@ -17,12 +17,12 @@
         </div>
     {% endif %}
 
-    {% if token %}
+    {% if session.token %}
         {% include "authenticated.html" %}
     {% else %}
         <div class="buttons-right">
             <div role="group">
-                {% if supports_prompt_create %}
+                {% if g.server_config and g.server_config.specs and g.server_config.specs.oidc_prompt_create %}
                     <a href="{{ url_for('routes.register') }}" role="button">Sign up</a>
                 {% endif %}
                 <a href="{{ url_for('routes.login') }}" role="button">Sign in</a>

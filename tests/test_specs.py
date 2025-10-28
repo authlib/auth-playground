@@ -1,6 +1,4 @@
-"""Tests for server metadata analysis and specification detection."""
-
-from auth_playground.metadata import ServerSpecs
+from auth_playground.specs import ServerSpecs
 
 
 class TestServerSpecs:

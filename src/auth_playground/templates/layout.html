@@ -19,10 +19,10 @@
                     <p>OAuth 2.0 Demonstration Client</p>
                 </hgroup>
                 <hgroup>
-                    {% if session.get('issuer_url') %}
-                        <h1><a href="{{ session.get('issuer_url') }}" target="_blank">{{ session.get('issuer_url')|replace('https://', '')|replace('http://', '') }}</a></h1>
+                    {% if g.server_config and g.server_config.issuer_url %}
+                        <h1><a href="{{ g.server_config.issuer_url }}" target="_blank">{{ g.server_config.issuer_url|replace('https://', '')|replace('http://', '') }}</a></h1>
                         <p>
-                            {{ server_display_name }}
+                            {{ g.server_config.display_name }}
                             • <a href="{{ url_for('routes.playground') }}">playground</a>
                             • <a href="{{ url_for('routes.specs') }}">specs</a>
                             {% if not config.OAUTH_AUTH_SERVER %}
@@ -31,7 +31,7 @@
                         </p>
                     {% elif config.OAUTH_AUTH_SERVER %}
                         <h1><a href="{{ config.OAUTH_AUTH_SERVER }}" target="_blank">{{ config.OAUTH_AUTH_SERVER|replace('https://', '')|replace('http://', '') }}</a></h1>
-                        <p>{{ server_display_name }}</p>
+                        <p>{{ g.server_config.display_name }}</p>
                     {% else %}
                         <h1>&nbsp;</h1>
                         <p>&nbsp;</p>

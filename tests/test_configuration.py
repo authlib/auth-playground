@@ -81,8 +81,8 @@ def test_configure_client_displays_manual_form(unconfigured_app):
     assert b"Client secret" in res.data
 
 
-def test_configure_client_shows_auto_registration_when_supported(unconfigured_app):
-    """Test that auto registration option appears when registration endpoint exists."""
+def test_configure_client_shows_dynamic_registration_when_supported(unconfigured_app):
+    """Test that dynamic registration option appears when registration endpoint exists."""
     test_client = unconfigured_app.test_client()
     with test_client.session_transaction() as sess:
         sess["server_metadata"] = {
@@ -100,8 +100,10 @@ def test_configure_client_shows_auto_registration_when_supported(unconfigured_ap
     assert b"Initial access token" in res.data
 
 
-def test_configure_client_hides_auto_registration_when_not_supported(unconfigured_app):
-    """Test that auto registration is hidden when registration endpoint is missing."""
+def test_configure_client_hides_dynamic_registration_when_not_supported(
+    unconfigured_app,
+):
+    """Test that dynamic registration is hidden when registration endpoint is missing."""
     test_client = unconfigured_app.test_client()
     with test_client.session_transaction() as sess:
         sess["server_metadata"] = {
@@ -157,8 +159,8 @@ def test_configure_client_manual_setup_stores_in_session(unconfigured_app):
         assert sess["oauth_config"]["auth_server"] == "https://test.example.com"
 
 
-def test_auto_register_requires_registration_endpoint(unconfigured_app):
-    """Test that auto registration fails without registration endpoint."""
+def test_dynamic_registration_requires_registration_endpoint(unconfigured_app):
+    """Test that dynamic client registration fails without registration endpoint."""
     test_client = unconfigured_app.test_client()
     with test_client.session_transaction() as sess:
         sess["server_metadata"] = {
@@ -175,7 +177,7 @@ def test_auto_register_requires_registration_endpoint(unconfigured_app):
     csrf_token = csrf_match.group(1) if csrf_match else ""
 
     res = test_client.post(
-        "/auto-register",
+        "/client/dynamic-registration",
         data={"csrf_token": csrf_token, "initial_access_token": ""},
         follow_redirects=True,
     )
@@ -256,7 +258,7 @@ def test_validate_issuer_url_accepts_http_in_debug(app, test_client):
     assert b"HTTP is only allowed" not in res.data
 
 
-def test_client_uri_included_in_auto_registration(unconfigured_app):
+def test_client_uri_included_in_dynamic_registration(unconfigured_app):
     """Test that client_uri is included in dynamic registration payload."""
     test_client = unconfigured_app.test_client()
     with test_client.session_transaction() as sess:

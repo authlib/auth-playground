@@ -74,8 +74,8 @@ class ClientConfigForm(FlaskForm):
     submit = SubmitField("Complete Configuration")
 
 
-class AutoRegisterForm(FlaskForm):
-    """Form to trigger automatic client registration with CSRF protection."""
+class DynamicRegistrationForm(FlaskForm):
+    """Form to trigger dynamic client registration with CSRF protection."""
 
     initial_access_token = StringField(
         "Initial access token:",

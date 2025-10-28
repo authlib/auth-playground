@@ -1,5 +1,5 @@
 <div class="buttons-right">
-    {% if token.refresh_token %}
+    {% if session.token.refresh_token %}
         <form method="POST" action="{{ url_for('routes.refresh') }}">
             {{ refresh_form.hidden_tag() }}
             {{ refresh_form.submit() }}
@@ -9,7 +9,7 @@
         <a href="{{ url_for('routes.login') }}" role="button">Sign in again</a>
         <a href="{{ url_for('routes.consent') }}" role="button">Consent again</a>
         <a href="{{ url_for('routes.logout_local') }}" role="button" class="secondary">Log out</a>
-        {% if supports_rp_initiated_logout %}
+        {% if g.server_config and g.server_config.specs and g.server_config.specs.oidc_rpinitiated_logout %}
             <a href="{{ url_for('routes.logout') }}" role="button" class="contrast">Server log out</a>
         {% endif %}
     </div>
@@ -17,14 +17,14 @@
 
 <section>
     <h2>Token information</h2>
-    <p>Here are the tokens received from the {{ server_display_name }}:</p>
+    <p>Here are the tokens received from the {{ g.server_config.display_name }}:</p>
 
-    {% if token.id_token and user %}
+    {% if session.token.id_token and session.user %}
         <article>
             <h3>ID token & user information</h3>
             <p><small>Contains user identity information in JWT format.</small></p>
             <div role="group">
-                <input type="text" value="{{ token.id_token }}" readonly aria-label="ID Token">
+                <input type="text" value="{{ session.token.id_token }}" readonly aria-label="ID Token">
                 <button type="button" class="copy-token-btn secondary">Copy</button>
             </div>
 
@@ -32,91 +32,91 @@
                 <div>
                     <h4>User claims</h4>
 
-                    {% if user.picture %}
-                        <img src="{{ user.picture }}" alt="User avatar" class="user-avatar">
+                    {% if session.user.picture %}
+                        <img src="{{ session.user.picture }}" alt="User avatar" class="user-avatar">
                     {% endif %}
 
                     <ul>
-                        {% if user.sub %}
-                            <li><strong data-tooltip="sub">User name:</strong> <code>{{ user.sub }}</code></li>
+                        {% if session.user.sub %}
+                            <li><strong data-tooltip="sub">User name:</strong> <code>{{ session.user.sub }}</code></li>
                         {% endif %}
 
-                        {% if user.preferred_username %}
-                            <li><strong data-tooltip="preferred_username">Display name:</strong> {{ user.preferred_username }}</li>
+                        {% if session.user.preferred_username %}
+                            <li><strong data-tooltip="preferred_username">Display name:</strong> {{ session.user.preferred_username }}</li>
                         {% endif %}
 
-                        {% if user.name %}
-                            <li><strong data-tooltip="name">Full name:</strong> {{ user.name }}</li>
+                        {% if session.user.name %}
+                            <li><strong data-tooltip="name">Full name:</strong> {{ session.user.name }}</li>
                         {% endif %}
 
-                        {% if user.given_name %}
-                            <li><strong data-tooltip="given_name">Given name:</strong> {{ user.given_name }}</li>
+                        {% if session.user.given_name %}
+                            <li><strong data-tooltip="given_name">Given name:</strong> {{ session.user.given_name }}</li>
                         {% endif %}
 
-                        {% if user.family_name %}
-                            <li><strong data-tooltip="family_name">Family name:</strong> {{ user.family_name }}</li>
+                        {% if session.user.family_name %}
+                            <li><strong data-tooltip="family_name">Family name:</strong> {{ session.user.family_name }}</li>
                         {% endif %}
 
-                        {% if user.email %}
-                            <li><strong data-tooltip="email">Email:</strong> <a href="mailto:{{ user.email }}">{{ user.email }}</a></li>
+                        {% if session.user.email %}
+                            <li><strong data-tooltip="email">Email:</strong> <a href="mailto:{{ session.user.email }}">{{ session.user.email }}</a></li>
                         {% endif %}
 
-                        {% if user.email_verified is defined %}
-                            <li><strong data-tooltip="email_verified">Email verified:</strong> {{ user.email_verified }}</li>
+                        {% if session.user.email_verified is defined %}
+                            <li><strong data-tooltip="email_verified">Email verified:</strong> {{ session.user.email_verified }}</li>
                         {% endif %}
 
-                        {% if user.phone_number %}
-                            <li><strong data-tooltip="phone_number">Phone:</strong> <a href="tel:{{ user.phone_number }}">{{ user.phone_number }}</a></li>
+                        {% if session.user.phone_number %}
+                            <li><strong data-tooltip="phone_number">Phone:</strong> <a href="tel:{{ session.user.phone_number }}">{{ session.user.phone_number }}</a></li>
                         {% endif %}
 
-                        {% if user.address %}
+                        {% if session.user.address %}
                             <li>
                                 <strong data-tooltip="address">Address:</strong>
                                 <ul>
-                                    {% if user.address.get("formatted") %}
-                                        <li>{{ user.address["formatted"] }}</li>
+                                    {% if session.user.address.get("formatted") %}
+                                        <li>{{ session.user.address["formatted"] }}</li>
                                     {% else %}
-                                        {% if user.address.get("street_address") %}
-                                            <li>{{ user.address["street_address"] }}</li>
+                                        {% if session.user.address.get("street_address") %}
+                                            <li>{{ session.user.address["street_address"] }}</li>
                                         {% endif %}
-                                        {% if user.address.get("postal_code") %}
-                                            <li>{{ user.address["postal_code"] }}</li>
+                                        {% if session.user.address.get("postal_code") %}
+                                            <li>{{ session.user.address["postal_code"] }}</li>
                                         {% endif %}
-                                        {% if user.address.get("locality") %}
-                                            <li>{{ user.address["locality"] }}</li>
+                                        {% if session.user.address.get("locality") %}
+                                            <li>{{ session.user.address["locality"] }}</li>
                                         {% endif %}
-                                        {% if user.address.get("region") %}
-                                            <li>{{ user.address["region"] }}</li>
+                                        {% if session.user.address.get("region") %}
+                                            <li>{{ session.user.address["region"] }}</li>
                                         {% endif %}
                                     {% endif %}
                                 </ul>
                             </li>
                         {% endif %}
 
-                        {% if user.locale %}
-                            <li><strong data-tooltip="locale">Locale:</strong> {{ user.locale }}</li>
+                        {% if session.user.locale %}
+                            <li><strong data-tooltip="locale">Locale:</strong> {{ session.user.locale }}</li>
                         {% endif %}
 
-                        {% if user.zoneinfo %}
-                            <li><strong data-tooltip="zoneinfo">Timezone:</strong> {{ user.zoneinfo }}</li>
+                        {% if session.user.zoneinfo %}
+                            <li><strong data-tooltip="zoneinfo">Timezone:</strong> {{ session.user.zoneinfo }}</li>
                         {% endif %}
 
-                        {% if user.birthdate %}
-                            <li><strong data-tooltip="birthdate">Birthdate:</strong> {{ user.birthdate }}</li>
+                        {% if session.user.birthdate %}
+                            <li><strong data-tooltip="birthdate">Birthdate:</strong> {{ session.user.birthdate }}</li>
                         {% endif %}
 
-                        {% if user.gender %}
-                            <li><strong data-tooltip="gender">Gender:</strong> {{ user.gender }}</li>
+                        {% if session.user.gender %}
+                            <li><strong data-tooltip="gender">Gender:</strong> {{ session.user.gender }}</li>
                         {% endif %}
 
-                        {% if user.website %}
-                            <li><strong data-tooltip="website">Website:</strong> <a href="{{ user.website }}" target="_blank">{{ user.website }}</a></li>
+                        {% if session.user.website %}
+                            <li><strong data-tooltip="website">Website:</strong> <a href="{{ session.user.website }}" target="_blank">{{ session.user.website }}</a></li>
                         {% endif %}
 
-                        {% if user.groups %}
+                        {% if session.user.groups %}
                             <li>
                                 <strong data-tooltip="groups">Groups:</strong>
-                                {% for group in user.groups %}
+                                {% for group in session.user.groups %}
                                     <kbd>{{ group }}</kbd>{% if not loop.last %}, {% endif %}
                                 {% endfor %}
                             </li>
@@ -128,62 +128,62 @@
                     <h4>Token metadata</h4>
 
                     <ul>
-                        {% if user.iss %}
-                            <li><strong data-tooltip="iss">Issuer:</strong> <code>{{ user.iss }}</code></li>
+                        {% if session.user.iss %}
+                            <li><strong data-tooltip="iss">Issuer:</strong> <code>{{ session.user.iss }}</code></li>
                         {% endif %}
 
-                        {% if user.aud %}
+                        {% if session.user.aud %}
                             <li>
                                 <strong data-tooltip="aud">Audience:</strong>
-                                {% if user.aud is string %}
-                                    <code>{{ user.aud }}</code>
+                                {% if session.user.aud is string %}
+                                    <code>{{ session.user.aud }}</code>
                                 {% else %}
-                                    {% for aud_item in user.aud %}
+                                    {% for aud_item in session.user.aud %}
                                         <code>{{ aud_item }}</code>{% if not loop.last %}, {% endif %}
                                     {% endfor %}
                                 {% endif %}
                             </li>
                         {% endif %}
 
-                        {% if user.auth_time %}
-                            <li><strong data-tooltip="auth_time">Auth time:</strong> {{ user.auth_time|datetimeformat }}</li>
+                        {% if session.user.auth_time %}
+                            <li><strong data-tooltip="auth_time">Auth time:</strong> {{ session.user.auth_time|datetimeformat }}</li>
                         {% endif %}
 
-                        {% if user.iat %}
-                            <li><strong data-tooltip="iat">Issued at:</strong> {{ user.iat|datetimeformat }}</li>
+                        {% if session.user.iat %}
+                            <li><strong data-tooltip="iat">Issued at:</strong> {{ session.user.iat|datetimeformat }}</li>
                         {% endif %}
 
-                        {% if user.exp %}
-                            <li><strong data-tooltip="exp">Expires at:</strong> {{ user.exp|datetimeformat }}</li>
+                        {% if session.user.exp %}
+                            <li><strong data-tooltip="exp">Expires at:</strong> {{ session.user.exp|datetimeformat }}</li>
                         {% endif %}
 
-                        {% if user.nonce %}
-                            <li><strong data-tooltip="nonce">Nonce:</strong> <code>{{ user.nonce }}</code></li>
+                        {% if session.user.nonce %}
+                            <li><strong data-tooltip="nonce">Nonce:</strong> <code>{{ session.user.nonce }}</code></li>
                         {% endif %}
 
-                        {% if user.at_hash %}
-                            <li><strong data-tooltip="at_hash">Access token hash:</strong> <code>{{ user.at_hash }}</code></li>
+                        {% if session.user.at_hash %}
+                            <li><strong data-tooltip="at_hash">Access token hash:</strong> <code>{{ session.user.at_hash }}</code></li>
                         {% endif %}
 
-                        {% if user.c_hash %}
-                            <li><strong data-tooltip="c_hash">Code hash:</strong> <code>{{ user.c_hash }}</code></li>
+                        {% if session.user.c_hash %}
+                            <li><strong data-tooltip="c_hash">Code hash:</strong> <code>{{ session.user.c_hash }}</code></li>
                         {% endif %}
 
-                        {% if user.acr %}
-                            <li><strong data-tooltip="acr">Auth context class:</strong> <code>{{ user.acr }}</code></li>
+                        {% if session.user.acr %}
+                            <li><strong data-tooltip="acr">Auth context class:</strong> <code>{{ session.user.acr }}</code></li>
                         {% endif %}
 
-                        {% if user.amr %}
+                        {% if session.user.amr %}
                             <li>
                                 <strong data-tooltip="amr">Auth methods:</strong>
-                                {% for method in user.amr %}
+                                {% for method in session.user.amr %}
                                     <code>{{ method }}</code>{% if not loop.last %}, {% endif %}
                                 {% endfor %}
                             </li>
                         {% endif %}
 
-                        {% if user.azp %}
-                            <li><strong data-tooltip="azp">Authorized party:</strong> <code>{{ user.azp }}</code></li>
+                        {% if session.user.azp %}
+                            <li><strong data-tooltip="azp">Authorized party:</strong> <code>{{ session.user.azp }}</code></li>
                         {% endif %}
                     </ul>
                 </div>
@@ -192,37 +192,37 @@
     {% endif %}
 
     <div class="grid">
-        {% if token.access_token %}
+        {% if session.token.access_token %}
             <article>
                 <h3>Access token</h3>
                 <p><small>Used to access protected resources on behalf of the user.</small></p>
                 <div role="group">
-                    <input type="text" value="{{ token.access_token }}" readonly aria-label="Access Token">
+                    <input type="text" value="{{ session.token.access_token }}" readonly aria-label="Access Token">
                     <button type="button" class="copy-token-btn secondary">Copy</button>
                 </div>
                 <ul>
-                    {% if token.token_type %}
-                        <li><strong>Token type:</strong> {{ token.token_type }}</li>
+                    {% if session.token.token_type %}
+                        <li><strong>Token type:</strong> {{ session.token.token_type }}</li>
                     {% endif %}
-                    {% if token.expires_in %}
-                        <li><strong>Expires in:</strong> {{ token.expires_in }} seconds</li>
+                    {% if session.token.expires_in %}
+                        <li><strong>Expires in:</strong> {{ session.token.expires_in }} seconds</li>
                     {% endif %}
-                    {% if token.expires_at %}
-                        <li><strong>Expires at:</strong> {{ token.expires_at|datetimeformat }}</li>
+                    {% if session.token.expires_at %}
+                        <li><strong>Expires at:</strong> {{ session.token.expires_at|datetimeformat }}</li>
                     {% endif %}
-                    {% if token.scope %}
-                        <li><strong>Scope:</strong> {{ token.scope }}</li>
+                    {% if session.token.scope %}
+                        <li><strong>Scope:</strong> {{ session.token.scope }}</li>
                     {% endif %}
                 </ul>
             </article>
         {% endif %}
 
-        {% if token.refresh_token %}
+        {% if session.token.refresh_token %}
             <article>
                 <h3>Refresh token</h3>
                 <p><small>Used to obtain new access tokens without re-authentication.</small></p>
                 <div role="group">
-                    <input type="text" value="{{ token.refresh_token }}" readonly aria-label="Refresh Token">
+                    <input type="text" value="{{ session.token.refresh_token }}" readonly aria-label="Refresh Token">
                     <button type="button" class="copy-token-btn secondary">Copy</button>
                 </div>
             </article>

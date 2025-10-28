@@ -1,7 +1,6 @@
 import pytest
 
 from auth_playground import create_app
-from auth_playground import setup_oauth
 
 
 @pytest.fixture
@@ -54,9 +53,6 @@ def app(iam_server, iam_client, unconfigured_app):
     unconfigured_app.config["OAUTH_CLIENT_ID"] = iam_client.client_id
     unconfigured_app.config["OAUTH_CLIENT_SECRET"] = iam_client.client_secret
     unconfigured_app.config["OAUTH_AUTH_SERVER"] = iam_server.url
-
-    setup_oauth(unconfigured_app)
-
     return unconfigured_app
 
 
