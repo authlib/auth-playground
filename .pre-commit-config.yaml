@@ -25,5 +25,5 @@ repos:
     - id: codespell
       additional_dependencies:
         - tomli
-      exclude: ".*\\.min\\..*|translations|\\.css$|^tests|fomanticui|doc/locales"
+      exclude: ".*\\.min\\..*|translations|\\.css$|^tests|fomanticui|doc/locales|auth-playground\\.spec"
       args: [--write-changes]

@@ -24,7 +24,7 @@ dependencies = [
 repository = "https://github.com/yaal-coop/auth-playground"
 
 [project.scripts]
-auth-playground = "auth_playground:main"
+auth-playground = "auth_playground.cli:run"
 
 [build-system]
 requires = ["uv_build>=0.9.5,<0.10.0"]
@@ -37,6 +37,10 @@ dev = [
     "pytest-coverage>=0.0",
     "pytest-iam>=0.2.4",
     "tox-uv>=1.29.0",
+]
+
+release = [
+    "pyinstaller>=6.11.1",
 ]
 
 [tool.coverage.run]
@@ -98,6 +102,7 @@ env_list = [
     "py313",
     "minversions",
     "coverage",
+    "binary",
 ]
 
 [tool.tox.env_run_base]
@@ -124,6 +129,15 @@ basepython = ["python3.10"]
 commands = [
     ["pytest", "--cov", "--cov-fail-under=100", "--cov-report", "term:skip-covered", "{posargs}"],
     ["coverage", "html"],
+]
+
+[tool.tox.env.binary]
+skip_install = true
+runner = "uv-venv-lock-runner"
+dependency_groups = ["release"]
+uv_sync_flags = ["--all-extras"]
+commands = [
+    ["pyinstaller", "--log-level", "WARN", "auth-playground.spec"],
 ]
 
 [tool.pytest.ini_options]

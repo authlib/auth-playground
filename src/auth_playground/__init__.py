@@ -4,7 +4,6 @@ import os
 from authlib.integrations.flask_client import OAuth
 from authlib.oidc.discovery import get_well_known_url
 from cachelib.simple import SimpleCache
-from dotenv import load_dotenv
 from flask import Flask
 from flask import session
 from flask_babel import Babel
@@ -167,13 +166,3 @@ def create_app():
         }
 
     return app
-
-
-def main():
-    """Run the Auth Playground application."""
-    load_dotenv()
-    app = create_app()
-    host = os.environ.get("FLASK_RUN_HOST", "0.0.0.0")
-    port = int(os.environ.get("FLASK_RUN_PORT", "4000"))
-    debug = os.environ.get("FLASK_DEBUG", "True").lower() == "true"
-    app.run(host=host, port=port, debug=debug)
