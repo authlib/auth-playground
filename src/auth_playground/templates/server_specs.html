@@ -1,9 +1,9 @@
 <details>
-    <summary role="button" class="outline">Server specifications</summary>
+    <summary role="button" class="outline">{% trans %}Server specifications{% endtrans %}</summary>
 
     {% if supported_specs %}
         <article>
-            <header><strong>Supported specifications ({{ supported_specs|length }})</strong></header>
+            <header><strong>{% trans count=supported_specs|length %}Supported specifications ({{ count }}){% endtrans %}</strong></header>
             <ul>
                 {% for spec_id, spec_name, spec_url in supported_specs %}
                     <li><code>{{ spec_id }}</code>: <a href="{{ spec_url }}" target="_blank" rel="noopener noreferrer">{{ spec_name }}</a></li>
@@ -14,7 +14,7 @@
 
     {% if unsupported_specs %}
         <details>
-            <summary role="button" class="outline secondary">Unsupported specifications ({{ unsupported_specs|length }})</summary>
+            <summary role="button" class="outline secondary">{% trans count=unsupported_specs|length %}Unsupported specifications ({{ count }}){% endtrans %}</summary>
             <ul>
                 {% for spec_id, spec_name, spec_url in unsupported_specs %}
                     <li><code>{{ spec_id }}</code>: <a href="{{ spec_url }}" target="_blank" rel="noopener noreferrer">{{ spec_name }}</a></li>
@@ -25,7 +25,7 @@
 
     {% if unknown_specs %}
         <details>
-            <summary role="button" class="outline contrast">Unknown specifications ({{ unknown_specs|length }})</summary>
+            <summary role="button" class="outline contrast">{% trans count=unknown_specs|length %}Unknown specifications ({{ count }}){% endtrans %}</summary>
             <ul>
                 {% for spec_id, spec_name, spec_url in unknown_specs %}
                     <li><code>{{ spec_id }}</code>: <a href="{{ spec_url }}" target="_blank" rel="noopener noreferrer">{{ spec_name }}</a></li>

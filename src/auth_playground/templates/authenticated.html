@@ -1,36 +1,19 @@
-<div class="buttons-right">
-    {% if session.token.refresh_token %}
-        <form method="POST" action="{{ url_for('routes.refresh') }}">
-            {{ refresh_form.hidden_tag() }}
-            {{ refresh_form.submit() }}
-        </form>
-    {% endif %}
-    <div role="group">
-        <a href="{{ url_for('routes.login') }}" role="button">Sign in again</a>
-        <a href="{{ url_for('routes.consent') }}" role="button">Consent again</a>
-        <a href="{{ url_for('routes.logout_local') }}" role="button" class="secondary">Log out</a>
-        {% if g.server_config and g.server_config.specs and g.server_config.specs.oidc_rpinitiated_logout %}
-            <a href="{{ url_for('routes.logout') }}" role="button" class="contrast">Server log out</a>
-        {% endif %}
-    </div>
-</div>
-
 <section>
-    <h2>Token information</h2>
-    <p>Here are the tokens received from the {{ g.server_config.display_name }}:</p>
+    <h2>{% trans %}Token information{% endtrans %}</h2>
+    <p>{% trans display_name=g.server_config.display_name %}Here are the tokens received from the {{ display_name }}:{% endtrans %}</p>
 
     {% if session.token.id_token and session.user %}
         <article>
-            <h3>ID token & user information</h3>
-            <p><small>Contains user identity information in JWT format.</small></p>
+            <h3>{% trans %}ID token & user information{% endtrans %}</h3>
+            <p><small>{% trans %}Contains user identity information in JWT format.{% endtrans %}</small></p>
             <div role="group">
                 <input type="text" value="{{ session.token.id_token }}" readonly aria-label="ID Token">
-                <button type="button" class="copy-token-btn secondary">Copy</button>
+                <button type="button" class="copy-token-btn secondary">{% trans %}Copy{% endtrans %}</button>
             </div>
 
             <div class="grid">
                 <div>
-                    <h4>User claims</h4>
+                    <h4>{% trans %}User claims{% endtrans %}</h4>
 
                     {% if session.user.picture %}
                         <img src="{{ session.user.picture }}" alt="User avatar" class="user-avatar">
@@ -38,40 +21,40 @@
 
                     <ul>
                         {% if session.user.sub %}
-                            <li><strong data-tooltip="sub">User name:</strong> <code>{{ session.user.sub }}</code></li>
+                            <li><strong data-tooltip="sub">{% trans %}User name:{% endtrans %}</strong> <code>{{ session.user.sub }}</code></li>
                         {% endif %}
 
                         {% if session.user.preferred_username %}
-                            <li><strong data-tooltip="preferred_username">Display name:</strong> {{ session.user.preferred_username }}</li>
+                            <li><strong data-tooltip="preferred_username">{% trans %}Display name:{% endtrans %}</strong> {{ session.user.preferred_username }}</li>
                         {% endif %}
 
                         {% if session.user.name %}
-                            <li><strong data-tooltip="name">Full name:</strong> {{ session.user.name }}</li>
+                            <li><strong data-tooltip="name">{% trans %}Full name:{% endtrans %}</strong> {{ session.user.name }}</li>
                         {% endif %}
 
                         {% if session.user.given_name %}
-                            <li><strong data-tooltip="given_name">Given name:</strong> {{ session.user.given_name }}</li>
+                            <li><strong data-tooltip="given_name">{% trans %}Given name:{% endtrans %}</strong> {{ session.user.given_name }}</li>
                         {% endif %}
 
                         {% if session.user.family_name %}
-                            <li><strong data-tooltip="family_name">Family name:</strong> {{ session.user.family_name }}</li>
+                            <li><strong data-tooltip="family_name">{% trans %}Family name:{% endtrans %}</strong> {{ session.user.family_name }}</li>
                         {% endif %}
 
                         {% if session.user.email %}
-                            <li><strong data-tooltip="email">Email:</strong> <a href="mailto:{{ session.user.email }}">{{ session.user.email }}</a></li>
+                            <li><strong data-tooltip="email">{% trans %}Email:{% endtrans %}</strong> <a href="mailto:{{ session.user.email }}">{{ session.user.email }}</a></li>
                         {% endif %}
 
                         {% if session.user.email_verified is defined %}
-                            <li><strong data-tooltip="email_verified">Email verified:</strong> {{ session.user.email_verified }}</li>
+                            <li><strong data-tooltip="email_verified">{% trans %}Email verified:{% endtrans %}</strong> {{ session.user.email_verified }}</li>
                         {% endif %}
 
                         {% if session.user.phone_number %}
-                            <li><strong data-tooltip="phone_number">Phone:</strong> <a href="tel:{{ session.user.phone_number }}">{{ session.user.phone_number }}</a></li>
+                            <li><strong data-tooltip="phone_number">{% trans %}Phone:{% endtrans %}</strong> <a href="tel:{{ session.user.phone_number }}">{{ session.user.phone_number }}</a></li>
                         {% endif %}
 
                         {% if session.user.address %}
                             <li>
-                                <strong data-tooltip="address">Address:</strong>
+                                <strong data-tooltip="address">{% trans %}Address:{% endtrans %}</strong>
                                 <ul>
                                     {% if session.user.address.get("formatted") %}
                                         <li>{{ session.user.address["formatted"] }}</li>
@@ -94,28 +77,28 @@
                         {% endif %}
 
                         {% if session.user.locale %}
-                            <li><strong data-tooltip="locale">Locale:</strong> {{ session.user.locale }}</li>
+                            <li><strong data-tooltip="locale">{% trans %}Locale:{% endtrans %}</strong> {{ session.user.locale }}</li>
                         {% endif %}
 
                         {% if session.user.zoneinfo %}
-                            <li><strong data-tooltip="zoneinfo">Timezone:</strong> {{ session.user.zoneinfo }}</li>
+                            <li><strong data-tooltip="zoneinfo">{% trans %}Timezone:{% endtrans %}</strong> {{ session.user.zoneinfo }}</li>
                         {% endif %}
 
                         {% if session.user.birthdate %}
-                            <li><strong data-tooltip="birthdate">Birthdate:</strong> {{ session.user.birthdate }}</li>
+                            <li><strong data-tooltip="birthdate">{% trans %}Birthdate:{% endtrans %}</strong> {{ session.user.birthdate }}</li>
                         {% endif %}
 
                         {% if session.user.gender %}
-                            <li><strong data-tooltip="gender">Gender:</strong> {{ session.user.gender }}</li>
+                            <li><strong data-tooltip="gender">{% trans %}Gender:{% endtrans %}</strong> {{ session.user.gender }}</li>
                         {% endif %}
 
                         {% if session.user.website %}
-                            <li><strong data-tooltip="website">Website:</strong> <a href="{{ session.user.website }}" target="_blank">{{ session.user.website }}</a></li>
+                            <li><strong data-tooltip="website">{% trans %}Website:{% endtrans %}</strong> <a href="{{ session.user.website }}" target="_blank">{{ session.user.website }}</a></li>
                         {% endif %}
 
                         {% if session.user.groups %}
                             <li>
-                                <strong data-tooltip="groups">Groups:</strong>
+                                <strong data-tooltip="groups">{% trans %}Groups:{% endtrans %}</strong>
                                 {% for group in session.user.groups %}
                                     <kbd>{{ group }}</kbd>{% if not loop.last %}, {% endif %}
                                 {% endfor %}
@@ -125,16 +108,16 @@
                 </div>
 
                 <div>
-                    <h4>Token metadata</h4>
+                    <h4>{% trans %}Token metadata{% endtrans %}</h4>
 
                     <ul>
                         {% if session.user.iss %}
-                            <li><strong data-tooltip="iss">Issuer:</strong> <code>{{ session.user.iss }}</code></li>
+                            <li><strong data-tooltip="iss">{% trans %}Issuer:{% endtrans %}</strong> <code>{{ session.user.iss }}</code></li>
                         {% endif %}
 
                         {% if session.user.aud %}
                             <li>
-                                <strong data-tooltip="aud">Audience:</strong>
+                                <strong data-tooltip="aud">{% trans %}Audience:{% endtrans %}</strong>
                                 {% if session.user.aud is string %}
                                     <code>{{ session.user.aud }}</code>
                                 {% else %}
@@ -146,36 +129,36 @@
                         {% endif %}
 
                         {% if session.user.auth_time %}
-                            <li><strong data-tooltip="auth_time">Auth time:</strong> {{ session.user.auth_time|datetimeformat }}</li>
+                            <li><strong data-tooltip="auth_time">{% trans %}Auth time:{% endtrans %}</strong> {{ session.user.auth_time|datetimeformat }}</li>
                         {% endif %}
 
                         {% if session.user.iat %}
-                            <li><strong data-tooltip="iat">Issued at:</strong> {{ session.user.iat|datetimeformat }}</li>
+                            <li><strong data-tooltip="iat">{% trans %}Issued at:{% endtrans %}</strong> {{ session.user.iat|datetimeformat }}</li>
                         {% endif %}
 
                         {% if session.user.exp %}
-                            <li><strong data-tooltip="exp">Expires at:</strong> {{ session.user.exp|datetimeformat }}</li>
+                            <li><strong data-tooltip="exp">{% trans %}Expires at:{% endtrans %}</strong> {{ session.user.exp|datetimeformat }}</li>
                         {% endif %}
 
                         {% if session.user.nonce %}
-                            <li><strong data-tooltip="nonce">Nonce:</strong> <code>{{ session.user.nonce }}</code></li>
+                            <li><strong data-tooltip="nonce">{% trans %}Nonce:{% endtrans %}</strong> <code>{{ session.user.nonce }}</code></li>
                         {% endif %}
 
                         {% if session.user.at_hash %}
-                            <li><strong data-tooltip="at_hash">Access token hash:</strong> <code>{{ session.user.at_hash }}</code></li>
+                            <li><strong data-tooltip="at_hash">{% trans %}Access token hash:{% endtrans %}</strong> <code>{{ session.user.at_hash }}</code></li>
                         {% endif %}
 
                         {% if session.user.c_hash %}
-                            <li><strong data-tooltip="c_hash">Code hash:</strong> <code>{{ session.user.c_hash }}</code></li>
+                            <li><strong data-tooltip="c_hash">{% trans %}Code hash:{% endtrans %}</strong> <code>{{ session.user.c_hash }}</code></li>
                         {% endif %}
 
                         {% if session.user.acr %}
-                            <li><strong data-tooltip="acr">Auth context class:</strong> <code>{{ session.user.acr }}</code></li>
+                            <li><strong data-tooltip="acr">{% trans %}Auth context class:{% endtrans %}</strong> <code>{{ session.user.acr }}</code></li>
                         {% endif %}
 
                         {% if session.user.amr %}
                             <li>
-                                <strong data-tooltip="amr">Auth methods:</strong>
+                                <strong data-tooltip="amr">{% trans %}Auth methods:{% endtrans %}</strong>
                                 {% for method in session.user.amr %}
                                     <code>{{ method }}</code>{% if not loop.last %}, {% endif %}
                                 {% endfor %}
@@ -183,7 +166,7 @@
                         {% endif %}
 
                         {% if session.user.azp %}
-                            <li><strong data-tooltip="azp">Authorized party:</strong> <code>{{ session.user.azp }}</code></li>
+                            <li><strong data-tooltip="azp">{% trans %}Authorized party:{% endtrans %}</strong> <code>{{ session.user.azp }}</code></li>
                         {% endif %}
                     </ul>
                 </div>
@@ -194,24 +177,24 @@
     <div class="grid">
         {% if session.token.access_token %}
             <article>
-                <h3>Access token</h3>
-                <p><small>Used to access protected resources on behalf of the user.</small></p>
+                <h3>{% trans %}Access token{% endtrans %}</h3>
+                <p><small>{% trans %}Used to access protected resources on behalf of the user.{% endtrans %}</small></p>
                 <div role="group">
                     <input type="text" value="{{ session.token.access_token }}" readonly aria-label="Access Token">
-                    <button type="button" class="copy-token-btn secondary">Copy</button>
+                    <button type="button" class="copy-token-btn secondary">{% trans %}Copy{% endtrans %}</button>
                 </div>
                 <ul>
                     {% if session.token.token_type %}
-                        <li><strong>Token type:</strong> {{ session.token.token_type }}</li>
+                        <li><strong>{% trans %}Token type:{% endtrans %}</strong> {{ session.token.token_type }}</li>
                     {% endif %}
                     {% if session.token.expires_in %}
-                        <li><strong>Expires in:</strong> {{ session.token.expires_in }} seconds</li>
+                        <li><strong>{% trans %}Expires in:{% endtrans %}</strong> {% trans seconds=session.token.expires_in %}{{ seconds }} seconds{% endtrans %}</li>
                     {% endif %}
                     {% if session.token.expires_at %}
-                        <li><strong>Expires at:</strong> {{ session.token.expires_at|datetimeformat }}</li>
+                        <li><strong>{% trans %}Expires at:{% endtrans %}</strong> {{ session.token.expires_at|datetimeformat }}</li>
                     {% endif %}
                     {% if session.token.scope %}
-                        <li><strong>Scope:</strong> {{ session.token.scope }}</li>
+                        <li><strong>{% trans %}Scope:{% endtrans %}</strong> {{ session.token.scope }}</li>
                     {% endif %}
                 </ul>
             </article>
@@ -219,11 +202,11 @@
 
         {% if session.token.refresh_token %}
             <article>
-                <h3>Refresh token</h3>
-                <p><small>Used to obtain new access tokens without re-authentication.</small></p>
+                <h3>{% trans %}Refresh token{% endtrans %}</h3>
+                <p><small>{% trans %}Used to obtain new access tokens without re-authentication.{% endtrans %}</small></p>
                 <div role="group">
                     <input type="text" value="{{ session.token.refresh_token }}" readonly aria-label="Refresh Token">
-                    <button type="button" class="copy-token-btn secondary">Copy</button>
+                    <button type="button" class="copy-token-btn secondary">{% trans %}Copy{% endtrans %}</button>
                 </div>
             </article>
         {% endif %}

@@ -1,14 +1,14 @@
 {% extends "layout.html" %}
 
-{% block title %}Configure Identity Server{% endblock %}
+{% block title %}{% trans %}Configure Identity Server{% endtrans %}{% endblock %}
 
 {% block content %}
     <article>
         <header>
-            <h2>Choose an identity provider</h2>
+            <h2>{% trans %}Choose an identity provider{% endtrans %}</h2>
         </header>
 
-        <p>Enter the URL of your OpenID Connect identity provider to validate it and discover configuration options.</p>
+        <p>{% trans %}Enter the URL of your OpenID Connect identity provider to validate it and discover configuration options.{% endtrans %}</p>
 
         <form method="POST" action="{{ url_for('routes.configure_server') }}">
             {{ form.hidden_tag() }}
@@ -30,14 +30,14 @@
         </form>
 
         <details>
-            <summary role="button" class="outline">What happens next?</summary>
+            <summary role="button" class="outline">{% trans %}What happens next?{% endtrans %}</summary>
             <ol>
-                <li>Auth Playground will fetch the server's OIDC metadata from <code>/.well-known/openid-configuration</code></li>
-                <li>If valid, Auth Playground will show you multiple configuration options:
+                <li>{% trans %}Auth Playground will fetch the server's OIDC metadata from{% endtrans %} <code>/.well-known/openid-configuration</code></li>
+                <li>{% trans %}If valid, Auth Playground will show you multiple configuration options:{% endtrans %}
                     <ul>
-                        <li>Automatic registration (if supported)</li>
-                        <li>Manual configuration via web form</li>
-                        <li>Environment variables setup</li>
+                        <li>{% trans %}Automatic registration (if supported){% endtrans %}</li>
+                        <li>{% trans %}Manual configuration via web form{% endtrans %}</li>
+                        <li>{% trans %}Environment variables setup{% endtrans %}</li>
                     </ul>
                 </li>
             </ol>

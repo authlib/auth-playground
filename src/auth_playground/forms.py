@@ -1,4 +1,5 @@
 from flask import current_app
+from flask_babel import lazy_gettext as _
 from flask_wtf import FlaskForm
 from wtforms import PasswordField
 from wtforms import StringField
@@ -11,7 +12,7 @@ from wtforms.validators import Length
 class RefreshTokenForm(FlaskForm):
     """Form to refresh access token using refresh token."""
 
-    submit = SubmitField("Renew tokens")
+    submit = SubmitField(_("Renew tokens"))
 
 
 def validate_issuer_url(form, field):
@@ -19,17 +20,17 @@ def validate_issuer_url(form, field):
     url = field.data
 
     if not url:
-        raise ValidationError("Identity Provider URL is required")
+        raise ValidationError(_("Identity Provider URL is required"))
 
     if not url.startswith(("http://", "https://")):
-        raise ValidationError("URL must start with http:// or https://")
+        raise ValidationError(_("URL must start with http:// or https://"))
 
     is_debug = current_app.debug
     is_testing = current_app.testing
 
     if url.startswith("http://") and not (is_debug or is_testing):
         raise ValidationError(
-            "HTTP is only allowed in debug or testing mode. Use HTTPS in production."
+            _("HTTP is only allowed in debug or testing mode. Use HTTPS in production.")
         )
 
 
@@ -37,55 +38,57 @@ class ServerConfigForm(FlaskForm):
     """Form to configure the Identity Provider server URL."""
 
     issuer_url = StringField(
-        "Identity Provider URL:",
+        _("Identity Provider URL:"),
         validators=[
-            DataRequired(message="Identity Provider URL is required"),
+            DataRequired(message=_("Identity Provider URL is required")),
             validate_issuer_url,
         ],
-        description="Enter the base URL of your OIDC/OAuth2 provider (e.g., https://auth.example.com)",
+        description=_(
+            "Enter the base URL of your OIDC/OAuth2 provider (e.g., https://auth.example.com)"
+        ),
         render_kw={"placeholder": "https://auth.example.com", "type": "url"},
     )
-    submit = SubmitField("Continue")
+    submit = SubmitField(_("Continue"))
 
 
 class ClientConfigForm(FlaskForm):
     """Form to configure OAuth client credentials manually."""
 
     client_id = StringField(
-        "Client ID:",
+        _("Client ID:"),
         validators=[
-            DataRequired(message="Client ID is required"),
+            DataRequired(message=_("Client ID is required")),
             Length(
                 min=1,
                 max=255,
-                message="Client ID must be between 1 and 255 characters",
+                message=_("Client ID must be between 1 and 255 characters"),
             ),
         ],
         render_kw={"placeholder": "auth-playground-client"},
     )
     client_secret = PasswordField(
-        "Client secret:",
+        _("Client secret:"),
         validators=[
-            DataRequired(message="Client Secret is required"),
-            Length(min=1, message="Client Secret is required"),
+            DataRequired(message=_("Client Secret is required")),
+            Length(min=1, message=_("Client Secret is required")),
         ],
         render_kw={"placeholder": "******************"},
     )
-    submit = SubmitField("Complete Configuration")
+    submit = SubmitField(_("Complete Configuration"))
 
 
 class DynamicRegistrationForm(FlaskForm):
     """Form to trigger dynamic client registration with CSRF protection."""
 
     initial_access_token = StringField(
-        "Initial access token:",
+        _("Initial access token:"),
         validators=[],
-        render_kw={"placeholder": "Leave empty if not required"},
+        render_kw={"placeholder": _("Leave empty if not required")},
     )
-    submit = SubmitField("Register client")
+    submit = SubmitField(_("Register client"))
 
 
 class UnregisterClientForm(FlaskForm):
     """Form to trigger client unregistration with CSRF protection."""
 
-    submit = SubmitField("Unregister client")
+    submit = SubmitField(_("Unregister client"))

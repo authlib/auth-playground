@@ -1,104 +1,104 @@
 {% extends "layout.html" %}
 
-{% block title %}Privacy Policy{% endblock %}
+{% block title %}{% trans %}Privacy Policy{% endtrans %}{% endblock %}
 
-{% block footer_text %}Auth Playground - Educational Tool{% endblock %}
+{% block footer_text %}{% trans %}Auth Playground - Educational Tool{% endtrans %}{% endblock %}
 
 {% block content %}
     <article>
         <header>
-            <h2>Privacy Policy</h2>
+            <h2>{% trans %}Privacy Policy{% endtrans %}</h2>
         </header>
 
         <section>
-            <h3>Overview</h3>
+            <h3>{% trans %}Overview{% endtrans %}</h3>
             <p>
-                Auth Playground is a <strong>demonstration tool</strong> for OpenID Connect authentication.
-                As this is a self-hosted application, you control all aspects of data handling.
+                {% trans %}Auth Playground is a <strong>demonstration tool</strong> for OpenID Connect authentication.
+                    As this is a self-hosted application, you control all aspects of data handling.{% endtrans %}
             </p>
         </section>
 
         <section>
-            <h3>What Data Is Handled</h3>
+            <h3>{% trans %}What Data Is Handled{% endtrans %}</h3>
             <p>
-                When you authenticate through Auth Playground, the following information is received from your
-                identity provider:
+                {% trans %}When you authenticate through Auth Playground, the following information is received from your
+                    identity provider:{% endtrans %}
             </p>
             <ul>
-                <li><strong>Access token:</strong> Used to access protected resources</li>
-                <li><strong>Refresh token:</strong> Used to obtain new access tokens (if provided)</li>
-                <li><strong>ID token:</strong> Contains your identity information in JWT format</li>
-                <li><strong>User information:</strong> Profile data such as name, email, phone, address, groups, etc.</li>
+                <li><strong>{% trans %}Access token:{% endtrans %}</strong> {% trans %}Used to access protected resources{% endtrans %}</li>
+                <li><strong>{% trans %}Refresh token:{% endtrans %}</strong> {% trans %}Used to obtain new access tokens (if provided){% endtrans %}</li>
+                <li><strong>{% trans %}ID token:{% endtrans %}</strong> {% trans %}Contains your identity information in JWT format{% endtrans %}</li>
+                <li><strong>{% trans %}User information:{% endtrans %}</strong> {% trans %}Profile data such as name, email, phone, address, groups, etc.{% endtrans %}</li>
             </ul>
             <p>
-                The exact data received depends on the scopes requested and what your identity provider shares.
+                {% trans %}The exact data received depends on the scopes requested and what your identity provider shares.{% endtrans %}
             </p>
         </section>
 
         <section>
-            <h3>How Data Is Stored</h3>
+            <h3>{% trans %}How Data Is Stored{% endtrans %}</h3>
             <p>
-                <mark>All authentication data is stored server-side in memory.</mark>
+                {% trans %}<mark>All authentication data is stored server-side in memory.</mark>{% endtrans %}
             </p>
             <ul>
-                <li>Data is stored in <strong>server memory</strong> (RAM) only</li>
-                <li>A secure session cookie is sent to your browser (containing only a session ID, not the actual data)</li>
-                <li>No database, files, or permanent storage is used</li>
-                <li>All session data is lost when the application restarts</li>
-                <li>Data is cleared when you log out</li>
-                <li>Sessions expire according to Flask's default session timeout</li>
-            </ul>
-        </section>
-
-        <section>
-            <h3>Data Sharing</h3>
-            <p>
-                Auth Playground does not:
-            </p>
-            <ul>
-                <li>Share your data with third parties</li>
-                <li>Send data to external services</li>
-                <li>Store data permanently</li>
-                <li>Track your usage</li>
-                <li>Use analytics or advertising</li>
-            </ul>
-            <p>
-                The only external communication is with your configured identity provider for authentication purposes.
-            </p>
-        </section>
-
-        <section>
-            <h3>Security Considerations</h3>
-            <p>
-                <strong>Important:</strong> Auth Playground is designed for development and testing.
-            </p>
-            <ul>
-                <li>Use only <strong>test accounts</strong>, not real user accounts</li>
-                <li>Do not use sensitive or production data</li>
-                <li>Ensure your deployment is properly secured (HTTPS, firewall, etc.)</li>
-                <li>Change the default <code>SECRET_KEY</code> environment variable</li>
-                <li>Review and understand the security implications of your setup</li>
+                <li>{% trans %}Data is stored in <strong>server memory</strong> (RAM) only{% endtrans %}</li>
+                <li>{% trans %}A secure session cookie is sent to your browser (containing only a session ID, not the actual data){% endtrans %}</li>
+                <li>{% trans %}No database, files, or permanent storage is used{% endtrans %}</li>
+                <li>{% trans %}All session data is lost when the application restarts{% endtrans %}</li>
+                <li>{% trans %}Data is cleared when you log out{% endtrans %}</li>
+                <li>{% trans %}Sessions expire according to Flask's default session timeout{% endtrans %}</li>
             </ul>
         </section>
 
         <section>
-            <h3>Your Rights</h3>
+            <h3>{% trans %}Data Sharing{% endtrans %}</h3>
             <p>
-                As this is a self-hosted application, you have complete control:
+                {% trans %}Auth Playground does not:{% endtrans %}
             </p>
             <ul>
-                <li>You can log out at any time to clear your session data</li>
-                <li>You control who has access to your deployment</li>
-                <li>You can review the source code to understand data handling</li>
-                <li>You can modify the application to suit your needs</li>
+                <li>{% trans %}Share your data with third parties{% endtrans %}</li>
+                <li>{% trans %}Send data to external services{% endtrans %}</li>
+                <li>{% trans %}Store data permanently{% endtrans %}</li>
+                <li>{% trans %}Track your usage{% endtrans %}</li>
+                <li>{% trans %}Use analytics or advertising{% endtrans %}</li>
+            </ul>
+            <p>
+                {% trans %}The only external communication is with your configured identity provider for authentication purposes.{% endtrans %}
+            </p>
+        </section>
+
+        <section>
+            <h3>{% trans %}Security Considerations{% endtrans %}</h3>
+            <p>
+                <strong>{% trans %}Important:{% endtrans %}</strong> {% trans %}Auth Playground is designed for development and testing.{% endtrans %}
+            </p>
+            <ul>
+                <li>{% trans %}Use only <strong>test accounts</strong>, not real user accounts{% endtrans %}</li>
+                <li>{% trans %}Do not use sensitive or production data{% endtrans %}</li>
+                <li>{% trans %}Ensure your deployment is properly secured (HTTPS, firewall, etc.){% endtrans %}</li>
+                <li>{% trans %}Change the default{% endtrans %} <code>SECRET_KEY</code> {% trans %}environment variable{% endtrans %}</li>
+                <li>{% trans %}Review and understand the security implications of your setup{% endtrans %}</li>
             </ul>
         </section>
 
         <section>
-            <h3>Identity Provider's Privacy Policy</h3>
+            <h3>{% trans %}Your Rights{% endtrans %}</h3>
             <p>
-                Your identity provider may have its own privacy policy regarding the data they collect and share.
-                Please review their privacy policy for information about how they handle your data.
+                {% trans %}As this is a self-hosted application, you have complete control:{% endtrans %}
+            </p>
+            <ul>
+                <li>{% trans %}You can log out at any time to clear your session data{% endtrans %}</li>
+                <li>{% trans %}You control who has access to your deployment{% endtrans %}</li>
+                <li>{% trans %}You can review the source code to understand data handling{% endtrans %}</li>
+                <li>{% trans %}You can modify the application to suit your needs{% endtrans %}</li>
+            </ul>
+        </section>
+
+        <section>
+            <h3>{% trans %}Identity Provider's Privacy Policy{% endtrans %}</h3>
+            <p>
+                {% trans %}Your identity provider may have its own privacy policy regarding the data they collect and share.
+                    Please review their privacy policy for information about how they handle your data.{% endtrans %}
             </p>
         </section>
     </article>

@@ -1,13 +1,13 @@
 {% extends "layout.html" %}
 
-{% block title %}Server Specifications{% endblock %}
+{% block title %}{% trans %}Server Specifications{% endtrans %}{% endblock %}
 
 {% block content %}
-    <h2>Server Specifications</h2>
+    <h2>{% trans %}Server Specifications{% endtrans %}</h2>
 
     {% if supported_specs %}
         <article>
-            <header><h3>Supported specifications ({{ supported_specs|length }})</h3></header>
+            <header><h3>{% trans count=supported_specs|length %}Supported specifications ({{ count }}){% endtrans %}</h3></header>
             <ul>
                 {% for spec_id, spec_name, spec_url in supported_specs %}
                     <li><code>{{ spec_id }}</code>: <a href="{{ spec_url }}" target="_blank" rel="noopener noreferrer">{{ spec_name }}</a></li>
@@ -18,7 +18,7 @@
 
     {% if unsupported_specs %}
         <article>
-            <header><h3>Unsupported specifications ({{ unsupported_specs|length }})</h3></header>
+            <header><h3>{% trans count=unsupported_specs|length %}Unsupported specifications ({{ count }}){% endtrans %}</h3></header>
             <ul>
                 {% for spec_id, spec_name, spec_url in unsupported_specs %}
                     <li><code>{{ spec_id }}</code>: <a href="{{ spec_url }}" target="_blank" rel="noopener noreferrer">{{ spec_name }}</a></li>
@@ -29,7 +29,7 @@
 
     {% if unknown_specs %}
         <article>
-            <header><h3>Unknown specifications ({{ unknown_specs|length }})</h3></header>
+            <header><h3>{% trans count=unknown_specs|length %}Unknown specifications ({{ count }}){% endtrans %}</h3></header>
             <ul>
                 {% for spec_id, spec_name, spec_url in unknown_specs %}
                     <li><code>{{ spec_id }}</code>: <a href="{{ spec_url }}" target="_blank" rel="noopener noreferrer">{{ spec_name }}</a></li>

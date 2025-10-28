@@ -1,33 +1,33 @@
 <article>
     <header>
-        <h2>Static configuration</h2>
+        <h2>{% trans %}Static configuration{% endtrans %}</h2>
     </header>
 
-    <p>If you prefer to configure Auth Playground via environment variables without validating the server first, you can set them directly and restart the application.</p>
+    <p>{% trans %}If you prefer to configure Auth Playground via environment variables without validating the server first, you can set them directly and restart the application.{% endtrans %}</p>
 
     <ol>
-        <li>Create an OAuth client on your identity provider
+        <li>{% trans %}Create an OAuth client on your identity provider{% endtrans %}
             <details>
-                <summary role="button" class="outline">What configuration details do I need?</summary>
-                <p>Configure these URIs in your OAuth client:</p>
-                <p><strong>Redirect URIs (<code>redirect_uris</code>):</strong></p>
+                <summary role="button" class="outline">{% trans %}What configuration details do I need?{% endtrans %}</summary>
+                <p>{% trans %}Configure these URIs in your OAuth client:{% endtrans %}</p>
+                <p><strong>{% trans %}Redirect URIs{% endtrans %} (<code>redirect_uris</code>):</strong></p>
                 <ul>
                     <li><code>{{ url_for('routes.login_callback', _external=True) }}</code></li>
                     <li><code>{{ url_for('routes.register_callback', _external=True) }}</code></li>
                 </ul>
-                <p><strong>Post-Logout Redirect URIs (<code>post_logout_redirect_uris</code>):</strong></p>
+                <p><strong>{% trans %}Post-Logout Redirect URIs{% endtrans %} (<code>post_logout_redirect_uris</code>):</strong></p>
                 <ul>
                     <li><code>{{ url_for('routes.logout_callback', _external=True) }}</code></li>
                 </ul>
             </details>
 
         </li>
-        <li>Set the following environment variables in a <code>.env</code> file or by exporting them in your shell:
+        <li>{% trans %}Set the following environment variables in a{% endtrans %} <code>.env</code> {% trans %}file or by exporting them in your shell:{% endtrans %}
             <pre><code>OAUTH_CLIENT_ID="your-client-id"
 OAUTH_CLIENT_SECRET="your-client-secret"
 OAUTH_AUTH_SERVER="https://your-idp.example.com"</code></pre>
         </li>
 
-        <li>Restart the application</li>
+        <li>{% trans %}Restart the application{% endtrans %}</li>
     </ol>
 </article>

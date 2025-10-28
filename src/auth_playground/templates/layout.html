@@ -16,17 +16,17 @@
             <div class="grid">
                 <hgroup>
                     <h1><a href="{{ url_for('routes.index') }}">{{ config.NAME }}</a></h1>
-                    <p>OAuth 2.0 Demonstration Client</p>
+                    <p>{% trans %}OAuth 2.0 Demonstration Client{% endtrans %}</p>
                 </hgroup>
                 <hgroup>
                     {% if g.server_config and g.server_config.issuer_url %}
                         <h1><a href="{{ g.server_config.issuer_url }}" target="_blank">{{ g.server_config.issuer_url|replace('https://', '')|replace('http://', '') }}</a></h1>
                         <p>
                             {{ g.server_config.display_name }}
-                            • <a href="{{ url_for('routes.playground') }}">playground</a>
-                            • <a href="{{ url_for('routes.specs') }}">specs</a>
+                            • <a href="{{ url_for('routes.playground') }}">{% trans %}playground{% endtrans %}</a>
+                            • <a href="{{ url_for('routes.specs') }}">{% trans %}specs{% endtrans %}</a>
                             {% if not config.OAUTH_AUTH_SERVER %}
-                                • <a href="{{ url_for('routes.configure_server') }}">switch</a>
+                                • <a href="{{ url_for('routes.configure_server') }}">{% trans %}switch{% endtrans %}</a>
                             {% endif %}
                         </p>
                     {% elif config.OAUTH_AUTH_SERVER %}
@@ -58,11 +58,11 @@
             <p>
                 <small>Auth Playground <a href="{{ repository_url }}" target="_blank" rel="noopener noreferrer">v{{ app_version }}</a></small>
                 •
-                <small><a href="{{ url_for('routes.tos') }}">Terms of Service</a></small>
+                <small><a href="{{ url_for('routes.tos') }}">{% trans %}Terms of Service{% endtrans %}</a></small>
                 •
-                <small><a href="{{ url_for('routes.policy') }}">Privacy Policy</a></small>
+                <small><a href="{{ url_for('routes.policy') }}">{% trans %}Privacy Policy{% endtrans %}</a></small>
                 •
-                <small>{% block footer_text %}Powered by <a href="https://authlib.org" target="_blank">Authlib</a>{% endblock %}</small>
+                <small>{% block footer_text %}{% trans %}Powered by{% endtrans %} <a href="https://authlib.org" target="_blank">Authlib</a>{% endblock %}</small>
             </p>
         </footer>
 

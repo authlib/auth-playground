@@ -12,6 +12,7 @@ from flask import redirect
 from flask import render_template
 from flask import session
 from flask import url_for
+from flask_babel import gettext as _
 
 import auth_playground
 from auth_playground.forms import ClientConfigForm
@@ -65,25 +66,32 @@ def handle_fetch_metadata_errors(issuer_url: str, on_error):
     try:
         return fetch_server_metadata(issuer_url)
     except requests.exceptions.ConnectionError:
-        flash("Cannot connect to the server. Please check the URL.", "error")
+        flash(_("Cannot connect to the server. Please check the URL."), "error")
         return on_error()
     except requests.exceptions.Timeout:
-        flash("Connection timeout. The server is not responding.", "error")
+        flash(_("Connection timeout. The server is not responding."), "error")
         return on_error()
     except requests.exceptions.HTTPError as e:
         if e.response.status_code == 404:
             flash(
-                "This server does not support OIDC Discovery or OAuth 2.0 Authorization Server Metadata",
+                _(
+                    "This server does not support OIDC Discovery or OAuth 2.0 Authorization Server Metadata"
+                ),
                 "error",
             )
         else:
-            flash(f"Server returned an error: HTTP {e.response.status_code}", "error")
+            flash(
+                _("Server returned an error: HTTP {status_code}").format(
+                    status_code=e.response.status_code
+                ),
+                "error",
+            )
         return on_error()
     except requests.RequestException:
-        flash("Failed to connect to the server. Please check the URL.", "error")
+        flash(_("Failed to connect to the server. Please check the URL."), "error")
         return on_error()
     except ValueError:
-        flash("Invalid response from server", "error")
+        flash(_("Invalid response from server"), "error")
         return on_error()
 
 
@@ -133,7 +141,9 @@ def configure_server():
     """Display form to configure and validate identity provider URL."""
     if auth_playground.is_oauth_server_from_env(current_app):
         flash(
-            "OAuth configuration is set via environment variables and cannot be changed",
+            _(
+                "OAuth configuration is set via environment variables and cannot be changed"
+            ),
             "warning",
         )
         return redirect(url_for("routes.playground"))
@@ -142,7 +152,7 @@ def configure_server():
 
     if not form.validate_on_submit():
         if g.server_config and g.server_config.issuer_url:
-            flash("You can now configure a different identity provider", "info")
+            flash(_("You can now configure a different identity provider"), "info")
         clear_server_session()
         return render_template("configure_server.html", form=form)
 
@@ -162,7 +172,7 @@ def configure_server():
     )
     g.server_config.save(session)
 
-    flash("Server metadata successfully loaded", "success")
+    flash(_("Server metadata successfully loaded"), "success")
 
     return redirect(url_for("routes.configure_client"))
 
@@ -172,14 +182,14 @@ def configure_client():
     """Display options to configure OAuth client credentials."""
     if auth_playground.is_oauth_client_from_env(current_app):
         flash(
-            "OAuth client is set via environment variables and cannot be changed",
+            _("OAuth client is set via environment variables and cannot be changed"),
             "warning",
         )
         return redirect(url_for("routes.playground"))
 
     issuer_url = g.server_config.issuer_url
     if not issuer_url:
-        flash("Please configure a server", "warning")
+        flash(_("Please configure a server"), "warning")
         return redirect(url_for("routes.configure_server"))
 
     if not g.server_config.metadata:
@@ -210,7 +220,7 @@ def configure_client():
         client_form.client_secret.data,
         issuer_url,
     )
-    flash("OAuth configuration completed successfully", "success")
+    flash(_("OAuth configuration completed successfully"), "success")
     return redirect(url_for("routes.playground"))
 
 
@@ -220,15 +230,15 @@ def client_dynamic_registration():
     form = DynamicRegistrationForm()
 
     if not form.validate_on_submit():
-        flash("Invalid request", "error")
+        flash(_("Invalid request"), "error")
         return redirect(url_for("routes.configure_client"))
 
     if not g.server_config or not g.server_config.metadata:
-        flash("Server metadata not found", "error")
+        flash(_("Server metadata not found"), "error")
         return redirect(url_for("routes.configure_client"))
 
     if not g.server_config.specs.oauth_2_dynamic_client_registration:
-        flash("Dynamic client registration not supported", "error")
+        flash(_("Dynamic client registration not supported"), "error")
         return redirect(url_for("routes.configure_client"))
 
     registration_endpoint = g.server_config.metadata["registration_endpoint"]
@@ -269,22 +279,24 @@ def client_dynamic_registration():
         response.raise_for_status()
         client_data = response.json()
     except requests.RequestException as e:
-        error_message = "Dynamic client registration failed"
+        error_message = _("Dynamic client registration failed")
         if hasattr(e, "response") and e.response is not None:
             try:
                 error_data = e.response.json()
                 if "error_description" in error_data:
-                    error_message = f"Dynamic client registration failed: {error_data['error_description']}"
+                    error_message = _(
+                        "Dynamic client registration failed: {error}"
+                    ).format(error=error_data["error_description"])
                 elif "error" in error_data:
-                    error_message = (
-                        f"Dynamic client registration failed: {error_data['error']}"
-                    )
+                    error_message = _(
+                        "Dynamic client registration failed: {error}"
+                    ).format(error=error_data["error"])
             except ValueError:
                 pass  # Response is not JSON, use default message
         flash(error_message, "error")
         return redirect(url_for("routes.configure_client"))
     except ValueError:
-        flash("Invalid JSON response from registration endpoint", "error")
+        flash(_("Invalid JSON response from registration endpoint"), "error")
         return redirect(url_for("routes.configure_client"))
 
     auth_playground.setup_oauth_runtime(
@@ -304,7 +316,7 @@ def client_dynamic_registration():
     g.server_config.save(session)
 
     flash(
-        "Client successfully registered!",
+        _("Client successfully registered!"),
         "success",
     )
     return redirect(url_for("routes.playground"))
@@ -339,7 +351,7 @@ def playground():
     refresh_form = RefreshTokenForm()
     unregister_form = UnregisterClientForm()
     return render_template(
-        "index.html",
+        "playground.html",
         refresh_form=refresh_form,
         unregister_form=unregister_form,
     )
@@ -349,7 +361,7 @@ def playground():
 def specs():
     """Display server specifications."""
     if not g.server_config or not g.server_config.specs:
-        flash("No server configured", "warning")
+        flash(_("No server configured"), "warning")
         return redirect(url_for("routes.configure_server"))
 
     server_specs = g.server_config.specs
@@ -392,7 +404,7 @@ def unregister_client():
     form = UnregisterClientForm()
 
     if not form.validate_on_submit():
-        flash("Invalid request", "error")
+        flash(_("Invalid request"), "error")
         return redirect(url_for("routes.playground"))
 
     if (
@@ -400,7 +412,7 @@ def unregister_client():
         or not g.server_config.registration_access_token
         or not g.server_config.registration_client_uri
     ):
-        flash("Client registration management credentials not found", "error")
+        flash(_("Client registration management credentials not found"), "error")
         return redirect(url_for("routes.playground"))
 
     headers = {"Authorization": f"Bearer {g.server_config.registration_access_token}"}
@@ -411,15 +423,17 @@ def unregister_client():
         )
         response.raise_for_status()
     except requests.RequestException as e:
-        error_message = "Client unregistration failed"
+        error_message = _("Client unregistration failed")
         if hasattr(e, "response") and e.response is not None:
             try:
                 error_data = e.response.json()
                 if "error_description" in error_data:
-                    error_message = f"Client unregistration failed: {error_data['error_description']}"
+                    error_message = _("Client unregistration failed: {error}").format(
+                        error=error_data["error_description"]
+                    )
                 elif "error" in error_data:
-                    error_message = (
-                        f"Client unregistration failed: {error_data['error']}"
+                    error_message = _("Client unregistration failed: {error}").format(
+                        error=error_data["error"]
                     )
             except ValueError:
                 pass  # Response is not JSON, use default message
@@ -434,7 +448,7 @@ def unregister_client():
     g.server_config.registration_client_uri = None
     g.server_config.save(session)
 
-    flash("Client successfully unregistered", "success")
+    flash(_("Client successfully unregistered"), "success")
     return redirect(url_for("routes.configure_client"))
 
 
@@ -473,9 +487,14 @@ def register_callback():
             "expires_at": token.get("expires_at"),
             "scope": token.get("scope"),
         }
-        flash("You account has been successfully created.", "success")
+        flash(_("You account has been successfully created."), "success")
     except AuthlibBaseError as exc:
-        flash(f"An error happened during registration: {exc.description}", "error")
+        flash(
+            _("An error happened during registration: {error}").format(
+                error=exc.description
+            ),
+            "error",
+        )
 
     return redirect(url_for("routes.playground"))
 
@@ -516,9 +535,12 @@ def login_callback():
             "expires_at": token.get("expires_at"),
             "scope": token.get("scope"),
         }
-        flash("You have been successfully logged in.", "success")
+        flash(_("You have been successfully logged in."), "success")
     except AuthlibBaseError as exc:
-        flash(f"An error happened during login: {exc.description}", "error")
+        flash(
+            _("An error happened during login: {error}").format(error=exc.description),
+            "error",
+        )
 
     return redirect(url_for("routes.playground"))
 
@@ -527,7 +549,7 @@ def login_callback():
 def logout_local():
     """Log out locally without contacting the Identity Provider."""
     clear_user_session()
-    flash("You have been logged out", "success")
+    flash(_("You have been logged out"), "success")
     return redirect(url_for("routes.playground"))
 
 
@@ -558,7 +580,7 @@ def logout():
 def logout_callback():
     """Handle callback after server-side logout."""
     clear_user_session()
-    flash("You have been logged out from the server", "success")
+    flash(_("You have been logged out from the server"), "success")
     return redirect(url_for("routes.playground"))
 
 
@@ -567,12 +589,12 @@ def refresh():
     """Refresh the access token using the refresh token."""
     form = RefreshTokenForm()
     if not form.validate_on_submit():
-        flash("Invalid request", "error")
+        flash(_("Invalid request"), "error")
         return redirect(url_for("routes.playground"))
 
     refresh_token = session.get("token", {}).get("refresh_token")
     if not refresh_token:
-        flash("No refresh token available", "error")
+        flash(_("No refresh token available"), "error")
         return redirect(url_for("routes.playground"))
 
     try:
@@ -593,8 +615,13 @@ def refresh():
             "expires_at": new_token.get("expires_at"),
             "scope": new_token.get("scope"),
         }
-        flash("Token successfully refreshed", "success")
+        flash(_("Token successfully refreshed"), "success")
     except AuthlibBaseError as exc:
-        flash(f"An error happened during token refresh: {exc.description}", "error")
+        flash(
+            _("An error happened during token refresh: {error}").format(
+                error=exc.description
+            ),
+            "error",
+        )
 
     return redirect(url_for("routes.playground"))
