@@ -118,6 +118,7 @@ def configure_server():
         if g.server_config and g.server_config.issuer_url:
             flash(_("You can now configure a different identity provider"), "info")
         clear_server_session()
+        g.server_config = ServerConfig()
         return render_template("configure_server.html", form=form)
 
     issuer_url = form.issuer_url.data.rstrip("/")
