@@ -1,27 +1,40 @@
 # Auth Playground
 
+[![Tests](https://github.com/authlib/auth-playground/actions/workflows/tests.yaml/badge.svg)](https://github.com/authlib/auth-playground/actions/workflows/tests.yaml)
+[![Docker](https://github.com/authlib/auth-playground/actions/workflows/publish-docker.yaml/badge.svg)](https://github.com/authlib/auth-playground/actions/workflows/publish-docker.yaml)
+[![Docker Image](https://ghcr-badge.egpl.dev/authlib/auth-playground/latest_tag?trim=major&label=latest)](https://github.com/authlib/auth-playground/pkgs/container/auth-playground)
+
 A demonstration OAuth2 / OpenID Connect (OIDC) client application built with [Authlib](https://authlib.org).
 This project illustrates how to integrate with an identity provider for user authentication, registration, and consent management.
 It can be used to play with the different interactions between clients and server, or debug a server implementation.
 
 ## Installation
 
+### Using pip
+
+```bash
+pip install auth-playground
+```
+
+### Using uv
 
 ```bash
 uv add auth-playground
 ```
 
-or
+### Using Docker
+
+Run the pre-built image from GitHub Container Registry:
 
 ```bash
-docker run -p 4000:4000 auth-playground
-pip install auth-playground
+docker run -p 4000:4000 -e SECRET_KEY="your-secret-key" ghcr.io/authlib/auth-playground:latest
 ```
 
-or
+Or build locally:
 
 ```bash
 docker build -t auth-playground .
+docker run -p 4000:4000 -e SECRET_KEY="your-secret-key" auth-playground
 ```
 
 ## Configuration
