@@ -101,7 +101,8 @@ def index():
 
 
 @bp.route("/server", methods=["GET", "POST"])
-def configure_server():
+@bp.route("/server/<path:domain>", methods=["GET", "POST"])
+def configure_server(domain=None):
     """Display form to configure and validate identity provider URL."""
     if auth_playground.is_oauth_server_from_env(current_app):
         flash(
@@ -114,14 +115,20 @@ def configure_server():
 
     form = ServerConfigForm()
 
-    if not form.validate_on_submit():
+    if domain:
+        if not domain.startswith(("http://", "https://")):
+            domain = f"https://{domain}"
+        issuer_url = domain.rstrip("/")
+
+    elif not form.validate_on_submit():
         if g.server_config and g.server_config.issuer_url:
             flash(_("You can now configure a different identity provider"), "info")
         clear_server_session()
         g.server_config = ServerConfig()
         return render_template("configure_server.html", form=form)
 
-    issuer_url = form.issuer_url.data.rstrip("/")
+    else:
+        issuer_url = form.issuer_url.data.rstrip("/")
 
     result = handle_fetch_metadata_errors(
         issuer_url, lambda: render_template("configure_server.html", form=form)
