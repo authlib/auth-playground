@@ -542,7 +542,7 @@ msgstr "Client de démonstration OAuth 2.0"
 
 #: src/auth_playground/templates/layout.html:26
 msgid "playground"
-msgstr "terrain de jeu"
+msgstr "bac à sable"
 
 #: src/auth_playground/templates/layout.html:27
 msgid "specs"
