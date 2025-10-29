@@ -36,7 +36,7 @@ jobs:
           grep -v '^#,' > /tmp/messages.pot.before
 
       - name: Extract translation strings
-        run: pybabel extract --mapping-file pyproject.toml --copyright-holder="Yaal Coop" --output-file src/auth_playground/translations/messages.pot src
+        run: uv run pybabel extract --mapping-file pyproject.toml --copyright-holder="Yaal Coop" --output-file src/auth_playground/translations/messages.pot src
 
       - name: Save new catalog (filtered)
         run: |

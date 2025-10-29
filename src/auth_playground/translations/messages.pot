@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-10-28 17:50+0100\n"
+"POT-Creation-Date: 2025-10-29 10:38+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,145 +17,59 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.17.0\n"
 
-#: src/auth_playground/endpoints.py:69
+#: src/auth_playground/endpoints.py:46
 msgid "Cannot connect to the server. Please check the URL."
 msgstr ""
 
-#: src/auth_playground/endpoints.py:72
+#: src/auth_playground/endpoints.py:49
 msgid "Connection timeout. The server is not responding."
 msgstr ""
 
-#: src/auth_playground/endpoints.py:78
+#: src/auth_playground/endpoints.py:55
 msgid ""
 "This server does not support OIDC Discovery or OAuth 2.0 Authorization "
 "Server Metadata"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:84
+#: src/auth_playground/endpoints.py:61
 #, python-brace-format
 msgid "Server returned an error: HTTP {status_code}"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:91
+#: src/auth_playground/endpoints.py:68
 msgid "Failed to connect to the server. Please check the URL."
 msgstr ""
 
-#: src/auth_playground/endpoints.py:94
+#: src/auth_playground/endpoints.py:71
 msgid "Invalid response from server"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:145
+#: src/auth_playground/endpoints.py:109
 msgid "OAuth configuration is set via environment variables and cannot be changed"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:155
+#: src/auth_playground/endpoints.py:119
 msgid "You can now configure a different identity provider"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:175
+#: src/auth_playground/endpoints.py:139
 msgid "Server metadata successfully loaded"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:185
+#: src/auth_playground/endpoints.py:149
 msgid "OAuth client is set via environment variables and cannot be changed"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:192
+#: src/auth_playground/endpoints.py:156
 msgid "Please configure a server"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:223
+#: src/auth_playground/endpoints.py:187
 msgid "OAuth configuration completed successfully"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:233 src/auth_playground/endpoints.py:407
-#: src/auth_playground/endpoints.py:592
-msgid "Invalid request"
-msgstr ""
-
-#: src/auth_playground/endpoints.py:237
-msgid "Server metadata not found"
-msgstr ""
-
-#: src/auth_playground/endpoints.py:241
-msgid "Dynamic client registration not supported"
-msgstr ""
-
-#: src/auth_playground/endpoints.py:282
-msgid "Dynamic client registration failed"
-msgstr ""
-
-#: src/auth_playground/endpoints.py:288 src/auth_playground/endpoints.py:292
-#, python-brace-format
-msgid "Dynamic client registration failed: {error}"
-msgstr ""
-
-#: src/auth_playground/endpoints.py:299
-msgid "Invalid JSON response from registration endpoint"
-msgstr ""
-
-#: src/auth_playground/endpoints.py:319
-msgid "Client successfully registered!"
-msgstr ""
-
-#: src/auth_playground/endpoints.py:364
+#: src/auth_playground/endpoints.py:230
 msgid "No server configured"
-msgstr ""
-
-#: src/auth_playground/endpoints.py:415
-msgid "Client registration management credentials not found"
-msgstr ""
-
-#: src/auth_playground/endpoints.py:426
-msgid "Client unregistration failed"
-msgstr ""
-
-#: src/auth_playground/endpoints.py:431 src/auth_playground/endpoints.py:435
-#, python-brace-format
-msgid "Client unregistration failed: {error}"
-msgstr ""
-
-#: src/auth_playground/endpoints.py:451
-msgid "Client successfully unregistered"
-msgstr ""
-
-#: src/auth_playground/endpoints.py:490
-msgid "You account has been successfully created."
-msgstr ""
-
-#: src/auth_playground/endpoints.py:493
-#, python-brace-format
-msgid "An error happened during registration: {error}"
-msgstr ""
-
-#: src/auth_playground/endpoints.py:538
-msgid "You have been successfully logged in."
-msgstr ""
-
-#: src/auth_playground/endpoints.py:541
-#, python-brace-format
-msgid "An error happened during login: {error}"
-msgstr ""
-
-#: src/auth_playground/endpoints.py:552
-msgid "You have been logged out"
-msgstr ""
-
-#: src/auth_playground/endpoints.py:583
-msgid "You have been logged out from the server"
-msgstr ""
-
-#: src/auth_playground/endpoints.py:597
-msgid "No refresh token available"
-msgstr ""
-
-#: src/auth_playground/endpoints.py:618
-msgid "Token successfully refreshed"
-msgstr ""
-
-#: src/auth_playground/endpoints.py:621
-#, python-brace-format
-msgid "An error happened during token refresh: {error}"
 msgstr ""
 
 #: src/auth_playground/forms.py:15
@@ -226,6 +140,92 @@ msgstr ""
 
 #: src/auth_playground/forms.py:94
 msgid "Unregister client"
+msgstr ""
+
+#: src/auth_playground/oauth.py:67 src/auth_playground/oauth.py:179
+#: src/auth_playground/oauth.py:352
+msgid "Invalid request"
+msgstr ""
+
+#: src/auth_playground/oauth.py:73
+msgid "Server metadata not found"
+msgstr ""
+
+#: src/auth_playground/oauth.py:79
+msgid "Dynamic client registration not supported"
+msgstr ""
+
+#: src/auth_playground/oauth.py:126
+msgid "Dynamic client registration failed"
+msgstr ""
+
+#: src/auth_playground/oauth.py:132 src/auth_playground/oauth.py:136
+#, python-brace-format
+msgid "Dynamic client registration failed: {error}"
+msgstr ""
+
+#: src/auth_playground/oauth.py:145
+msgid "Invalid JSON response from registration endpoint"
+msgstr ""
+
+#: src/auth_playground/oauth.py:167
+msgid "Client successfully registered!"
+msgstr ""
+
+#: src/auth_playground/oauth.py:187
+msgid "Client registration management credentials not found"
+msgstr ""
+
+#: src/auth_playground/oauth.py:198
+msgid "Client unregistration failed"
+msgstr ""
+
+#: src/auth_playground/oauth.py:203 src/auth_playground/oauth.py:207
+#, python-brace-format
+msgid "Client unregistration failed: {error}"
+msgstr ""
+
+#: src/auth_playground/oauth.py:223
+msgid "Client successfully unregistered"
+msgstr ""
+
+#: src/auth_playground/oauth.py:250
+msgid "You account has been successfully created."
+msgstr ""
+
+#: src/auth_playground/oauth.py:253
+#, python-brace-format
+msgid "An error happened during registration: {error}"
+msgstr ""
+
+#: src/auth_playground/oauth.py:298
+msgid "You have been successfully logged in."
+msgstr ""
+
+#: src/auth_playground/oauth.py:301
+#, python-brace-format
+msgid "An error happened during login: {error}"
+msgstr ""
+
+#: src/auth_playground/oauth.py:312
+msgid "You have been logged out"
+msgstr ""
+
+#: src/auth_playground/oauth.py:343
+msgid "You have been logged out from the server"
+msgstr ""
+
+#: src/auth_playground/oauth.py:357
+msgid "No refresh token available"
+msgstr ""
+
+#: src/auth_playground/oauth.py:378
+msgid "Token successfully refreshed"
+msgstr ""
+
+#: src/auth_playground/oauth.py:381
+#, python-brace-format
+msgid "An error happened during token refresh: {error}"
 msgstr ""
 
 #: src/auth_playground/templates/authenticated.html:2
