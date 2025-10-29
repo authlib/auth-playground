@@ -7,13 +7,20 @@ This project illustrates how to integrate with an identity provider for user aut
 
 
 ```bash
-uvx auth-playground
+uv add auth-playground
 ```
 
 or
 
 ```bash
+docker run -p 4000:4000 auth-playground
 pip install auth-playground
+```
+
+or
+
+```bash
+docker build -t auth-playground .
 ```
 
 ## Configuration

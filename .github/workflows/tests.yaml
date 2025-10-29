@@ -79,3 +79,40 @@ jobs:
           uv sync --group release --all-extras --no-dev
           uv run pyinstaller auth-playground.spec
           uv cache prune --ci
+
+  docker:
+    name: docker build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: auth-playground:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Test Docker image
+        run: |
+          docker run -d --name test-app -p 4000:4000 \
+            -e SECRET_KEY="test-secret-key-for-ci" \
+            -e FLASK_DEBUG="False" \
+            auth-playground:test
+
+          timeout 30 sh -c 'until docker inspect --format="{{.State.Health.Status}}" test-app | grep -q "healthy"; do sleep 1; done' || {
+            echo "Container failed to become healthy"
+            docker logs test-app
+            exit 1
+          }
+
+          curl -f http://localhost:4000/ || {
+            echo "App failed to respond"
+            docker logs test-app
+            exit 1
+          }
+
+          docker stop test-app
+          docker rm test-app
