@@ -38,10 +38,13 @@ def setup_i18n(app):
     @app.url_defaults
     def add_language_code(endpoint, values):
         """Automatically inject language code into url_for() calls when using i18n routes."""
-        # Don't add lang_code to OAuth endpoints (they don't have language prefix)
         if endpoint and endpoint.startswith("oauth."):
             return
-        if "lang_code" not in values and g.get("lang_code"):
+
+        if not g.get("lang_code"):
+            g.lang_code = app.config.get("BABEL_DEFAULT_LOCALE", "en")
+
+        if "lang_code" not in values:
             values.setdefault("lang_code", g.lang_code)
 
     @app.url_value_preprocessor

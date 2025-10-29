@@ -21,11 +21,6 @@ from auth_playground.forms import UnregisterClientForm
 bp = Blueprint("oauth", __name__)
 
 
-def get_default_lang():
-    """Get default language code for URL generation."""
-    return g.get("lang_code") or current_app.config.get("BABEL_DEFAULT_LOCALE", "en")
-
-
 def get_software_id() -> str:
     """Get unique software identifier based on repository URL."""
     pkg_metadata = importlib.metadata.metadata("auth-playground")
@@ -65,21 +60,15 @@ def client_dynamic_registration():
 
     if not form.validate_on_submit():
         flash(_("Invalid request"), "error")
-        return redirect(
-            url_for("routes.configure_client", lang_code=get_default_lang())
-        )
+        return redirect(url_for("routes.configure_client"))
 
     if not g.server_config or not g.server_config.metadata:
         flash(_("Server metadata not found"), "error")
-        return redirect(
-            url_for("routes.configure_client", lang_code=get_default_lang())
-        )
+        return redirect(url_for("routes.configure_client"))
 
     if not g.server_config.specs.oauth_2_dynamic_client_registration:
         flash(_("Dynamic client registration not supported"), "error")
-        return redirect(
-            url_for("routes.configure_client", lang_code=get_default_lang())
-        )
+        return redirect(url_for("routes.configure_client"))
 
     registration_endpoint = g.server_config.metadata["registration_endpoint"]
 
@@ -90,18 +79,14 @@ def client_dynamic_registration():
 
     registration_data = {
         "client_name": "Auth Playground",
-        "client_uri": url_for(
-            "routes.index", lang_code=get_default_lang(), _external=True
-        ),
+        "client_uri": url_for("routes.index", _external=True),
         "redirect_uris": redirect_uris,
         "grant_types": ["authorization_code", "refresh_token"],
         "response_types": ["code"],
         "token_endpoint_auth_method": "client_secret_basic",
         "scope": "openid profile email phone address groups",
-        "tos_uri": url_for("routes.tos", lang_code=get_default_lang(), _external=True),
-        "policy_uri": url_for(
-            "routes.policy", lang_code=get_default_lang(), _external=True
-        ),
+        "tos_uri": url_for("routes.tos", _external=True),
+        "policy_uri": url_for("routes.policy", _external=True),
         "software_id": get_software_id(),
         "software_version": get_software_version(),
     }
@@ -138,14 +123,10 @@ def client_dynamic_registration():
             except ValueError:
                 pass  # Response is not JSON, use default message
         flash(error_message, "error")
-        return redirect(
-            url_for("routes.configure_client", lang_code=get_default_lang())
-        )
+        return redirect(url_for("routes.configure_client"))
     except ValueError:
         flash(_("Invalid JSON response from registration endpoint"), "error")
-        return redirect(
-            url_for("routes.configure_client", lang_code=get_default_lang())
-        )
+        return redirect(url_for("routes.configure_client"))
 
     auth_playground.setup_oauth_runtime(
         current_app,
@@ -167,7 +148,7 @@ def client_dynamic_registration():
         _("Client successfully registered!"),
         "success",
     )
-    return redirect(url_for("routes.playground", lang_code=get_default_lang()))
+    return redirect(url_for("routes.playground"))
 
 
 @bp.route("/unregister-client", methods=["POST"])
@@ -177,7 +158,7 @@ def unregister_client():
 
     if not form.validate_on_submit():
         flash(_("Invalid request"), "error")
-        return redirect(url_for("routes.playground", lang_code=get_default_lang()))
+        return redirect(url_for("routes.playground"))
 
     if (
         not g.server_config
@@ -185,7 +166,7 @@ def unregister_client():
         or not g.server_config.registration_client_uri
     ):
         flash(_("Client registration management credentials not found"), "error")
-        return redirect(url_for("routes.playground", lang_code=get_default_lang()))
+        return redirect(url_for("routes.playground"))
 
     headers = {"Authorization": f"Bearer {g.server_config.registration_access_token}"}
 
@@ -210,7 +191,7 @@ def unregister_client():
             except ValueError:
                 pass  # Response is not JSON, use default message
         flash(error_message, "error")
-        return redirect(url_for("routes.playground", lang_code=get_default_lang()))
+        return redirect(url_for("routes.playground"))
 
     session.pop("oauth_config", None)
     session.pop("user", None)
@@ -221,7 +202,7 @@ def unregister_client():
     g.server_config.save(session)
 
     flash(_("Client successfully unregistered"), "success")
-    return redirect(url_for("routes.configure_client", lang_code=get_default_lang()))
+    return redirect(url_for("routes.configure_client"))
 
 
 @bp.route("/register")
@@ -256,7 +237,7 @@ def register_callback():
             "error",
         )
 
-    return redirect(url_for("routes.playground", lang_code=get_default_lang()))
+    return redirect(url_for("routes.playground"))
 
 
 @bp.route("/login")
@@ -302,7 +283,7 @@ def login_callback():
             "error",
         )
 
-    return redirect(url_for("routes.playground", lang_code=get_default_lang()))
+    return redirect(url_for("routes.playground"))
 
 
 @bp.route("/logout/local")
@@ -310,7 +291,7 @@ def logout_local():
     """Log out locally without contacting the Identity Provider."""
     clear_user_session()
     flash(_("You have been logged out"), "success")
-    return redirect(url_for("routes.playground", lang_code=get_default_lang()))
+    return redirect(url_for("routes.playground"))
 
 
 @bp.route("/logout")
@@ -341,7 +322,7 @@ def logout_callback():
     """Handle callback after server-side logout."""
     clear_user_session()
     flash(_("You have been logged out from the server"), "success")
-    return redirect(url_for("routes.playground", lang_code=get_default_lang()))
+    return redirect(url_for("routes.playground"))
 
 
 @bp.route("/refresh", methods=["POST"])
@@ -350,12 +331,12 @@ def refresh():
     form = RefreshTokenForm()
     if not form.validate_on_submit():
         flash(_("Invalid request"), "error")
-        return redirect(url_for("routes.playground", lang_code=get_default_lang()))
+        return redirect(url_for("routes.playground"))
 
     refresh_token = session.get("token", {}).get("refresh_token")
     if not refresh_token:
         flash(_("No refresh token available"), "error")
-        return redirect(url_for("routes.playground", lang_code=get_default_lang()))
+        return redirect(url_for("routes.playground"))
 
     try:
         original_scope = session.get("token", {}).get("scope", "")
@@ -384,4 +365,4 @@ def refresh():
             "error",
         )
 
-    return redirect(url_for("routes.playground", lang_code=get_default_lang()))
+    return redirect(url_for("routes.playground"))
