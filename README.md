@@ -1,7 +1,8 @@
 # Auth Playground
 
-A demonstration OAuth2 / OpenID Connect (OIDC) client application built with Flask.
+A demonstration OAuth2 / OpenID Connect (OIDC) client application built with [Authlib](https://authlib.org).
 This project illustrates how to integrate with an identity provider for user authentication, registration, and consent management.
+It can be used to play with the different interactions between clients and server, or debug a server implementation.
 
 ## Installation
 
