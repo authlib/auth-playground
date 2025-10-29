@@ -1,5 +1,5 @@
 # Translations template for PROJECT.
-# Copyright (C) 2025 Yaal Coop
+# Copyright (C) 2025 ORGANIZATION
 # This file is distributed under the same license as the PROJECT project.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
 #
@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-10-29 10:51+0100\n"
+"POT-Creation-Date: 2025-10-29 11:18+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -52,23 +52,23 @@ msgstr ""
 msgid "You can now configure a different identity provider"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:139
+#: src/auth_playground/endpoints.py:140
 msgid "Server metadata successfully loaded"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:149
+#: src/auth_playground/endpoints.py:150
 msgid "OAuth client is set via environment variables and cannot be changed"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:156
+#: src/auth_playground/endpoints.py:157
 msgid "Please configure a server"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:187
+#: src/auth_playground/endpoints.py:188
 msgid "OAuth configuration completed successfully"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:230
+#: src/auth_playground/endpoints.py:231
 msgid "No server configured"
 msgstr ""
 
@@ -592,191 +592,171 @@ msgstr ""
 #: src/auth_playground/templates/policy.html:16
 msgid ""
 "Auth Playground is a <strong>demonstration tool</strong> for OpenID "
-"Connect authentication. As this is a self-hosted application, you control"
-" all aspects of data handling."
+"Connect authentication."
 msgstr ""
 
-#: src/auth_playground/templates/policy.html:22
+#: src/auth_playground/templates/policy.html:23
 msgid "What Data Is Handled"
 msgstr ""
 
-#: src/auth_playground/templates/policy.html:24
+#: src/auth_playground/templates/policy.html:25
 msgid ""
 "When you authenticate through Auth Playground, the following information "
 "is received from your identity provider:"
 msgstr ""
 
-#: src/auth_playground/templates/policy.html:28
+#: src/auth_playground/templates/policy.html:29
 msgid "Access token:"
 msgstr ""
 
-#: src/auth_playground/templates/policy.html:28
+#: src/auth_playground/templates/policy.html:29
 msgid "Used to access protected resources"
 msgstr ""
 
-#: src/auth_playground/templates/policy.html:29
+#: src/auth_playground/templates/policy.html:30
 msgid "Refresh token:"
 msgstr ""
 
-#: src/auth_playground/templates/policy.html:29
+#: src/auth_playground/templates/policy.html:30
 msgid "Used to obtain new access tokens (if provided)"
 msgstr ""
 
-#: src/auth_playground/templates/policy.html:30
+#: src/auth_playground/templates/policy.html:31
 msgid "ID token:"
 msgstr ""
 
-#: src/auth_playground/templates/policy.html:30
+#: src/auth_playground/templates/policy.html:31
 msgid "Contains your identity information in JWT format"
 msgstr ""
 
-#: src/auth_playground/templates/policy.html:31
+#: src/auth_playground/templates/policy.html:32
 msgid "User information:"
 msgstr ""
 
-#: src/auth_playground/templates/policy.html:31
+#: src/auth_playground/templates/policy.html:32
 msgid "Profile data such as name, email, phone, address, groups, etc."
 msgstr ""
 
-#: src/auth_playground/templates/policy.html:34
+#: src/auth_playground/templates/policy.html:35
 msgid ""
 "The exact data received depends on the scopes requested and what your "
 "identity provider shares."
 msgstr ""
 
-#: src/auth_playground/templates/policy.html:39
+#: src/auth_playground/templates/policy.html:40
 msgid "How Data Is Stored"
 msgstr ""
 
-#: src/auth_playground/templates/policy.html:41
-msgid "<mark>All authentication data is stored server-side in memory.</mark>"
-msgstr ""
-
-#: src/auth_playground/templates/policy.html:44
-msgid "Data is stored in <strong>server memory</strong> (RAM) only"
+#: src/auth_playground/templates/policy.html:42
+msgid "All authentication data is stored server-side in memory."
 msgstr ""
 
 #: src/auth_playground/templates/policy.html:45
+msgid "Data is stored in <strong>server memory</strong> (RAM) only"
+msgstr ""
+
+#: src/auth_playground/templates/policy.html:46
 msgid ""
 "A secure session cookie is sent to your browser (containing only a "
 "session ID, not the actual data)"
 msgstr ""
 
-#: src/auth_playground/templates/policy.html:46
+#: src/auth_playground/templates/policy.html:47
 msgid "No database, files, or permanent storage is used"
 msgstr ""
 
-#: src/auth_playground/templates/policy.html:47
+#: src/auth_playground/templates/policy.html:48
 msgid "All session data is lost when the application restarts"
 msgstr ""
 
-#: src/auth_playground/templates/policy.html:48
+#: src/auth_playground/templates/policy.html:49
 msgid "Data is cleared when you log out"
 msgstr ""
 
-#: src/auth_playground/templates/policy.html:49
-msgid "Sessions expire according to Flask's default session timeout"
+#: src/auth_playground/templates/policy.html:52
+#, python-format
+msgid "Sessions expire after %(timeout)s"
 msgstr ""
 
 #: src/auth_playground/templates/policy.html:54
-msgid "Data Sharing"
-msgstr ""
-
-#: src/auth_playground/templates/policy.html:56
-msgid "Auth Playground does not:"
-msgstr ""
-
-#: src/auth_playground/templates/policy.html:59
-msgid "Share your data with third parties"
-msgstr ""
-
-#: src/auth_playground/templates/policy.html:60
-msgid "Send data to external services"
+msgid "Sessions expire when you close your browser"
 msgstr ""
 
 #: src/auth_playground/templates/policy.html:61
-msgid "Store data permanently"
-msgstr ""
-
-#: src/auth_playground/templates/policy.html:62
-msgid "Track your usage"
+msgid "Data Sharing"
 msgstr ""
 
 #: src/auth_playground/templates/policy.html:63
-msgid "Use analytics or advertising"
+msgid "Auth Playground does not:"
 msgstr ""
 
 #: src/auth_playground/templates/policy.html:66
+msgid "Share your data with third parties"
+msgstr ""
+
+#: src/auth_playground/templates/policy.html:67
+msgid "Send data to external services"
+msgstr ""
+
+#: src/auth_playground/templates/policy.html:68
+msgid "Store data permanently"
+msgstr ""
+
+#: src/auth_playground/templates/policy.html:69
+msgid "Track your usage"
+msgstr ""
+
+#: src/auth_playground/templates/policy.html:70
+msgid "Use analytics or advertising"
+msgstr ""
+
+#: src/auth_playground/templates/policy.html:73
 msgid ""
 "The only external communication is with your configured identity provider"
 " for authentication purposes."
 msgstr ""
 
-#: src/auth_playground/templates/policy.html:71
+#: src/auth_playground/templates/policy.html:78
 msgid "Security Considerations"
 msgstr ""
 
-#: src/auth_playground/templates/policy.html:73
-msgid "Important:"
-msgstr ""
-
-#: src/auth_playground/templates/policy.html:73
-msgid "Auth Playground is designed for development and testing."
-msgstr ""
-
-#: src/auth_playground/templates/policy.html:76
+#: src/auth_playground/templates/policy.html:80
 msgid "Use only <strong>test accounts</strong>, not real user accounts"
 msgstr ""
 
-#: src/auth_playground/templates/policy.html:77
+#: src/auth_playground/templates/policy.html:81
 msgid "Do not use sensitive or production data"
 msgstr ""
 
-#: src/auth_playground/templates/policy.html:78
+#: src/auth_playground/templates/policy.html:82
 msgid "Ensure your deployment is properly secured (HTTPS, firewall, etc.)"
 msgstr ""
 
-#: src/auth_playground/templates/policy.html:79
+#: src/auth_playground/templates/policy.html:83
 msgid "Change the default"
 msgstr ""
 
-#: src/auth_playground/templates/policy.html:79
+#: src/auth_playground/templates/policy.html:83
 msgid "environment variable"
 msgstr ""
 
-#: src/auth_playground/templates/policy.html:80
-msgid "Review and understand the security implications of your setup"
-msgstr ""
-
-#: src/auth_playground/templates/policy.html:85
+#: src/auth_playground/templates/policy.html:88
 msgid "Your Rights"
 msgstr ""
 
-#: src/auth_playground/templates/policy.html:87
-msgid "As this is a self-hosted application, you have complete control:"
-msgstr ""
-
 #: src/auth_playground/templates/policy.html:90
-msgid "You can log out at any time to clear your session data"
-msgstr ""
-
-#: src/auth_playground/templates/policy.html:91
-msgid "You control who has access to your deployment"
-msgstr ""
-
-#: src/auth_playground/templates/policy.html:92
 msgid "You can review the source code to understand data handling"
 msgstr ""
 
-#: src/auth_playground/templates/policy.html:93
+#: src/auth_playground/templates/policy.html:91
 msgid "You can modify the application to suit your needs"
 msgstr ""
 
-#: src/auth_playground/templates/policy.html:98
+#: src/auth_playground/templates/policy.html:96
 msgid "Identity Provider's Privacy Policy"
 msgstr ""
 
-#: src/auth_playground/templates/policy.html:100
+#: src/auth_playground/templates/policy.html:98
 msgid ""
 "Your identity provider may have its own privacy policy regarding the data"
 " they collect and share. Please review their privacy policy for "

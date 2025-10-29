@@ -70,3 +70,4 @@ def setup_i18n(app):
 
     babel.init_app(app, locale_selector=locale_selector)
     app.url_map.converters["lang"] = LangConverter
+    app.jinja_env.policies["ext.i18n.trimmed"] = True

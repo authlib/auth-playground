@@ -2,8 +2,6 @@
 
 {% block title %}{% trans %}Privacy Policy{% endtrans %}{% endblock %}
 
-{% block footer_text %}{% trans %}Auth Playground - Educational Tool{% endtrans %}{% endblock %}
-
 {% block content %}
     <article>
         <header>
@@ -13,8 +11,9 @@
         <section>
             <h3>{% trans %}Overview{% endtrans %}</h3>
             <p>
-                {% trans %}Auth Playground is a <strong>demonstration tool</strong> for OpenID Connect authentication.
-                    As this is a self-hosted application, you control all aspects of data handling.{% endtrans %}
+                {% trans %}
+                    Auth Playground is a <strong>demonstration tool</strong> for OpenID Connect authentication.
+                {% endtrans %}
             </p>
         </section>
 
@@ -38,7 +37,7 @@
         <section>
             <h3>{% trans %}How Data Is Stored{% endtrans %}</h3>
             <p>
-                {% trans %}<mark>All authentication data is stored server-side in memory.</mark>{% endtrans %}
+                {% trans %}All authentication data is stored server-side in memory.{% endtrans %}
             </p>
             <ul>
                 <li>{% trans %}Data is stored in <strong>server memory</strong> (RAM) only{% endtrans %}</li>
@@ -46,7 +45,13 @@
                 <li>{% trans %}No database, files, or permanent storage is used{% endtrans %}</li>
                 <li>{% trans %}All session data is lost when the application restarts{% endtrans %}</li>
                 <li>{% trans %}Data is cleared when you log out{% endtrans %}</li>
-                <li>{% trans %}Sessions expire according to Flask's default session timeout{% endtrans %}</li>
+                <li>
+                    {% if config.SESSION_PERMANENT %}
+                        {% trans timeout=config.PERMANENT_SESSION_LIFETIME|format_timedelta %}Sessions expire after {{ timeout }}{% endtrans %}
+                    {% else %}
+                        {% trans %}Sessions expire when you close your browser{% endtrans %}
+                    {% endif %}
+                </li>
             </ul>
         </section>
 
@@ -69,26 +74,17 @@
 
         <section>
             <h3>{% trans %}Security Considerations{% endtrans %}</h3>
-            <p>
-                <strong>{% trans %}Important:{% endtrans %}</strong> {% trans %}Auth Playground is designed for development and testing.{% endtrans %}
-            </p>
             <ul>
                 <li>{% trans %}Use only <strong>test accounts</strong>, not real user accounts{% endtrans %}</li>
                 <li>{% trans %}Do not use sensitive or production data{% endtrans %}</li>
                 <li>{% trans %}Ensure your deployment is properly secured (HTTPS, firewall, etc.){% endtrans %}</li>
                 <li>{% trans %}Change the default{% endtrans %} <code>SECRET_KEY</code> {% trans %}environment variable{% endtrans %}</li>
-                <li>{% trans %}Review and understand the security implications of your setup{% endtrans %}</li>
             </ul>
         </section>
 
         <section>
             <h3>{% trans %}Your Rights{% endtrans %}</h3>
-            <p>
-                {% trans %}As this is a self-hosted application, you have complete control:{% endtrans %}
-            </p>
             <ul>
-                <li>{% trans %}You can log out at any time to clear your session data{% endtrans %}</li>
-                <li>{% trans %}You control who has access to your deployment{% endtrans %}</li>
                 <li>{% trans %}You can review the source code to understand data handling{% endtrans %}</li>
                 <li>{% trans %}You can modify the application to suit your needs{% endtrans %}</li>
             </ul>
