@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-10-29 11:50+0100\n"
+"POT-Creation-Date: 2025-10-29 11:56+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -76,69 +76,69 @@ msgstr ""
 msgid "Renew tokens"
 msgstr ""
 
-#: src/auth_playground/forms.py:23 src/auth_playground/forms.py:43
-msgid "Provider URL is required"
-msgstr ""
-
-#: src/auth_playground/forms.py:26
+#: src/auth_playground/forms.py:23
 msgid "URL must start with http:// or https://"
 msgstr ""
 
-#: src/auth_playground/forms.py:33
+#: src/auth_playground/forms.py:30
 msgid "HTTP is only allowed in debug or testing mode. Use HTTPS in production."
 msgstr ""
 
-#: src/auth_playground/forms.py:41
+#: src/auth_playground/forms.py:38
 msgid "Provider URL:"
 msgstr ""
 
-#: src/auth_playground/forms.py:47
+#: src/auth_playground/forms.py:40
+msgid "Provider URL is required"
+msgstr ""
+
+#: src/auth_playground/forms.py:44
 msgid ""
 "Enter the base URL of your OIDC/OAuth2 provider (e.g., "
 "https://auth.example.com)"
 msgstr ""
 
-#: src/auth_playground/forms.py:51
+#: src/auth_playground/forms.py:48
 msgid "Continue"
 msgstr ""
 
-#: src/auth_playground/forms.py:58
+#: src/auth_playground/forms.py:55
 msgid "Client ID:"
 msgstr ""
 
-#: src/auth_playground/forms.py:60
+#: src/auth_playground/forms.py:57
 msgid "Client ID is required"
 msgstr ""
 
-#: src/auth_playground/forms.py:64
+#: src/auth_playground/forms.py:61
 msgid "Client ID must be between 1 and 255 characters"
 msgstr ""
 
-#: src/auth_playground/forms.py:70
+#: src/auth_playground/forms.py:67
 msgid "Client secret:"
 msgstr ""
 
-#: src/auth_playground/forms.py:72 src/auth_playground/forms.py:73
+#: src/auth_playground/forms.py:69 src/auth_playground/forms.py:70
 msgid "Client Secret is required"
 msgstr ""
 
-#: src/auth_playground/forms.py:77
+#: src/auth_playground/forms.py:74
 msgid "Complete configuration"
 msgstr ""
 
-#: src/auth_playground/forms.py:84
+#: src/auth_playground/forms.py:81
 msgid "Initial access token:"
 msgstr ""
 
-#: src/auth_playground/forms.py:86
+#: src/auth_playground/forms.py:83
 msgid "Leave empty if not required"
 msgstr ""
 
-#: src/auth_playground/forms.py:88
+#: src/auth_playground/forms.py:85
 msgid "Register client"
 msgstr ""
 
-#: src/auth_playground/forms.py:94
+#: src/auth_playground/forms.py:91
 msgid "Unregister client"
 msgstr ""
 
