@@ -27,3 +27,12 @@ repos:
         - tomli
       exclude: ".*\\.min\\..*|translations|\\.css$|^tests|fomanticui|doc/locales|auth-playground\\.spec"
       args: [--write-changes]
+  - repo: local
+    hooks:
+      - id: pybabel-extract
+        name: Extract translatable strings
+        entry: bash -c 'uv run pybabel extract -o src/auth_playground/translations/messages.pot src/auth_playground && git add src/auth_playground/translations/messages.pot'
+        language: system
+        pass_filenames: false
+        files: '\.(py|html)$'
+        exclude: '^tests/'
