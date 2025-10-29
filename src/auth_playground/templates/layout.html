@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="{{ locale }}">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -63,6 +63,21 @@
                 <small><a href="{{ url_for('routes.policy') }}">{% trans %}Privacy Policy{% endtrans %}</a></small>
                 •
                 <small>{% block footer_text %}{% trans %}Powered by{% endtrans %} <a href="https://authlib.org" target="_blank">Authlib</a>{% endblock %}</small>
+            </p>
+            <p>
+                <small>
+                    {% for lang in available_languages %}
+                        {% if not loop.first %} • {% endif %}
+                        {% if lang.language == locale.language %}
+                            <strong>{{ lang.get_language_name(lang.language).title() }}</strong>
+                        {% else %}
+                            {# Build URL for current page with different language #}
+                            {% set view_args = request.view_args.copy() if request.view_args else {} %}
+                            {% set _ = view_args.pop('lang_code', None) %}
+                            <a href="{{ url_for(request.endpoint, lang_code=lang.language, **view_args) }}">{{ lang.get_language_name(lang.language).title() }}</a>
+                        {% endif %}
+                    {% endfor %}
+                </small>
             </p>
         </footer>
 

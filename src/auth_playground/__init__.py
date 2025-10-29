@@ -7,16 +7,20 @@ from cachelib.simple import SimpleCache
 from flask import Flask
 from flask import g
 from flask import has_request_context
+from flask import redirect
+from flask import request
 from flask import session as flask_session
-from flask_babel import Babel
+from flask import url_for
 from flask_session import Session
 
 from auth_playground.endpoints import bp
+from auth_playground.i18n import babel
+from auth_playground.i18n import setup_i18n
+from auth_playground.oauth import bp as oauth_bp
 from auth_playground.session import ServerConfig
 
 oauth = OAuth()
 sess = Session()
-babel = Babel()
 
 
 def is_oauth_configured():
@@ -109,9 +113,22 @@ def create_app():
     )
 
     sess.init_app(app)
-    babel.init_app(app)
+    setup_i18n(app)
 
-    app.register_blueprint(bp)
+    # Register OAuth blueprint without language prefix (technical endpoints)
+    app.register_blueprint(oauth_bp)
+
+    # Register main blueprint with mandatory language prefix (/<lang:lang_code>/...)
+    # The 'lang' converter validates that lang_code is an available language
+    app.register_blueprint(bp, url_prefix="/<lang:lang_code>")
+
+    @app.route("/")
+    def root():
+        """Redirect to the appropriate language prefix based on browser preference."""
+        available_langs = [locale.language for locale in babel.list_translations()]
+        default_lang = app.config.get("BABEL_DEFAULT_LOCALE", "en")
+        lang = request.accept_languages.best_match(available_langs) or default_lang
+        return redirect(url_for("routes.index", lang_code=lang))
 
     @app.before_request
     def load_server_config():

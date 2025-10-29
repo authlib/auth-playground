@@ -5,7 +5,7 @@ import re
 from pathlib import Path
 import importlib.resources
 from auth_playground import create_app
-from auth_playground import babel
+from auth_playground.i18n import babel
 
 with create_app().app_context():
     codes = {locale.language for locale in babel.list_translations()}
@@ -39,6 +39,7 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=[
+        ('src/auth_playground/translations', 'auth_playground/translations'),
         ('src/auth_playground/templates', 'auth_playground/templates'),
         ('src/auth_playground/static', 'auth_playground/static'),
         (wtforms_locale, 'wtforms/locale'),

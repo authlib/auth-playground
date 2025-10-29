@@ -1,0 +1,984 @@
+# French translations for PROJECT.
+# Copyright (C) 2025 Yaal Coop
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2025-10-28 17:50+0100\n"
+"PO-Revision-Date: 2025-10-28 17:51+0100\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: fr\n"
+"Language-Team: fr <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: src/auth_playground/endpoints.py:69
+msgid "Cannot connect to the server. Please check the URL."
+msgstr "Impossible de se connecter au serveur. Veuillez vérifier l'URL."
+
+#: src/auth_playground/endpoints.py:72
+msgid "Connection timeout. The server is not responding."
+msgstr "Délai de connexion dépassé. Le serveur ne répond pas."
+
+#: src/auth_playground/endpoints.py:78
+msgid ""
+"This server does not support OIDC Discovery or OAuth 2.0 Authorization "
+"Server Metadata"
+msgstr ""
+"Ce serveur ne prend pas en charge OIDC Discovery ou les métadonnées du "
+"serveur d'autorisation OAuth 2.0"
+
+#: src/auth_playground/endpoints.py:84
+#, python-brace-format
+msgid "Server returned an error: HTTP {status_code}"
+msgstr "Le serveur a renvoyé une erreur : HTTP {status_code}"
+
+#: src/auth_playground/endpoints.py:91
+msgid "Failed to connect to the server. Please check the URL."
+msgstr "Échec de connexion au serveur. Veuillez vérifier l'URL."
+
+#: src/auth_playground/endpoints.py:94
+msgid "Invalid response from server"
+msgstr "Réponse invalide du serveur"
+
+#: src/auth_playground/endpoints.py:145
+msgid "OAuth configuration is set via environment variables and cannot be changed"
+msgstr "La configuration OAuth est définie via des variables d'environnement et ne peut pas être modifiée"
+
+#: src/auth_playground/endpoints.py:155
+msgid "You can now configure a different identity provider"
+msgstr "Vous pouvez maintenant configurer un fournisseur d'identité différent"
+
+#: src/auth_playground/endpoints.py:175
+msgid "Server metadata successfully loaded"
+msgstr "Métadonnées du serveur chargées avec succès"
+
+#: src/auth_playground/endpoints.py:185
+msgid "OAuth client is set via environment variables and cannot be changed"
+msgstr "Le client OAuth est défini via des variables d'environnement et ne peut pas être modifié"
+
+#: src/auth_playground/endpoints.py:192
+msgid "Please configure a server"
+msgstr "Veuillez configurer un serveur"
+
+#: src/auth_playground/endpoints.py:223
+msgid "OAuth configuration completed successfully"
+msgstr "Configuration OAuth terminée avec succès"
+
+#: src/auth_playground/endpoints.py:233 src/auth_playground/endpoints.py:407
+#: src/auth_playground/endpoints.py:592
+msgid "Invalid request"
+msgstr "Requête invalide"
+
+#: src/auth_playground/endpoints.py:237
+msgid "Server metadata not found"
+msgstr "Métadonnées du serveur introuvables"
+
+#: src/auth_playground/endpoints.py:241
+msgid "Dynamic client registration not supported"
+msgstr "L'enregistrement dynamique de client n'est pas pris en charge"
+
+#: src/auth_playground/endpoints.py:282
+msgid "Dynamic client registration failed"
+msgstr "Échec de l'enregistrement dynamique du client"
+
+#: src/auth_playground/endpoints.py:288 src/auth_playground/endpoints.py:292
+#, python-brace-format
+msgid "Dynamic client registration failed: {error}"
+msgstr "Échec de l'enregistrement dynamique du client : {error}"
+
+#: src/auth_playground/endpoints.py:299
+msgid "Invalid JSON response from registration endpoint"
+msgstr "Réponse JSON invalide du point de terminaison d'enregistrement"
+
+#: src/auth_playground/endpoints.py:319
+msgid "Client successfully registered!"
+msgstr "Client enregistré avec succès !"
+
+#: src/auth_playground/endpoints.py:364
+msgid "No server configured"
+msgstr "Aucun serveur configuré"
+
+#: src/auth_playground/endpoints.py:415
+msgid "Client registration management credentials not found"
+msgstr "Identifiants de gestion de l'enregistrement du client introuvables"
+
+#: src/auth_playground/endpoints.py:426
+msgid "Client unregistration failed"
+msgstr "Échec de la désinscription du client"
+
+#: src/auth_playground/endpoints.py:431 src/auth_playground/endpoints.py:435
+#, python-brace-format
+msgid "Client unregistration failed: {error}"
+msgstr "Échec de la désinscription du client : {error}"
+
+#: src/auth_playground/endpoints.py:451
+msgid "Client successfully unregistered"
+msgstr "Client désinscrit avec succès"
+
+#: src/auth_playground/endpoints.py:490
+msgid "You account has been successfully created."
+msgstr "Votre compte a été créé avec succès."
+
+#: src/auth_playground/endpoints.py:493
+#, python-brace-format
+msgid "An error happened during registration: {error}"
+msgstr "Une erreur s'est produite lors de l'inscription : {error}"
+
+#: src/auth_playground/endpoints.py:538
+msgid "You have been successfully logged in."
+msgstr "Vous avez été connecté avec succès."
+
+#: src/auth_playground/endpoints.py:541
+#, python-brace-format
+msgid "An error happened during login: {error}"
+msgstr "Une erreur s'est produite lors de la connexion : {error}"
+
+#: src/auth_playground/endpoints.py:552
+msgid "You have been logged out"
+msgstr "Vous avez été déconnecté"
+
+#: src/auth_playground/endpoints.py:583
+msgid "You have been logged out from the server"
+msgstr "Vous avez été déconnecté du serveur"
+
+#: src/auth_playground/endpoints.py:597
+msgid "No refresh token available"
+msgstr "Aucun jeton de rafraîchissement disponible"
+
+#: src/auth_playground/endpoints.py:618
+msgid "Token successfully refreshed"
+msgstr "Jeton rafraîchi avec succès"
+
+#: src/auth_playground/endpoints.py:621
+#, python-brace-format
+msgid "An error happened during token refresh: {error}"
+msgstr "Une erreur s'est produite lors du rafraîchissement du jeton : {error}"
+
+#: src/auth_playground/forms.py:15
+msgid "Renew tokens"
+msgstr "Renouveler les jetons"
+
+#: src/auth_playground/forms.py:23 src/auth_playground/forms.py:43
+msgid "Identity Provider URL is required"
+msgstr "L'URL du fournisseur d'identité est requise"
+
+#: src/auth_playground/forms.py:26
+msgid "URL must start with http:// or https://"
+msgstr "L'URL doit commencer par http:// ou https://"
+
+#: src/auth_playground/forms.py:33
+msgid "HTTP is only allowed in debug or testing mode. Use HTTPS in production."
+msgstr "HTTP n'est autorisé qu'en mode débogage ou test. Utilisez HTTPS en production."
+
+#: src/auth_playground/forms.py:41
+msgid "Identity Provider URL:"
+msgstr "URL du fournisseur d'identité :"
+
+#: src/auth_playground/forms.py:47
+msgid ""
+"Enter the base URL of your OIDC/OAuth2 provider (e.g., "
+"https://auth.example.com)"
+msgstr ""
+"Entrez l'URL de base de votre fournisseur OIDC/OAuth2 (par ex., "
+"https://auth.exemple.com)"
+
+#: src/auth_playground/forms.py:51
+msgid "Continue"
+msgstr "Continuer"
+
+#: src/auth_playground/forms.py:58
+msgid "Client ID:"
+msgstr "ID du client :"
+
+#: src/auth_playground/forms.py:60
+msgid "Client ID is required"
+msgstr "L'ID du client est requis"
+
+#: src/auth_playground/forms.py:64
+msgid "Client ID must be between 1 and 255 characters"
+msgstr "L'ID du client doit contenir entre 1 et 255 caractères"
+
+#: src/auth_playground/forms.py:70
+msgid "Client secret:"
+msgstr "Secret du client :"
+
+#: src/auth_playground/forms.py:72 src/auth_playground/forms.py:73
+msgid "Client Secret is required"
+msgstr "Le secret du client est requis"
+
+#: src/auth_playground/forms.py:77
+msgid "Complete Configuration"
+msgstr "Terminer la configuration"
+
+#: src/auth_playground/forms.py:84
+msgid "Initial access token:"
+msgstr "Jeton d'accès initial :"
+
+#: src/auth_playground/forms.py:86
+msgid "Leave empty if not required"
+msgstr "Laisser vide si non requis"
+
+#: src/auth_playground/forms.py:88
+msgid "Register client"
+msgstr "Enregistrer le client"
+
+#: src/auth_playground/forms.py:94
+msgid "Unregister client"
+msgstr "Désinscrire le client"
+
+#: src/auth_playground/templates/authenticated.html:2
+msgid "Token information"
+msgstr "Informations sur les jetons"
+
+#: src/auth_playground/templates/authenticated.html:3
+#, python-format
+msgid "Here are the tokens received from the %(display_name)s:"
+msgstr "Voici les jetons reçus du %(display_name)s :"
+
+#: src/auth_playground/templates/authenticated.html:7
+msgid "ID token & user information"
+msgstr "Jeton d'identité et informations utilisateur"
+
+#: src/auth_playground/templates/authenticated.html:8
+msgid "Contains user identity information in JWT format."
+msgstr "Contient les informations d'identité de l'utilisateur au format JWT."
+
+#: src/auth_playground/templates/authenticated.html:11
+#: src/auth_playground/templates/authenticated.html:184
+#: src/auth_playground/templates/authenticated.html:209
+msgid "Copy"
+msgstr "Copier"
+
+#: src/auth_playground/templates/authenticated.html:16
+msgid "User claims"
+msgstr "Revendications utilisateur"
+
+#: src/auth_playground/templates/authenticated.html:24
+msgid "User name:"
+msgstr "Nom d'utilisateur :"
+
+#: src/auth_playground/templates/authenticated.html:28
+msgid "Display name:"
+msgstr "Nom d'affichage :"
+
+#: src/auth_playground/templates/authenticated.html:32
+msgid "Full name:"
+msgstr "Nom complet :"
+
+#: src/auth_playground/templates/authenticated.html:36
+msgid "Given name:"
+msgstr "Prénom :"
+
+#: src/auth_playground/templates/authenticated.html:40
+msgid "Family name:"
+msgstr "Nom de famille :"
+
+#: src/auth_playground/templates/authenticated.html:44
+msgid "Email:"
+msgstr "Email :"
+
+#: src/auth_playground/templates/authenticated.html:48
+msgid "Email verified:"
+msgstr "Email vérifié :"
+
+#: src/auth_playground/templates/authenticated.html:52
+msgid "Phone:"
+msgstr "Téléphone :"
+
+#: src/auth_playground/templates/authenticated.html:57
+msgid "Address:"
+msgstr "Adresse :"
+
+#: src/auth_playground/templates/authenticated.html:80
+msgid "Locale:"
+msgstr "Langue :"
+
+#: src/auth_playground/templates/authenticated.html:84
+msgid "Timezone:"
+msgstr "Fuseau horaire :"
+
+#: src/auth_playground/templates/authenticated.html:88
+msgid "Birthdate:"
+msgstr "Date de naissance :"
+
+#: src/auth_playground/templates/authenticated.html:92
+msgid "Gender:"
+msgstr "Genre :"
+
+#: src/auth_playground/templates/authenticated.html:96
+msgid "Website:"
+msgstr "Site web :"
+
+#: src/auth_playground/templates/authenticated.html:101
+msgid "Groups:"
+msgstr "Groupes :"
+
+#: src/auth_playground/templates/authenticated.html:111
+msgid "Token metadata"
+msgstr "Métadonnées du jeton"
+
+#: src/auth_playground/templates/authenticated.html:115
+msgid "Issuer:"
+msgstr "Émetteur :"
+
+#: src/auth_playground/templates/authenticated.html:120
+msgid "Audience:"
+msgstr "Audience :"
+
+#: src/auth_playground/templates/authenticated.html:132
+msgid "Auth time:"
+msgstr "Heure d'authentification :"
+
+#: src/auth_playground/templates/authenticated.html:136
+msgid "Issued at:"
+msgstr "Émis le :"
+
+#: src/auth_playground/templates/authenticated.html:140
+#: src/auth_playground/templates/authenticated.html:194
+msgid "Expires at:"
+msgstr "Expire le :"
+
+#: src/auth_playground/templates/authenticated.html:144
+msgid "Nonce:"
+msgstr "Nonce :"
+
+#: src/auth_playground/templates/authenticated.html:148
+msgid "Access token hash:"
+msgstr "Hachage du jeton d'accès :"
+
+#: src/auth_playground/templates/authenticated.html:152
+msgid "Code hash:"
+msgstr "Hachage du code :"
+
+#: src/auth_playground/templates/authenticated.html:156
+msgid "Auth context class:"
+msgstr "Classe de contexte d'authentification :"
+
+#: src/auth_playground/templates/authenticated.html:161
+msgid "Auth methods:"
+msgstr "Méthodes d'authentification :"
+
+#: src/auth_playground/templates/authenticated.html:169
+msgid "Authorized party:"
+msgstr "Partie autorisée :"
+
+#: src/auth_playground/templates/authenticated.html:180
+msgid "Access token"
+msgstr "Jeton d'accès"
+
+#: src/auth_playground/templates/authenticated.html:181
+msgid "Used to access protected resources on behalf of the user."
+msgstr "Utilisé pour accéder aux ressources protégées au nom de l'utilisateur."
+
+#: src/auth_playground/templates/authenticated.html:188
+msgid "Token type:"
+msgstr "Type de jeton :"
+
+#: src/auth_playground/templates/authenticated.html:191
+msgid "Expires in:"
+msgstr "Expire dans :"
+
+#: src/auth_playground/templates/authenticated.html:191
+#, python-format
+msgid "%(seconds)s seconds"
+msgstr "%(seconds)s secondes"
+
+#: src/auth_playground/templates/authenticated.html:197
+msgid "Scope:"
+msgstr "Portée :"
+
+#: src/auth_playground/templates/authenticated.html:205
+msgid "Refresh token"
+msgstr "Jeton de rafraîchissement"
+
+#: src/auth_playground/templates/authenticated.html:206
+msgid "Used to obtain new access tokens without re-authentication."
+msgstr "Utilisé pour obtenir de nouveaux jetons d'accès sans nouvelle authentification."
+
+#: src/auth_playground/templates/configure_client.html:3
+msgid "Configure OAuth Client"
+msgstr "Configurer le client OAuth"
+
+#: src/auth_playground/templates/configure_client.html:7
+msgid "Choose a configuration method"
+msgstr "Choisissez une méthode de configuration"
+
+#: src/auth_playground/templates/configure_client.html:10
+#, python-format
+msgid ""
+"The %(display_name)s configuration has been successfully loaded. Now "
+"register your client at the %(display_name)s. Select one of the following"
+" options:"
+msgstr ""
+"La configuration de %(display_name)s a été chargée avec succès. "
+"Enregistrez maintenant votre client auprès de %(display_name)s. "
+"Sélectionnez l'une des options suivantes :"
+
+#: src/auth_playground/templates/configure_client.html:18
+msgid "Dynamic registration"
+msgstr "Enregistrement dynamique"
+
+#: src/auth_playground/templates/configure_client.html:21
+msgid "This server supports"
+msgstr "Ce serveur prend en charge"
+
+#: src/auth_playground/templates/configure_client.html:21
+msgid "dynamic client registration"
+msgstr "l'enregistrement dynamique de client"
+
+#: src/auth_playground/templates/configure_client.html:21
+msgid ""
+"Provide an Initial Access Token if required, then click the button to "
+"automatically register this application."
+msgstr ""
+"Fournissez un jeton d'accès initial si nécessaire, puis cliquez sur le "
+"bouton pour enregistrer automatiquement cette application."
+
+#: src/auth_playground/templates/configure_client.html:46
+#: src/auth_playground/templates/configure_server.html:33
+msgid "What happens next?"
+msgstr "Que se passe-t-il ensuite ?"
+
+#: src/auth_playground/templates/configure_client.html:49
+#, python-format
+msgid ""
+"A new OAuth client will be created automatically at the %(display_name)s,"
+" with the correct configuration,"
+msgstr ""
+"Un nouveau client OAuth sera créé automatiquement sur %(display_name)s, "
+"avec la bonne configuration,"
+
+#: src/auth_playground/templates/configure_client.html:52
+msgid "Client ID and Secret will be generated by the server,"
+msgstr "L'ID et le secret du client seront générés par le serveur,"
+
+#: src/auth_playground/templates/configure_client.html:53
+msgid "Configuration will be stored in your session."
+msgstr "La configuration sera stockée dans votre session."
+
+#: src/auth_playground/templates/configure_client.html:61
+msgid "Manual configuration"
+msgstr "Configuration manuelle"
+
+#: src/auth_playground/templates/configure_client.html:64
+#, python-format
+msgid ""
+"Manually register the client at the %(display_name)s, then enter the "
+"client credentials below."
+msgstr ""
+"Enregistrez manuellement le client auprès de %(display_name)s, puis "
+"entrez les identifiants du client ci-dessous."
+
+#: src/auth_playground/templates/configure_client.html:68
+#, python-format
+msgid "%(display_name)s configuration"
+msgstr "Configuration de %(display_name)s"
+
+#: src/auth_playground/templates/configure_client.html:69
+#, python-format
+msgid ""
+"When creating your OAuth client at the %(display_name)s, configure these "
+"URIs:"
+msgstr ""
+"Lors de la création de votre client OAuth sur %(display_name)s, "
+"configurez ces URIs :"
+
+#: src/auth_playground/templates/configure_client.html:70
+#: src/auth_playground/templates/static-configuration.html:13
+msgid "Redirect URIs"
+msgstr "URIs de redirection"
+
+#: src/auth_playground/templates/configure_client.html:75
+#: src/auth_playground/templates/static-configuration.html:18
+msgid "Post-Logout Redirect URIs"
+msgstr "URIs de redirection après déconnexion"
+
+#: src/auth_playground/templates/configure_server.html:3
+msgid "Configure Identity Server"
+msgstr "Configurer le serveur d'identité"
+
+#: src/auth_playground/templates/configure_server.html:8
+msgid "Choose an identity provider"
+msgstr "Choisissez un fournisseur d'identité"
+
+#: src/auth_playground/templates/configure_server.html:11
+msgid ""
+"Enter the URL of your OpenID Connect identity provider to validate it and"
+" discover configuration options."
+msgstr ""
+"Entrez l'URL de votre fournisseur d'identité OpenID Connect pour la "
+"valider et découvrir les options de configuration."
+
+#: src/auth_playground/templates/configure_server.html:35
+msgid "Auth Playground will fetch the server's OIDC metadata from"
+msgstr "Auth Playground récupérera les métadonnées OIDC du serveur depuis"
+
+#: src/auth_playground/templates/configure_server.html:36
+msgid "If valid, Auth Playground will show you multiple configuration options:"
+msgstr "Si valide, Auth Playground vous montrera plusieurs options de configuration :"
+
+#: src/auth_playground/templates/configure_server.html:38
+msgid "Automatic registration (if supported)"
+msgstr "Enregistrement automatique (si pris en charge)"
+
+#: src/auth_playground/templates/configure_server.html:39
+msgid "Manual configuration via web form"
+msgstr "Configuration manuelle via formulaire web"
+
+#: src/auth_playground/templates/configure_server.html:40
+msgid "Environment variables setup"
+msgstr "Configuration via variables d'environnement"
+
+#: src/auth_playground/templates/layout.html:19
+msgid "OAuth 2.0 Demonstration Client"
+msgstr "Client de démonstration OAuth 2.0"
+
+#: src/auth_playground/templates/layout.html:26
+msgid "playground"
+msgstr "terrain de jeu"
+
+#: src/auth_playground/templates/layout.html:27
+msgid "specs"
+msgstr "spécifications"
+
+#: src/auth_playground/templates/layout.html:29
+msgid "switch"
+msgstr "changer"
+
+#: src/auth_playground/templates/layout.html:61
+#: src/auth_playground/templates/tos.html:3
+#: src/auth_playground/templates/tos.html:10
+msgid "Terms of Service"
+msgstr "Conditions d'utilisation"
+
+#: src/auth_playground/templates/layout.html:63
+#: src/auth_playground/templates/policy.html:3
+#: src/auth_playground/templates/policy.html:10
+msgid "Privacy Policy"
+msgstr "Politique de confidentialité"
+
+#: src/auth_playground/templates/layout.html:65
+msgid "Powered by"
+msgstr "Propulsé par"
+
+#: src/auth_playground/templates/playground.html:6
+msgid ""
+"Sign in to explore OAuth 2.0 and OpenID Connect flows. Test registration,"
+" authentication, token refresh, and logout operations."
+msgstr ""
+"Connectez-vous pour explorer les flux OAuth 2.0 et OpenID Connect. Testez "
+"l'inscription, l'authentification, le rafraîchissement des jetons et les "
+"opérations de déconnexion."
+
+#: src/auth_playground/templates/playground.html:28
+msgid "Sign in again"
+msgstr "Se connecter à nouveau"
+
+#: src/auth_playground/templates/playground.html:29
+msgid "Consent again"
+msgstr "Consentir à nouveau"
+
+#: src/auth_playground/templates/playground.html:30
+msgid "Log out"
+msgstr "Se déconnecter"
+
+#: src/auth_playground/templates/playground.html:32
+msgid "Server log out"
+msgstr "Déconnexion du serveur"
+
+#: src/auth_playground/templates/playground.html:36
+msgid "Sign up"
+msgstr "S'inscrire"
+
+#: src/auth_playground/templates/playground.html:38
+msgid "Sign in"
+msgstr "Se connecter"
+
+#: src/auth_playground/templates/policy.html:5
+#: src/auth_playground/templates/tos.html:5
+msgid "Auth Playground - Educational Tool"
+msgstr "Auth Playground - Outil éducatif"
+
+#: src/auth_playground/templates/policy.html:14
+msgid "Overview"
+msgstr "Aperçu"
+
+#: src/auth_playground/templates/policy.html:16
+msgid ""
+"Auth Playground is a <strong>demonstration tool</strong> for OpenID "
+"Connect authentication. As this is a self-hosted application, you control"
+" all aspects of data handling."
+msgstr ""
+"Auth Playground est un <strong>outil de démonstration</strong> pour "
+"l'authentification OpenID Connect. Comme il s'agit d'une application "
+"auto-hébergée, vous contrôlez tous les aspects de la gestion des données."
+
+#: src/auth_playground/templates/policy.html:22
+msgid "What Data Is Handled"
+msgstr "Quelles données sont traitées"
+
+#: src/auth_playground/templates/policy.html:24
+msgid ""
+"When you authenticate through Auth Playground, the following information "
+"is received from your identity provider:"
+msgstr ""
+"Lorsque vous vous authentifiez via Auth Playground, les informations "
+"suivantes sont reçues de votre fournisseur d'identité :"
+
+#: src/auth_playground/templates/policy.html:28
+msgid "Access token:"
+msgstr "Jeton d'accès :"
+
+#: src/auth_playground/templates/policy.html:28
+msgid "Used to access protected resources"
+msgstr "Utilisé pour accéder aux ressources protégées"
+
+#: src/auth_playground/templates/policy.html:29
+msgid "Refresh token:"
+msgstr "Jeton de rafraîchissement :"
+
+#: src/auth_playground/templates/policy.html:29
+msgid "Used to obtain new access tokens (if provided)"
+msgstr "Utilisé pour obtenir de nouveaux jetons d'accès (si fourni)"
+
+#: src/auth_playground/templates/policy.html:30
+msgid "ID token:"
+msgstr "Jeton d'identité :"
+
+#: src/auth_playground/templates/policy.html:30
+msgid "Contains your identity information in JWT format"
+msgstr "Contient vos informations d'identité au format JWT"
+
+#: src/auth_playground/templates/policy.html:31
+msgid "User information:"
+msgstr "Informations utilisateur :"
+
+#: src/auth_playground/templates/policy.html:31
+msgid "Profile data such as name, email, phone, address, groups, etc."
+msgstr "Données de profil telles que nom, email, téléphone, adresse, groupes, etc."
+
+#: src/auth_playground/templates/policy.html:34
+msgid ""
+"The exact data received depends on the scopes requested and what your "
+"identity provider shares."
+msgstr ""
+"Les données exactes reçues dépendent des portées demandées et de ce que "
+"votre fournisseur d'identité partage."
+
+#: src/auth_playground/templates/policy.html:39
+msgid "How Data Is Stored"
+msgstr "Comment les données sont stockées"
+
+#: src/auth_playground/templates/policy.html:41
+msgid "<mark>All authentication data is stored server-side in memory.</mark>"
+msgstr "<mark>Toutes les données d'authentification sont stockées en mémoire côté serveur.</mark>"
+
+#: src/auth_playground/templates/policy.html:44
+msgid "Data is stored in <strong>server memory</strong> (RAM) only"
+msgstr "Les données sont stockées uniquement dans la <strong>mémoire du serveur</strong> (RAM)"
+
+#: src/auth_playground/templates/policy.html:45
+msgid ""
+"A secure session cookie is sent to your browser (containing only a "
+"session ID, not the actual data)"
+msgstr ""
+"Un cookie de session sécurisé est envoyé à votre navigateur (contenant "
+"uniquement un ID de session, pas les données réelles)"
+
+#: src/auth_playground/templates/policy.html:46
+msgid "No database, files, or permanent storage is used"
+msgstr "Aucune base de données, fichier ou stockage permanent n'est utilisé"
+
+#: src/auth_playground/templates/policy.html:47
+msgid "All session data is lost when the application restarts"
+msgstr "Toutes les données de session sont perdues au redémarrage de l'application"
+
+#: src/auth_playground/templates/policy.html:48
+msgid "Data is cleared when you log out"
+msgstr "Les données sont effacées lorsque vous vous déconnectez"
+
+#: src/auth_playground/templates/policy.html:49
+msgid "Sessions expire according to Flask's default session timeout"
+msgstr "Les sessions expirent selon le délai d'expiration par défaut de Flask"
+
+#: src/auth_playground/templates/policy.html:54
+msgid "Data Sharing"
+msgstr "Partage de données"
+
+#: src/auth_playground/templates/policy.html:56
+msgid "Auth Playground does not:"
+msgstr "Auth Playground ne :"
+
+#: src/auth_playground/templates/policy.html:59
+msgid "Share your data with third parties"
+msgstr "Partage pas vos données avec des tiers"
+
+#: src/auth_playground/templates/policy.html:60
+msgid "Send data to external services"
+msgstr "Envoie pas de données vers des services externes"
+
+#: src/auth_playground/templates/policy.html:61
+msgid "Store data permanently"
+msgstr "Stocke pas les données de manière permanente"
+
+#: src/auth_playground/templates/policy.html:62
+msgid "Track your usage"
+msgstr "Suit pas votre utilisation"
+
+#: src/auth_playground/templates/policy.html:63
+msgid "Use analytics or advertising"
+msgstr "Utilise pas d'analyse ou de publicité"
+
+#: src/auth_playground/templates/policy.html:66
+msgid ""
+"The only external communication is with your configured identity provider"
+" for authentication purposes."
+msgstr ""
+"La seule communication externe se fait avec votre fournisseur d'identité "
+"configuré à des fins d'authentification."
+
+#: src/auth_playground/templates/policy.html:71
+msgid "Security Considerations"
+msgstr "Considérations de sécurité"
+
+#: src/auth_playground/templates/policy.html:73
+msgid "Important:"
+msgstr "Important :"
+
+#: src/auth_playground/templates/policy.html:73
+msgid "Auth Playground is designed for development and testing."
+msgstr "Auth Playground est conçu pour le développement et les tests."
+
+#: src/auth_playground/templates/policy.html:76
+msgid "Use only <strong>test accounts</strong>, not real user accounts"
+msgstr "Utilisez uniquement des <strong>comptes de test</strong>, pas de vrais comptes utilisateurs"
+
+#: src/auth_playground/templates/policy.html:77
+msgid "Do not use sensitive or production data"
+msgstr "N'utilisez pas de données sensibles ou de production"
+
+#: src/auth_playground/templates/policy.html:78
+msgid "Ensure your deployment is properly secured (HTTPS, firewall, etc.)"
+msgstr "Assurez-vous que votre déploiement est correctement sécurisé (HTTPS, pare-feu, etc.)"
+
+#: src/auth_playground/templates/policy.html:79
+msgid "Change the default"
+msgstr "Changez la valeur par défaut de la"
+
+#: src/auth_playground/templates/policy.html:79
+msgid "environment variable"
+msgstr "variable d'environnement"
+
+#: src/auth_playground/templates/policy.html:80
+msgid "Review and understand the security implications of your setup"
+msgstr "Examinez et comprenez les implications de sécurité de votre configuration"
+
+#: src/auth_playground/templates/policy.html:85
+msgid "Your Rights"
+msgstr "Vos droits"
+
+#: src/auth_playground/templates/policy.html:87
+msgid "As this is a self-hosted application, you have complete control:"
+msgstr "Comme il s'agit d'une application auto-hébergée, vous avez un contrôle total :"
+
+#: src/auth_playground/templates/policy.html:90
+msgid "You can log out at any time to clear your session data"
+msgstr "Vous pouvez vous déconnecter à tout moment pour effacer vos données de session"
+
+#: src/auth_playground/templates/policy.html:91
+msgid "You control who has access to your deployment"
+msgstr "Vous contrôlez qui a accès à votre déploiement"
+
+#: src/auth_playground/templates/policy.html:92
+msgid "You can review the source code to understand data handling"
+msgstr "Vous pouvez examiner le code source pour comprendre la gestion des données"
+
+#: src/auth_playground/templates/policy.html:93
+msgid "You can modify the application to suit your needs"
+msgstr "Vous pouvez modifier l'application pour répondre à vos besoins"
+
+#: src/auth_playground/templates/policy.html:98
+msgid "Identity Provider's Privacy Policy"
+msgstr "Politique de confidentialité du fournisseur d'identité"
+
+#: src/auth_playground/templates/policy.html:100
+msgid ""
+"Your identity provider may have its own privacy policy regarding the data"
+" they collect and share. Please review their privacy policy for "
+"information about how they handle your data."
+msgstr ""
+"Votre fournisseur d'identité peut avoir sa propre politique de "
+"confidentialité concernant les données qu'il collecte et partage. Veuillez "
+"consulter sa politique de confidentialité pour des informations sur la "
+"façon dont il gère vos données."
+
+#: src/auth_playground/templates/server_specs.html:2
+msgid "Server specifications"
+msgstr "Spécifications du serveur"
+
+#: src/auth_playground/templates/server_specs.html:6
+#: src/auth_playground/templates/specs.html:10
+#, python-format
+msgid "Supported specifications (%(count)s)"
+msgstr "Spécifications supportées (%(count)s)"
+
+#: src/auth_playground/templates/server_specs.html:17
+#: src/auth_playground/templates/specs.html:21
+#, python-format
+msgid "Unsupported specifications (%(count)s)"
+msgstr "Spécifications non supportées (%(count)s)"
+
+#: src/auth_playground/templates/server_specs.html:28
+#: src/auth_playground/templates/specs.html:32
+#, python-format
+msgid "Unknown specifications (%(count)s)"
+msgstr "Spécifications inconnues (%(count)s)"
+
+#: src/auth_playground/templates/specs.html:3
+#: src/auth_playground/templates/specs.html:6
+msgid "Server Specifications"
+msgstr "Spécifications du serveur"
+
+#: src/auth_playground/templates/static-configuration.html:3
+msgid "Static configuration"
+msgstr "Configuration statique"
+
+#: src/auth_playground/templates/static-configuration.html:6
+msgid ""
+"If you prefer to configure Auth Playground via environment variables "
+"without validating the server first, you can set them directly and "
+"restart the application."
+msgstr ""
+"Si vous préférez configurer Auth Playground via des variables "
+"d'environnement sans valider d'abord le serveur, vous pouvez les définir "
+"directement et redémarrer l'application."
+
+#: src/auth_playground/templates/static-configuration.html:9
+msgid "Create an OAuth client on your identity provider"
+msgstr "Créez un client OAuth sur votre fournisseur d'identité"
+
+#: src/auth_playground/templates/static-configuration.html:11
+msgid "What configuration details do I need?"
+msgstr "Quels détails de configuration ai-je besoin ?"
+
+#: src/auth_playground/templates/static-configuration.html:12
+msgid "Configure these URIs in your OAuth client:"
+msgstr "Configurez ces URIs dans votre client OAuth :"
+
+#: src/auth_playground/templates/static-configuration.html:25
+msgid "Set the following environment variables in a"
+msgstr "Définissez les variables d'environnement suivantes dans un fichier"
+
+#: src/auth_playground/templates/static-configuration.html:25
+msgid "file or by exporting them in your shell:"
+msgstr "ou en les exportant dans votre shell :"
+
+#: src/auth_playground/templates/static-configuration.html:31
+msgid "Restart the application"
+msgstr "Redémarrez l'application"
+
+#: src/auth_playground/templates/tos.html:14
+msgid "Purpose"
+msgstr "Objectif"
+
+#: src/auth_playground/templates/tos.html:16
+msgid ""
+"Auth Playground is an <strong>educational and demonstration tool</strong>"
+" designed to help developers test OAuth2 and OpenID Connect (OIDC) "
+"authentication flows. It is intended for:"
+msgstr ""
+"Auth Playground est un <strong>outil éducatif et de démonstration</strong> "
+"conçu pour aider les développeurs à tester les flux d'authentification "
+"OAuth2 et OpenID Connect (OIDC). Il est destiné à :"
+
+#: src/auth_playground/templates/tos.html:20
+msgid "Learning and understanding OAuth 2.0 and OpenID Connect protocols"
+msgstr "Apprendre et comprendre les protocoles OAuth 2.0 et OpenID Connect"
+
+#: src/auth_playground/templates/tos.html:21
+msgid "Testing integration with identity providers"
+msgstr "Tester l'intégration avec les fournisseurs d'identité"
+
+#: src/auth_playground/templates/tos.html:22
+msgid "Demonstrating authentication flows in development environments"
+msgstr "Démontrer les flux d'authentification dans les environnements de développement"
+
+#: src/auth_playground/templates/tos.html:23
+msgid "Debugging OIDC implementations"
+msgstr "Déboguer les implémentations OIDC"
+
+#: src/auth_playground/templates/tos.html:28
+msgid "Open Source Project"
+msgstr "Projet open source"
+
+#: src/auth_playground/templates/tos.html:30
+msgid "Auth Playground is an open source project. You are free to:"
+msgstr "Auth Playground est un projet open source. Vous êtes libre de :"
+
+#: src/auth_playground/templates/tos.html:33
+msgid "Use, modify, and distribute the software"
+msgstr "Utiliser, modifier et distribuer le logiciel"
+
+#: src/auth_playground/templates/tos.html:34
+msgid "Self-host the application"
+msgstr "Auto-héberger l'application"
+
+#: src/auth_playground/templates/tos.html:35
+msgid "Contribute improvements and bug fixes"
+msgstr "Contribuer des améliorations et des corrections de bugs"
+
+#: src/auth_playground/templates/tos.html:36
+msgid "Review the source code for security and functionality"
+msgstr "Examiner le code source pour la sécurité et les fonctionnalités"
+
+#: src/auth_playground/templates/tos.html:39
+msgid "Please refer to the LICENSE file in the repository for detailed terms."
+msgstr "Veuillez vous référer au fichier LICENSE dans le dépôt pour les conditions détaillées."
+
+#: src/auth_playground/templates/tos.html:44
+msgid "User Responsibility"
+msgstr "Responsabilité de l'utilisateur"
+
+#: src/auth_playground/templates/tos.html:46
+msgid "When using Auth Playground, you are responsible for:"
+msgstr "Lorsque vous utilisez Auth Playground, vous êtes responsable de :"
+
+#: src/auth_playground/templates/tos.html:49
+msgid "Using only test accounts and non-sensitive data"
+msgstr "Utiliser uniquement des comptes de test et des données non sensibles"
+
+#: src/auth_playground/templates/tos.html:50
+msgid "Securing your deployment appropriately for your environment"
+msgstr "Sécuriser votre déploiement de manière appropriée pour votre environnement"
+
+#: src/auth_playground/templates/tos.html:51
+msgid "Configuring environment variables correctly"
+msgstr "Configurer correctement les variables d'environnement"
+
+#: src/auth_playground/templates/tos.html:52
+msgid "Understanding the security implications of your setup"
+msgstr "Comprendre les implications de sécurité de votre configuration"
+
+#: src/auth_playground/templates/tos.html:53
+msgid "Complying with your identity provider's terms of service"
+msgstr "Respecter les conditions d'utilisation de votre fournisseur d'identité"
+
+#: src/auth_playground/templates/tos.html:58
+msgid "No Warranty"
+msgstr "Aucune garantie"
+
+#: src/auth_playground/templates/tos.html:60
+msgid ""
+"This software is provided \"as is\" without warranty of any kind, express"
+" or implied. Use at your own risk."
+msgstr ""
+"Ce logiciel est fourni « en l'état » sans garantie d'aucune sorte, "
+"expresse ou implicite. Utilisez-le à vos propres risques."
+

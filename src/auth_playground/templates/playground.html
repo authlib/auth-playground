@@ -11,31 +11,31 @@
     <div class="buttons-right">
         {% if g.server_config and g.server_config.registration_access_token %}
             <div class="buttons-right">
-                <form method="POST" action="{{ url_for('routes.unregister_client') }}">
+                <form method="POST" action="{{ url_for('oauth.unregister_client') }}">
                     {{ unregister_form.hidden_tag() }}
                     {{ unregister_form.submit() }}
                 </form>
             </div>
         {% endif %}
         {% if session.token and session.token.refresh_token %}
-            <form method="POST" action="{{ url_for('routes.refresh') }}">
+            <form method="POST" action="{{ url_for('oauth.refresh') }}">
                 {{ refresh_form.hidden_tag() }}
                 {{ refresh_form.submit() }}
             </form>
         {% endif %}
         <div role="group">
             {% if session.token %}
-                <a href="{{ url_for('routes.login') }}" role="button">{% trans %}Sign in again{% endtrans %}</a>
-                <a href="{{ url_for('routes.consent') }}" role="button">{% trans %}Consent again{% endtrans %}</a>
-                <a href="{{ url_for('routes.logout_local') }}" role="button" class="secondary">{% trans %}Log out{% endtrans %}</a>
+                <a href="{{ url_for('oauth.login') }}" role="button">{% trans %}Sign in again{% endtrans %}</a>
+                <a href="{{ url_for('oauth.consent') }}" role="button">{% trans %}Consent again{% endtrans %}</a>
+                <a href="{{ url_for('oauth.logout_local') }}" role="button" class="secondary">{% trans %}Log out{% endtrans %}</a>
                 {% if g.server_config and g.server_config.specs and g.server_config.specs.oidc_rpinitiated_logout %}
-                    <a href="{{ url_for('routes.logout') }}" role="button" class="contrast">{% trans %}Server log out{% endtrans %}</a>
+                    <a href="{{ url_for('oauth.logout') }}" role="button" class="contrast">{% trans %}Server log out{% endtrans %}</a>
                 {% endif %}
             {% else %}
                 {% if g.server_config and g.server_config.specs and g.server_config.specs.oidc_prompt_create %}
-                    <a href="{{ url_for('routes.register') }}" role="button">{% trans %}Sign up{% endtrans %}</a>
+                    <a href="{{ url_for('oauth.register') }}" role="button">{% trans %}Sign up{% endtrans %}</a>
                 {% endif %}
-                <a href="{{ url_for('routes.login') }}" role="button">{% trans %}Sign in{% endtrans %}</a>
+                <a href="{{ url_for('oauth.login') }}" role="button">{% trans %}Sign in{% endtrans %}</a>
             {% endif %}
         </div>
     </div>

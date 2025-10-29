@@ -1,3 +1,7 @@
+[build-system]
+requires = ["hatchling", "babel", "setuptools >= 50.0.0; python_version<'3.13'"]
+build-backend = "hatchling.build"
+
 [project]
 name = "auth-playground"
 version = "0.1.0"
@@ -26,10 +30,6 @@ repository = "https://github.com/yaal-coop/auth-playground"
 [project.scripts]
 auth-playground = "auth_playground.cli:run"
 
-[build-system]
-requires = ["uv_build>=0.9.5,<0.10.0"]
-build-backend = "uv_build"
-
 [dependency-groups]
 dev = [
     "prek>=0.2.11",
@@ -37,6 +37,11 @@ dev = [
     "pytest-coverage>=0.0",
     "pytest-iam>=0.2.4",
     "tox-uv>=1.29.0",
+    # Babel 2.14 does not directly depend on setuptools
+    # https://github.com/python-babel/babel/blob/40e60a1f6cf178d9f57fcc14f157ea1b2ab77361/CHANGES.rst?plain=1#L22-L24
+    # and neither python 3.12 due to PEP 632
+    # https://peps.python.org/pep-0632/
+    "setuptools >= 50.0.0; python_version>='3.12'",
 ]
 
 release = [
@@ -154,23 +159,7 @@ method = "jinja2"
 pattern = "**/templates/**.html"
 trimmed = "true"
 
-[[tool.babel.mappings]]
-method = "jinja2"
-pattern = "**/themes/**.html"
-trimmed = "true"
-
-[[tool.babel.mappings]]
-method = "jinja2"
-pattern = "**/templates/**.txt"
-trimmed = "true"
-
-[tool.codespell]
-ignore-words-list = "thirdparty"
-
 [tool.mypy]
-plugins = [
-  "pydantic.mypy"
-]
 warn_unused_ignores = true
 exclude = [
   "tests/",

@@ -1,0 +1,59 @@
+name: Check translation catalogs are up to date
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  check-translations:
+    name: Verify translation catalogs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version-file: "pyproject.toml"
+
+      - name: Install dependencies
+        run: uv sync --all-groups --all-extras
+
+      - name: Save current catalog (filtered)
+        run: |
+          grep -v '^"POT-Creation-Date:' src/auth_playground/translations/messages.pot | \
+          grep -v '^"Generated-By:' | \
+          grep -v '^#:' | \
+          grep -v '^#,' > /tmp/messages.pot.before
+
+      - name: Extract translation strings
+        run: pybabel extract --mapping-file pyproject.toml --copyright-holder="Yaal Coop" --output-file src/auth_playground/translations/messages.pot src
+
+      - name: Save new catalog (filtered)
+        run: |
+          grep -v '^"POT-Creation-Date:' src/auth_playground/translations/messages.pot | \
+          grep -v '^"Generated-By:' | \
+          grep -v '^#:' | \
+          grep -v '^#,' > /tmp/messages.pot.after
+
+      - name: Check for uncommitted changes in catalogs
+        run: |
+          # Compare filtered files
+          if diff -u /tmp/messages.pot.before /tmp/messages.pot.after; then
+            echo "Translation catalogs are up to date"
+          else
+            echo "Translation catalogs are not up to date!"
+            echo ""
+            echo "New translatable strings were found or existing ones were modified."
+            echo "Please check instructions in src/auth_playground/README.md and extract the strings."
+            exit 1
+          fi

@@ -2,7 +2,7 @@ def test_index_shows_signup_when_unauthenticated(iam_server, test_client):
     """Test that unauthenticated users see signup button only if server supports prompt=create."""
     import requests
 
-    res = test_client.get("/playground")
+    res = test_client.get("/en/playground")
     assert res.status_code == 200
 
     # Check if server supports prompt=create
@@ -127,7 +127,7 @@ def test_authenticated_user_can_access_index(iam_server, iam_client, user, test_
     res = iam_server.test_client.get(res.location)
     res = test_client.get(res.location)
 
-    res = test_client.get("/playground")
+    res = test_client.get("/en/playground")
     assert res.status_code == 200
     assert b"Auth Playground" in res.data
 
@@ -151,7 +151,7 @@ def test_tos_route(iam_server, iam_client, user, test_client):
     res = iam_server.test_client.get(res.location)
     res = test_client.get(res.location)
 
-    res = test_client.get("/tos")
+    res = test_client.get("/en/tos")
     assert res.status_code == 200
     assert b"Auth Playground" in res.data
 
@@ -165,7 +165,7 @@ def test_policy_route(iam_server, iam_client, user, test_client):
     res = iam_server.test_client.get(res.location)
     res = test_client.get(res.location)
 
-    res = test_client.get("/policy")
+    res = test_client.get("/en/policy")
     assert res.status_code == 200
     assert b"Auth Playground" in res.data
 
@@ -181,7 +181,7 @@ def test_refresh_token_form_displays_when_refresh_token_present(test_client):
         }
         sess["user"] = {"sub": "testuser"}
 
-    res = test_client.get("/playground")
+    res = test_client.get("/en/playground")
     assert res.status_code == 200
     assert b"Renew tokens" in res.data
 

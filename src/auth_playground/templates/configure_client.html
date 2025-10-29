@@ -20,7 +20,7 @@
 
             <p>{% trans %}This server supports{% endtrans %} <a href="https://datatracker.ietf.org/doc/html/rfc7591">{% trans %}dynamic client registration{% endtrans %}</a>. {% trans %}Provide an Initial Access Token if required, then click the button to automatically register this application.{% endtrans %}</p>
 
-            <form method="POST" action="{{ url_for('routes.client_dynamic_registration') }}">
+            <form method="POST" action="{{ url_for('oauth.client_dynamic_registration') }}">
                 {{ dynamic_registration_form.hidden_tag() }}
 
                 <label for="{{ dynamic_registration_form.initial_access_token.id }}">
@@ -69,12 +69,12 @@
             <p>{% trans display_name=g.server_config.display_name %}When creating your OAuth client at the {{ display_name }}, configure these URIs:{% endtrans %}</p>
             <p><strong>{% trans %}Redirect URIs{% endtrans %} (<code>redirect_uris</code>):</strong></p>
             <ul>
-                <li><code>{{ url_for('routes.login_callback', _external=True) }}</code></li>
-                <li><code>{{ url_for('routes.register_callback', _external=True) }}</code></li>
+                <li><code>{{ url_for('oauth.login_callback', _external=True) }}</code></li>
+                <li><code>{{ url_for('oauth.register_callback', _external=True) }}</code></li>
             </ul>
             <p><strong>{% trans %}Post-Logout Redirect URIs{% endtrans %} (<code>post_logout_redirect_uris</code>):</strong></p>
             <ul>
-                <li><code>{{ url_for('routes.logout_callback', _external=True) }}</code></li>
+                <li><code>{{ url_for('oauth.logout_callback', _external=True) }}</code></li>
             </ul>
         </details>
 

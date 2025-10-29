@@ -12,12 +12,12 @@
                 <p>{% trans %}Configure these URIs in your OAuth client:{% endtrans %}</p>
                 <p><strong>{% trans %}Redirect URIs{% endtrans %} (<code>redirect_uris</code>):</strong></p>
                 <ul>
-                    <li><code>{{ url_for('routes.login_callback', _external=True) }}</code></li>
-                    <li><code>{{ url_for('routes.register_callback', _external=True) }}</code></li>
+                    <li><code>{{ url_for('oauth.login_callback', _external=True) }}</code></li>
+                    <li><code>{{ url_for('oauth.register_callback', _external=True) }}</code></li>
                 </ul>
                 <p><strong>{% trans %}Post-Logout Redirect URIs{% endtrans %} (<code>post_logout_redirect_uris</code>):</strong></p>
                 <ul>
-                    <li><code>{{ url_for('routes.logout_callback', _external=True) }}</code></li>
+                    <li><code>{{ url_for('oauth.logout_callback', _external=True) }}</code></li>
                 </ul>
             </details>
 
