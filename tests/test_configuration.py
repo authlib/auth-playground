@@ -38,7 +38,7 @@ def test_configure_server_displays_form(unconfigured_app):
     test_client = unconfigured_app.test_client()
     res = test_client.get("/en/server")
     assert res.status_code == 200
-    assert b"Identity Provider URL" in res.data
+    assert b"issuer_url" in res.data
     assert b"Continue" in res.data
 
 

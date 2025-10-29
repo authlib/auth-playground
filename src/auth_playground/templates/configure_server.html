@@ -1,14 +1,14 @@
 {% extends "layout.html" %}
 
-{% block title %}{% trans %}Configure Identity Server{% endtrans %}{% endblock %}
+{% block title %}{% trans %}Configure Server{% endtrans %}{% endblock %}
 
 {% block content %}
     <article>
         <header>
-            <h2>{% trans %}Choose an identity provider{% endtrans %}</h2>
+            <h2>{% trans %}Choose a provider{% endtrans %}</h2>
         </header>
 
-        <p>{% trans %}Enter the URL of your OpenID Connect identity provider to validate it and discover configuration options.{% endtrans %}</p>
+        <p>{% trans %}Enter the URL of your OAuth2 or OpenID Connect provider to validate it and discover configuration options.{% endtrans %}</p>
 
         <form method="POST" action="{{ url_for('routes.configure_server') }}">
             {{ form.hidden_tag() }}
@@ -32,7 +32,7 @@
         <details>
             <summary role="button" class="outline">{% trans %}What happens next?{% endtrans %}</summary>
             <ol>
-                <li>{% trans %}Auth Playground will fetch the server's OIDC metadata from{% endtrans %} <code>/.well-known/openid-configuration</code></li>
+                <li>{% trans %}Auth Playground will fetch the server's metadata from{% endtrans %} <code>/.well-known/openid-configuration</code> {% trans %}or{% endtrans %} <code>/.well-known/oauth-authorization-server</code></li>
                 <li>{% trans %}If valid, Auth Playground will show you multiple configuration options:{% endtrans %}
                     <ul>
                         <li>{% trans %}Automatic registration (if supported){% endtrans %}</li>

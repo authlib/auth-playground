@@ -1,22 +1,15 @@
-def test_index_shows_signup_when_unauthenticated(iam_server, test_client):
-    """Test that unauthenticated users see signup button only if server supports prompt=create."""
-    import requests
-
+def test_index_shows_signin_when_unauthenticated(iam_server, test_client):
+    """Test that unauthenticated users see signin button."""
     res = test_client.get("/en/playground")
     assert res.status_code == 200
-
-    # Check if server supports prompt=create
-    metadata_url = f"{iam_server.url}/.well-known/openid-configuration"
-    metadata_response = requests.get(metadata_url)
-    metadata = metadata_response.json()
-    prompt_values = metadata.get("prompt_values_supported", [])
-
-    if "create" in prompt_values:
-        assert b"Sign up" in res.data
-    else:
-        assert b"Sign up" not in res.data
-
     assert b"Sign in" in res.data
+
+
+def test_index_shows_signup_when_server_supports_prompt_create(iam_server, test_client):
+    """Test that signup button appears when server supports prompt=create."""
+    res = test_client.get("/en/playground")
+    assert res.status_code == 200
+    assert b"Sign up" in res.data
 
 
 def test_registration_redirects_to_iam(iam_server, iam_client, test_client):

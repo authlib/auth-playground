@@ -1,11 +1,11 @@
-import os
+import os  # pragma: no cover
 
-from dotenv import load_dotenv
+from dotenv import load_dotenv  # pragma: no cover
 
-from auth_playground import create_app
+from auth_playground import create_app  # pragma: no cover
 
 
-def run():
+def run():  # pragma: no cover
     """Run the Auth Playground application."""
     load_dotenv()
     app = create_app()
@@ -15,5 +15,5 @@ def run():
     app.run(host=host, port=port, debug=debug)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     run()

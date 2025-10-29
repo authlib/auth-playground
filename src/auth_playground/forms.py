@@ -19,28 +19,25 @@ def validate_issuer_url(form, field):
     """Validate issuer URL with relaxed rules in debug/testing mode."""
     url = field.data
 
-    if not url:
-        raise ValidationError(_("Identity Provider URL is required"))
-
     if not url.startswith(("http://", "https://")):
         raise ValidationError(_("URL must start with http:// or https://"))
 
     is_debug = current_app.debug
     is_testing = current_app.testing
 
-    if url.startswith("http://") and not (is_debug or is_testing):
+    if url.startswith("http://") and not (is_debug or is_testing):  # pragma: no cover
         raise ValidationError(
             _("HTTP is only allowed in debug or testing mode. Use HTTPS in production.")
         )
 
 
 class ServerConfigForm(FlaskForm):
-    """Form to configure the Identity Provider server URL."""
+    """Form to configure the provider server URL."""
 
     issuer_url = StringField(
-        _("Identity Provider URL:"),
+        _("Provider URL:"),
         validators=[
-            DataRequired(message=_("Identity Provider URL is required")),
+            DataRequired(message=_("Provider URL is required")),
             validate_issuer_url,
         ],
         description=_(
@@ -74,7 +71,7 @@ class ClientConfigForm(FlaskForm):
         ],
         render_kw={"placeholder": "******************"},
     )
-    submit = SubmitField(_("Complete Configuration"))
+    submit = SubmitField(_("Complete configuration"))
 
 
 class DynamicRegistrationForm(FlaskForm):

@@ -269,6 +269,26 @@ class TestServerSpecs:
 
         assert specs.openid_for_verifiable_presentations
 
+    def test_fapi_baseline_with_pkce_and_oidc(self):
+        """Test FAPI 1.0 Baseline detection with PKCE and OIDC Core."""
+        metadata = {
+            "issuer": "https://example.com",
+            "authorization_endpoint": "https://example.com/authorize",
+            "token_endpoint": "https://example.com/token",
+            "jwks_uri": "https://example.com/jwks",
+            "response_types_supported": ["code"],
+            "subject_types_supported": ["public"],
+            "id_token_signing_alg_values_supported": ["RS256"],
+            "code_challenge_methods_supported": ["S256"],
+        }
+
+        specs = ServerSpecs(metadata)
+
+        assert specs.oauth_2_pkce
+        assert specs.oidc_core
+        assert specs.fapi_1_baseline
+        assert not specs.fapi_1_advanced
+
     def test_fapi_advanced_heuristic(self):
         """Test heuristic detection of FAPI Advanced profile."""
         metadata = {
