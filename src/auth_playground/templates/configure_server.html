@@ -44,6 +44,7 @@
         </details>
     </article>
 
-
-    {% include "static-configuration.html" %}
+    {% if config.DEBUG %}
+        {% include "static-configuration.html" %}
+    {% endif %}
 {% endblock %}
