@@ -4,8 +4,10 @@ on:
   push:
     tags:
       - '*.*.*'
+
 jobs:
-  release:
+  build-binary:
+    name: build binary
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -13,13 +15,64 @@ jobs:
         uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
-      - run: |
+      - name: Build binary
+        run: |
           export TZ=UTC
           uv sync --group release --all-extras --no-dev
           uv run pyinstaller auth-playground.spec
           uv cache prune --ci
-      - uses: softprops/action-gh-release@v2
-        if: github.ref_type == 'tag'
+      - uses: actions/upload-artifact@v4
         with:
-          files: |
-            dist/auth-playground
+          name: binary
+          path: dist/auth-playground
+          if-no-files-found: error
+
+  build-package:
+    name: build dist files
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - name: build dist
+        run: uv build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: package
+          path: dist/*
+          if-no-files-found: error
+
+  release:
+    name: create Github release
+    needs: build-binary
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: binary
+          path: dist
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/auth-playground
+
+  publish:
+    name: release to pypi
+    needs: build-package
+    runs-on: ubuntu-latest
+
+    environment:
+      name: pypi-release
+      url: https://pypi.org/project/auth-playground/
+    permissions:
+      id-token: write
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: package
+          path: dist
+
+      - name: Push build artifacts to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
