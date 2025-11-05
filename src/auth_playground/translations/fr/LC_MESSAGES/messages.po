@@ -597,6 +597,10 @@ msgid "playground"
 msgstr "bac à sable"
 
 #: src/auth_playground/templates/layout.html:27
+msgid "tokens"
+msgstr "jetons"
+
+#: src/auth_playground/templates/layout.html:28
 msgid "specs"
 msgstr "spécifications"
 
@@ -615,6 +619,14 @@ msgstr "Conditions d'utilisation"
 #: src/auth_playground/templates/policy.html:8
 msgid "Privacy Policy"
 msgstr "Politique de confidentialité"
+
+#: src/auth_playground/templates/tokens.html:8
+msgid "You need to sign in first to view token information."
+msgstr "Vous devez d'abord vous connecter pour voir les informations de jeton."
+
+#: src/auth_playground/templates/tokens.html:9
+msgid "Go to playground"
+msgstr "Aller au bac à sable"
 
 #: src/auth_playground/templates/layout.html:65
 msgid "Powered by"

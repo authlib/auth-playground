@@ -250,7 +250,7 @@ def authorize_callback():
             "error",
         )
 
-    return redirect(url_for("routes.playground"))
+    return redirect(url_for("routes.tokens"))
 
 
 @bp.route("/logout/local")

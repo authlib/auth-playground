@@ -24,6 +24,9 @@
                         <p>
                             {{ g.server_config.display_name }}
                             • <a href="{{ url_for('routes.playground') }}">{% trans %}playground{% endtrans %}</a>
+                            {% if session.token %}
+                                • <a href="{{ url_for('routes.tokens') }}">{% trans %}tokens{% endtrans %}</a>
+                            {% endif %}
                             • <a href="{{ url_for('routes.specs') }}">{% trans %}specs{% endtrans %}</a>
                             {% if not config.OAUTH_AUTH_SERVER %}
                                 • <a href="{{ url_for('routes.configure_server') }}">{% trans %}switch{% endtrans %}</a>

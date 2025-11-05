@@ -10,7 +10,7 @@
 
     <form method="POST" action="{{ url_for('oauth.authorize') }}" id="auth-params-form">
         {{ auth_params_form.hidden_tag() }}
-        <details>
+        <details{% if session.token %} open{% endif %}>
             <summary role="button" class="outline">{% trans %}Authorization parameters{% endtrans %}</summary>
 
             {% if auth_params_form.scopes.choices %}
@@ -68,12 +68,4 @@
             </div>
         {% endif %}
     </div>
-
-    {% if session.token %}
-        {% include "authenticated.html" %}
-    {% endif %}
-{% endblock %}
-
-{% block scripts %}
-    <script src="{{ url_for('static', filename='js/copy-token.js') }}"></script>
 {% endblock %}

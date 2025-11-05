@@ -276,3 +276,10 @@ def tos():
 def policy():
     """Display the Privacy Policy page."""
     return render_template("policy.html")
+
+
+@bp.route("/tokens")
+@server_config_needed
+def tokens():
+    """Display token information page."""
+    return render_template("tokens.html")
