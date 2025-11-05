@@ -49,6 +49,33 @@ release = [
     "pyinstaller>=6.11.1",
 ]
 
+[tool.hatch.build.targets.wheel]
+packages = ["src/auth_playground"]
+
+[tool.hatch.build]
+include = [
+    "src/auth_playground/**/*.py",
+    "src/auth_playground/templates/",
+    "src/auth_playground/static/",
+    "src/auth_playground/translations/",
+]
+
+exclude = [
+    "tests/",
+    "**/__pycache__",
+    "**/*.pyc",
+]
+
+artifacts = [
+    "src/auth_playground/translations/*/LC_MESSAGES/*.mo",
+]
+
+[tool.hatch.build.hooks.custom]
+dependencies = [
+    "Babel>=2.6.0",
+    "setuptools >= 50.0.0; python_version>='3.12'",
+]
+
 [tool.coverage.run]
 source = [
     "auth_playground",
