@@ -1,12 +1,73 @@
+from babel import Locale
+from babel import UnknownLocaleError
 from flask import current_app
+from flask import g
 from flask_babel import lazy_gettext as _
 from flask_wtf import FlaskForm
 from wtforms import PasswordField
+from wtforms import SelectField
+from wtforms import SelectMultipleField
 from wtforms import StringField
 from wtforms import SubmitField
 from wtforms import ValidationError
 from wtforms.validators import DataRequired
 from wtforms.validators import Length
+from wtforms.widgets import CheckboxInput
+from wtforms.widgets import ListWidget
+
+
+def get_scopes_choices():
+    """Get scopes choices from server metadata."""
+    if g.server_config and g.server_config.metadata:
+        scopes_supported = g.server_config.metadata.get("scopes_supported", [])
+        return [(scope, scope) for scope in scopes_supported]
+    return []
+
+
+def get_scopes_default():
+    """Get default scopes (all supported scopes)."""
+    if g.server_config and g.server_config.metadata:
+        return g.server_config.metadata.get("scopes_supported", [])
+    return []
+
+
+def get_prompt_choices():
+    """Get prompt choices for OAuth authorization."""
+    return [
+        ("", _("Default")),
+        ("none", _("None - No UI")),
+        ("login", _("Login - Authentication page")),
+        ("consent", _("Consent - Consent page")),
+        ("select_account", _("Select account - Account selection page")),
+        ("create", _("Create - Registration page")),
+    ]
+
+
+def get_ui_locales_choices():
+    """Get UI locales choices from server metadata."""
+    choices = [("", _("Default"))]
+    if (
+        g.server_config
+        and g.server_config.metadata
+        and (
+            ui_locales_supported := g.server_config.metadata.get(
+                "ui_locales_supported", []
+            )
+        )
+    ):
+        for locale_code in ui_locales_supported:
+            try:
+                # Parse the locale and get its display name in its own language
+                locale_obj = Locale.parse(locale_code.replace("-", "_"))
+                display_name = locale_obj.get_display_name(
+                    locale_code.replace("-", "_")
+                )
+                choices.append((locale_code, display_name))
+
+            except (UnknownLocaleError, ValueError):
+                # Fallback to the locale code if parsing fails
+                choices.append((locale_code, locale_code))
+    return choices
 
 
 class RefreshTokenForm(FlaskForm):
@@ -89,3 +150,26 @@ class UnregisterClientForm(FlaskForm):
     """Form to trigger client unregistration with CSRF protection."""
 
     submit = SubmitField(_("Unregister client"))
+
+
+class AuthorizationParamsForm(FlaskForm):
+    """Form to customize OAuth authorization parameters."""
+
+    scopes = SelectMultipleField(
+        _("Scopes:"),
+        choices=get_scopes_choices,
+        default=get_scopes_default,
+        description=_("Select the scopes to request from the authorization server"),
+        widget=ListWidget(prefix_label=False),
+        option_widget=CheckboxInput(),
+    )
+    prompt = SelectField(
+        _("Prompt:"),
+        choices=get_prompt_choices,
+        description=_("Control the authentication UI behavior"),
+    )
+    ui_locales = SelectField(
+        _("UI Locale:"),
+        choices=get_ui_locales_choices,
+        description=_("Preferred language for the authentication UI"),
+    )

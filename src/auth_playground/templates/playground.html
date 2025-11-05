@@ -8,6 +8,42 @@
         </p>
     </section>
 
+    <form method="POST" action="{{ url_for('oauth.authorize') }}" id="auth-params-form">
+        {{ auth_params_form.hidden_tag() }}
+        <details>
+            <summary role="button" class="outline">{% trans %}Authorization parameters{% endtrans %}</summary>
+
+            {% if auth_params_form.scopes.choices %}
+                <fieldset>
+                    <legend>{{ auth_params_form.scopes.label.text }}</legend>
+                    {% if auth_params_form.scopes.description %}
+                        <small>{{ auth_params_form.scopes.description }}</small>
+                    {% endif %}
+                    {{ auth_params_form.scopes() }}
+                </fieldset>
+            {% endif %}
+
+            <label>
+                {{ auth_params_form.prompt.label }}
+                {{ auth_params_form.prompt() }}
+                {% if auth_params_form.prompt.description %}
+                    <small>{{ auth_params_form.prompt.description }}</small>
+                {% endif %}
+            </label>
+
+            {% if auth_params_form.ui_locales.choices|length > 1 %}
+                <label>
+                    {{ auth_params_form.ui_locales.label }}
+                    {{ auth_params_form.ui_locales() }}
+                    {% if auth_params_form.ui_locales.description %}
+                        <small>{{ auth_params_form.ui_locales.description }}</small>
+                    {% endif %}
+                </label>
+            {% endif %}
+        </details>
+        <button type="submit">{% trans %}Sign in{% endtrans %}</button>
+    </form>
+
     <div class="buttons-right">
         {% if g.server_config and g.server_config.registration_access_token %}
             <div class="buttons-right">
@@ -23,21 +59,14 @@
                 {{ refresh_form.submit() }}
             </form>
         {% endif %}
-        <div role="group">
-            {% if session.token %}
-                <a href="{{ url_for('oauth.login') }}" role="button">{% trans %}Sign in again{% endtrans %}</a>
-                <a href="{{ url_for('oauth.consent') }}" role="button">{% trans %}Consent again{% endtrans %}</a>
+        {% if session.token %}
+            <div role="group">
                 <a href="{{ url_for('oauth.logout_local') }}" role="button" class="secondary">{% trans %}Log out{% endtrans %}</a>
                 {% if g.server_config and g.server_config.specs and g.server_config.specs.oidc_rpinitiated_logout %}
                     <a href="{{ url_for('oauth.logout') }}" role="button" class="contrast">{% trans %}Server log out{% endtrans %}</a>
                 {% endif %}
-            {% else %}
-                {% if g.server_config and g.server_config.specs and g.server_config.specs.oidc_prompt_create %}
-                    <a href="{{ url_for('oauth.register') }}" role="button">{% trans %}Sign up{% endtrans %}</a>
-                {% endif %}
-                <a href="{{ url_for('oauth.login') }}" role="button">{% trans %}Sign in{% endtrans %}</a>
-            {% endif %}
-        </div>
+            </div>
+        {% endif %}
     </div>
 
     {% if session.token %}

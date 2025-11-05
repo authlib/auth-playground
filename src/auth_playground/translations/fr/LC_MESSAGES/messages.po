@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-10-29 11:44+0100\n"
+"POT-Creation-Date: 2025-11-04 18:34+0100\n"
 "PO-Revision-Date: 2025-10-28 17:51+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: fr\n"
@@ -18,15 +18,15 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.17.0\n"
 
-#: src/auth_playground/endpoints.py:46
+#: src/auth_playground/endpoints.py:47
 msgid "Cannot connect to the server. Please check the URL."
 msgstr "Impossible de se connecter au serveur. Veuillez vérifier l'URL."
 
-#: src/auth_playground/endpoints.py:49
+#: src/auth_playground/endpoints.py:50
 msgid "Connection timeout. The server is not responding."
 msgstr "Délai de connexion dépassé. Le serveur ne répond pas."
 
-#: src/auth_playground/endpoints.py:55
+#: src/auth_playground/endpoints.py:56
 msgid ""
 "This server does not support OIDC Discovery or OAuth 2.0 Authorization "
 "Server Metadata"
@@ -34,74 +34,79 @@ msgstr ""
 "Ce serveur ne prend pas en charge OIDC Discovery ou les métadonnées du "
 "serveur d'autorisation OAuth 2.0"
 
-#: src/auth_playground/endpoints.py:61
+#: src/auth_playground/endpoints.py:62
 #, python-brace-format
 msgid "Server returned an error: HTTP {status_code}"
 msgstr "Le serveur a renvoyé une erreur : HTTP {status_code}"
 
-#: src/auth_playground/endpoints.py:68
+#: src/auth_playground/endpoints.py:69
 msgid "Failed to connect to the server. Please check the URL."
 msgstr "Échec de connexion au serveur. Veuillez vérifier l'URL."
 
-#: src/auth_playground/endpoints.py:71
+#: src/auth_playground/endpoints.py:72
 msgid "Invalid response from server"
 msgstr "Réponse invalide du serveur"
 
-#: src/auth_playground/endpoints.py:109
+#: src/auth_playground/endpoints.py:111
 msgid "OAuth configuration is set via environment variables and cannot be changed"
 msgstr ""
 "La configuration OAuth est définie via des variables d'environnement et "
 "ne peut pas être modifiée"
 
-#: src/auth_playground/endpoints.py:119
+#: src/auth_playground/endpoints.py:126
 msgid "You can now configure a different identity provider"
 msgstr "Vous pouvez maintenant configurer un fournisseur d'identité différent"
 
-#: src/auth_playground/endpoints.py:140
+#: src/auth_playground/endpoints.py:148
 msgid "Server metadata successfully loaded"
 msgstr "Métadonnées du serveur chargées avec succès"
 
-#: src/auth_playground/endpoints.py:150
+#: src/auth_playground/endpoints.py:158
 msgid "OAuth client is set via environment variables and cannot be changed"
 msgstr ""
 "Le client OAuth est défini via des variables d'environnement et ne peut "
 "pas être modifié"
 
-#: src/auth_playground/endpoints.py:157
+#: src/auth_playground/endpoints.py:165
 msgid "Please configure a server"
 msgstr "Veuillez configurer un serveur"
 
-#: src/auth_playground/endpoints.py:188
+#: src/auth_playground/endpoints.py:196
 msgid "OAuth configuration completed successfully"
 msgstr "Configuration OAuth terminée avec succès"
 
-#: src/auth_playground/endpoints.py:231
+#: src/auth_playground/endpoints.py:242 src/auth_playground/forms.py:107
+#: src/auth_playground/forms.py:118
+msgid "Default"
+msgstr ""
+
+#: src/auth_playground/endpoints.py:256
 msgid "No server configured"
 msgstr "Aucun serveur configuré"
 
-#: src/auth_playground/forms.py:15
+#: src/auth_playground/forms.py:17
 msgid "Renew tokens"
 msgstr "Renouveler les jetons"
 
-#: src/auth_playground/forms.py:23 src/auth_playground/forms.py:43
-msgid "Provider URL is required"
-msgstr "L'URL du fournisseur est requise"
-
-#: src/auth_playground/forms.py:26
+#: src/auth_playground/forms.py:25
 msgid "URL must start with http:// or https://"
 msgstr "L'URL doit commencer par http:// ou https://"
 
-#: src/auth_playground/forms.py:33
+#: src/auth_playground/forms.py:32
 msgid "HTTP is only allowed in debug or testing mode. Use HTTPS in production."
 msgstr ""
 "HTTP n'est autorisé qu'en mode débogage ou test. Utilisez HTTPS en "
 "production."
 
-#: src/auth_playground/forms.py:41
+#: src/auth_playground/forms.py:40
 msgid "Provider URL:"
 msgstr "URL du fournisseur :"
 
-#: src/auth_playground/forms.py:47
+#: src/auth_playground/forms.py:42
+msgid "Provider URL is required"
+msgstr "L'URL du fournisseur est requise"
+
+#: src/auth_playground/forms.py:46
 msgid ""
 "Enter the base URL of your OIDC/OAuth2 provider (e.g., "
 "https://auth.example.com)"
@@ -109,132 +114,167 @@ msgstr ""
 "Entrez l'URL de base de votre fournisseur OIDC/OAuth2 (par ex., "
 "https://auth.exemple.com)"
 
-#: src/auth_playground/forms.py:51
+#: src/auth_playground/forms.py:50
 msgid "Continue"
 msgstr "Continuer"
 
-#: src/auth_playground/forms.py:58
+#: src/auth_playground/forms.py:57
 msgid "Client ID:"
 msgstr "ID du client :"
 
-#: src/auth_playground/forms.py:60
+#: src/auth_playground/forms.py:59
 msgid "Client ID is required"
 msgstr "L'ID du client est requis"
 
-#: src/auth_playground/forms.py:64
+#: src/auth_playground/forms.py:63
 msgid "Client ID must be between 1 and 255 characters"
 msgstr "L'ID du client doit contenir entre 1 et 255 caractères"
 
-#: src/auth_playground/forms.py:70
+#: src/auth_playground/forms.py:69
 msgid "Client secret:"
 msgstr "Secret du client :"
 
-#: src/auth_playground/forms.py:72 src/auth_playground/forms.py:73
+#: src/auth_playground/forms.py:71 src/auth_playground/forms.py:72
 msgid "Client Secret is required"
 msgstr "Le secret du client est requis"
 
-#: src/auth_playground/forms.py:77
+#: src/auth_playground/forms.py:76
 msgid "Complete configuration"
 msgstr "Terminer la configuration"
 
-#: src/auth_playground/forms.py:84
+#: src/auth_playground/forms.py:83
 msgid "Initial access token:"
 msgstr "Jeton d'accès initial :"
 
-#: src/auth_playground/forms.py:86
+#: src/auth_playground/forms.py:85
 msgid "Leave empty if not required"
 msgstr "Laisser vide si non requis"
 
-#: src/auth_playground/forms.py:88
+#: src/auth_playground/forms.py:87
 msgid "Register client"
 msgstr "Enregistrer le client"
 
-#: src/auth_playground/forms.py:94
+#: src/auth_playground/forms.py:93
 msgid "Unregister client"
 msgstr "Désinscrire le client"
 
-#: src/auth_playground/oauth.py:67 src/auth_playground/oauth.py:179
-#: src/auth_playground/oauth.py:352
+#: src/auth_playground/forms.py:100
+msgid "Scopes:"
+msgstr "Portées :"
+
+#: src/auth_playground/forms.py:102
+msgid "Select the scopes to request from the authorization server"
+msgstr "Sélectionnez les portées à demander au serveur d'autorisation"
+
+#: src/auth_playground/forms.py:105
+msgid "Prompt:"
+msgstr "Invite :"
+
+#: src/auth_playground/forms.py:108
+msgid "None - No UI"
+msgstr "Aucune - Pas d'interface"
+
+#: src/auth_playground/forms.py:109
+msgid "Login - Force re-authentication"
+msgstr "Connexion - Forcer la ré-authentification"
+
+#: src/auth_playground/forms.py:110
+msgid "Consent - Force consent"
+msgstr "Consentement - Forcer le consentement"
+
+#: src/auth_playground/forms.py:111
+msgid "Select account"
+msgstr "Sélectionner le compte"
+
+#: src/auth_playground/forms.py:112
+msgid "Create - Registration"
+msgstr "Création - Inscription"
+
+#: src/auth_playground/forms.py:114
+msgid "Control the authentication UI behavior"
+msgstr "Contrôler le comportement de l'interface d'authentification"
+
+#: src/auth_playground/forms.py:117
+msgid "UI Locale:"
+msgstr "Langue de l'interface :"
+
+#: src/auth_playground/forms.py:119
+msgid "Preferred language for the authentication UI"
+msgstr "Langue préférée pour l'interface d'authentification"
+
+#: src/auth_playground/oauth.py:63 src/auth_playground/oauth.py:161
+#: src/auth_playground/oauth.py:317
 msgid "Invalid request"
 msgstr "Requête invalide"
 
-#: src/auth_playground/oauth.py:73
+#: src/auth_playground/oauth.py:67
 msgid "Server metadata not found"
 msgstr "Métadonnées du serveur introuvables"
 
-#: src/auth_playground/oauth.py:79
+#: src/auth_playground/oauth.py:71
 msgid "Dynamic client registration not supported"
 msgstr "L'enregistrement dynamique de client n'est pas pris en charge"
 
-#: src/auth_playground/oauth.py:126
+#: src/auth_playground/oauth.py:112
 msgid "Dynamic client registration failed"
 msgstr "Échec de l'enregistrement dynamique du client"
 
-#: src/auth_playground/oauth.py:132 src/auth_playground/oauth.py:136
+#: src/auth_playground/oauth.py:118 src/auth_playground/oauth.py:122
 #, python-brace-format
 msgid "Dynamic client registration failed: {error}"
 msgstr "Échec de l'enregistrement dynamique du client : {error}"
 
-#: src/auth_playground/oauth.py:145
+#: src/auth_playground/oauth.py:129
 msgid "Invalid JSON response from registration endpoint"
 msgstr "Réponse JSON invalide du point de terminaison d'enregistrement"
 
-#: src/auth_playground/oauth.py:167
+#: src/auth_playground/oauth.py:149
 msgid "Client successfully registered!"
 msgstr "Client enregistré avec succès !"
 
-#: src/auth_playground/oauth.py:187
+#: src/auth_playground/oauth.py:169
 msgid "Client registration management credentials not found"
 msgstr "Identifiants de gestion de l'enregistrement du client introuvables"
 
-#: src/auth_playground/oauth.py:198
+#: src/auth_playground/oauth.py:180
 msgid "Client unregistration failed"
 msgstr "Échec de la désinscription du client"
 
-#: src/auth_playground/oauth.py:203 src/auth_playground/oauth.py:207
+#: src/auth_playground/oauth.py:185 src/auth_playground/oauth.py:189
 #, python-brace-format
 msgid "Client unregistration failed: {error}"
 msgstr "Échec de la désinscription du client : {error}"
 
-#: src/auth_playground/oauth.py:223
+#: src/auth_playground/oauth.py:205
 msgid "Client successfully unregistered"
 msgstr "Client désinscrit avec succès"
 
-#: src/auth_playground/oauth.py:250
-msgid "You account has been successfully created."
-msgstr "Votre compte a été créé avec succès."
-
-#: src/auth_playground/oauth.py:253
-#, python-brace-format
-msgid "An error happened during registration: {error}"
-msgstr "Une erreur s'est produite lors de l'inscription : {error}"
-
-#: src/auth_playground/oauth.py:298
+#: src/auth_playground/oauth.py:263
 msgid "You have been successfully logged in."
 msgstr "Vous avez été connecté avec succès."
 
-#: src/auth_playground/oauth.py:301
+#: src/auth_playground/oauth.py:266
 #, python-brace-format
 msgid "An error happened during login: {error}"
 msgstr "Une erreur s'est produite lors de la connexion : {error}"
 
-#: src/auth_playground/oauth.py:312
+#: src/auth_playground/oauth.py:277
 msgid "You have been logged out"
 msgstr "Vous avez été déconnecté"
 
-#: src/auth_playground/oauth.py:343
+#: src/auth_playground/oauth.py:308
 msgid "You have been logged out from the server"
 msgstr "Vous avez été déconnecté du serveur"
 
-#: src/auth_playground/oauth.py:357
+#: src/auth_playground/oauth.py:322
 msgid "No refresh token available"
 msgstr "Aucun jeton de rafraîchissement disponible"
 
-#: src/auth_playground/oauth.py:378
+#: src/auth_playground/oauth.py:343
 msgid "Token successfully refreshed"
 msgstr "Jeton rafraîchi avec succès"
 
-#: src/auth_playground/oauth.py:381
+#: src/auth_playground/oauth.py:346
 #, python-brace-format
 msgid "An error happened during token refresh: {error}"
 msgstr "Une erreur s'est produite lors du rafraîchissement du jeton : {error}"
@@ -589,29 +629,30 @@ msgstr ""
 " l'inscription, l'authentification, le rafraîchissement des jetons et les"
 " opérations de déconnexion."
 
-#: src/auth_playground/templates/playground.html:28
+#: src/auth_playground/templates/playground.html:13
+msgid "Authorization parameters"
+msgstr "Paramètres d'autorisation"
+
+#: src/auth_playground/templates/playground.html:45
+#: src/auth_playground/templates/playground.html:74
+msgid "Sign in"
+msgstr "Se connecter"
+
+#: src/auth_playground/templates/playground.html:67
 msgid "Sign in again"
 msgstr "Se connecter à nouveau"
 
-#: src/auth_playground/templates/playground.html:29
+#: src/auth_playground/templates/playground.html:68
 msgid "Consent again"
 msgstr "Consentir à nouveau"
 
-#: src/auth_playground/templates/playground.html:30
+#: src/auth_playground/templates/playground.html:69
 msgid "Log out"
 msgstr "Se déconnecter"
 
-#: src/auth_playground/templates/playground.html:32
+#: src/auth_playground/templates/playground.html:71
 msgid "Server log out"
 msgstr "Déconnexion du serveur"
-
-#: src/auth_playground/templates/playground.html:36
-msgid "Sign up"
-msgstr "S'inscrire"
-
-#: src/auth_playground/templates/playground.html:38
-msgid "Sign in"
-msgstr "Se connecter"
 
 #: src/auth_playground/templates/policy.html:12
 msgid "Overview"
@@ -980,4 +1021,19 @@ msgid ""
 msgstr ""
 "Ce logiciel est fourni « en l'état » sans garantie d'aucune sorte, "
 "expresse ou implicite. Utilisez-le à vos propres risques."
+
+#~ msgid "Authorization parameters saved"
+#~ msgstr "Paramètres d'autorisation sauvegardés"
+
+#~ msgid "You account has been successfully created."
+#~ msgstr "Votre compte a été créé avec succès."
+
+#~ msgid "An error happened during registration: {error}"
+#~ msgstr "Une erreur s'est produite lors de l'inscription : {error}"
+
+#~ msgid "Save parameters"
+#~ msgstr "Sauvegarder les paramètres"
+
+#~ msgid "Sign up"
+#~ msgstr "S'inscrire"
 

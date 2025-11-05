@@ -5,6 +5,7 @@ from authlib.integrations.flask_client import OAuth
 from authlib.oidc.discovery import get_well_known_url
 from cachelib.simple import SimpleCache
 from flask import Flask
+from flask import current_app
 from flask import g
 from flask import has_request_context
 from flask import redirect
@@ -23,7 +24,7 @@ oauth = OAuth()
 sess = Session()
 
 
-def is_oauth_configured():
+def is_client_configured():
     """Check if OAuth client is configured by checking the registry."""
     return "default" in oauth._registry
 
@@ -31,6 +32,13 @@ def is_oauth_configured():
 def is_oauth_server_from_env(app):
     """Check if OAuth server is set via environment variables."""
     return bool(app.config.get("OAUTH_AUTH_SERVER"))
+
+
+def is_server_configured():
+    """Check if OAuth server is configured (from env or session)."""
+    return is_oauth_server_from_env(current_app) or (
+        g.server_config and g.server_config.issuer_url
+    )
 
 
 def is_oauth_client_from_env(app):
@@ -115,11 +123,7 @@ def create_app():
     sess.init_app(app)
     setup_i18n(app)
 
-    # Register OAuth blueprint without language prefix (technical endpoints)
     app.register_blueprint(oauth_bp)
-
-    # Register main blueprint with mandatory language prefix (/<lang:lang_code>/...)
-    # The 'lang' converter validates that lang_code is an available language
     app.register_blueprint(bp, url_prefix="/<lang:lang_code>")
 
     @app.route("/")
@@ -141,6 +145,17 @@ def create_app():
                 g.server_config = ServerConfig()
             if issuer_url := app.config.get("OAUTH_AUTH_SERVER"):
                 g.server_config.issuer_url = issuer_url
+
+    @app.after_request
+    def save_server_config(response):
+        """Automatically save server configuration to session after each request."""
+        if (
+            g.get("server_config")
+            and not app.config.get("OAUTH_AUTH_SERVER")
+            and (g.server_config.metadata or g.server_config.issuer_url)
+        ):
+            g.server_config.save(flask_session)
+        return response
 
     @app.context_processor
     def inject_server_info():

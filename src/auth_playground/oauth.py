@@ -9,11 +9,14 @@ from flask import current_app
 from flask import flash
 from flask import g
 from flask import redirect
+from flask import request
 from flask import session
 from flask import url_for
 from flask_babel import gettext as _
 
 import auth_playground
+from auth_playground.decorators import server_config_needed
+from auth_playground.forms import AuthorizationParamsForm
 from auth_playground.forms import DynamicRegistrationForm
 from auth_playground.forms import RefreshTokenForm
 from auth_playground.forms import UnregisterClientForm
@@ -54,16 +57,13 @@ def clear_user_session():
 
 
 @bp.route("/client/dynamic-registration", methods=["POST"])
+@server_config_needed(client_needed=False)
 def client_dynamic_registration():
     """Automatically register OAuth client using dynamic client registration."""
     form = DynamicRegistrationForm()
 
     if not form.validate_on_submit():
         flash(_("Invalid request"), "error")
-        return redirect(url_for("routes.configure_client"))
-
-    if not g.server_config or not g.server_config.metadata:
-        flash(_("Server metadata not found"), "error")
         return redirect(url_for("routes.configure_client"))
 
     if not g.server_config.specs.oauth_2_dynamic_client_registration:
@@ -73,8 +73,7 @@ def client_dynamic_registration():
     registration_endpoint = g.server_config.metadata["registration_endpoint"]
 
     redirect_uris = [
-        url_for("oauth.login_callback", _external=True),
-        url_for("oauth.register_callback", _external=True),
+        url_for("oauth.authorize_callback", _external=True),
     ]
 
     registration_data = {
@@ -142,8 +141,6 @@ def client_dynamic_registration():
     if "registration_client_uri" in client_data:
         g.server_config.registration_client_uri = client_data["registration_client_uri"]
 
-    g.server_config.save(session)
-
     flash(
         _("Client successfully registered!"),
         "success",
@@ -152,6 +149,7 @@ def client_dynamic_registration():
 
 
 @bp.route("/unregister-client", methods=["POST"])
+@server_config_needed
 def unregister_client():
     """Unregister OAuth client using dynamic client registration management."""
     form = UnregisterClientForm()
@@ -161,8 +159,7 @@ def unregister_client():
         return redirect(url_for("routes.playground"))
 
     if (
-        not g.server_config
-        or not g.server_config.registration_access_token
+        not g.server_config.registration_access_token
         or not g.server_config.registration_client_uri
     ):
         flash(_("Client registration management credentials not found"), "error")
@@ -199,71 +196,41 @@ def unregister_client():
 
     g.server_config.registration_access_token = None
     g.server_config.registration_client_uri = None
-    g.server_config.save(session)
 
     flash(_("Client successfully unregistered"), "success")
     return redirect(url_for("routes.configure_client"))
 
 
-@bp.route("/register")
-def register():
-    """Redirect users to the Identity Provider registration page."""
+@bp.route("/authorize", methods=["GET", "POST"])
+@server_config_needed
+def authorize():
+    """Redirect users to the Identity Provider authorization page."""
+    kwargs = {}
+
+    if request.method == "POST":
+        form = AuthorizationParamsForm()
+
+        if form.validate_on_submit():
+            if form.scopes.data:
+                kwargs["scope"] = " ".join(form.scopes.data)
+
+            if form.prompt.data:
+                kwargs["prompt"] = form.prompt.data
+
+            if form.ui_locales.data:
+                kwargs["ui_locales"] = form.ui_locales.data
+
+    if request.method == "GET" and "user" in session:
+        kwargs["prompt"] = "login"
+
     return auth_playground.oauth.default.authorize_redirect(
-        url_for("oauth.register_callback", _external=True), prompt="create"
+        url_for("oauth.authorize_callback", _external=True), **kwargs
     )
 
 
-@bp.route("/register_callback")
-def register_callback():
-    """Handle OAuth callback after user registration."""
-    try:
-        token = auth_playground.oauth.default.authorize_access_token()
-        session["user"] = token.get("userinfo")
-        session["token"] = {
-            "access_token": token.get("access_token"),
-            "refresh_token": token.get("refresh_token"),
-            "id_token": token.get("id_token"),
-            "token_type": token.get("token_type"),
-            "expires_in": token.get("expires_in"),
-            "expires_at": token.get("expires_at"),
-            "scope": token.get("scope"),
-        }
-        flash(_("You account has been successfully created."), "success")
-    except AuthlibBaseError as exc:
-        flash(
-            _("An error happened during registration: {error}").format(
-                error=exc.description
-            ),
-            "error",
-        )
-
-    return redirect(url_for("routes.playground"))
-
-
-@bp.route("/login")
-def login():
-    """Redirect users to the Identity Provider login page."""
-    if "user" in session:
-        return auth_playground.oauth.default.authorize_redirect(
-            url_for("oauth.login_callback", _external=True), prompt="login"
-        )
-    else:
-        return auth_playground.oauth.default.authorize_redirect(
-            url_for("oauth.login_callback", _external=True)
-        )
-
-
-@bp.route("/consent")
-def consent():
-    """Redirect users to the Identity Provider consent page."""
-    return auth_playground.oauth.default.authorize_redirect(
-        url_for("oauth.login_callback", _external=True), prompt="consent"
-    )
-
-
-@bp.route("/login_callback")
-def login_callback():
-    """Handle OAuth callback after user login."""
+@bp.route("/authorize_callback")
+def authorize_callback():
+    """Handle OAuth callback after user authorization."""
     try:
         token = auth_playground.oauth.default.authorize_access_token()
         session["user"] = token.get("userinfo")
@@ -295,6 +262,7 @@ def logout_local():
 
 
 @bp.route("/logout")
+@server_config_needed
 def logout():
     """Redirect users to the Identity Provider logout page for global logout."""
     auth_playground.oauth.default.load_server_metadata()

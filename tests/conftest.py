@@ -25,7 +25,7 @@ def iam_client(iam_server):
         client_name="Auth Playground Test",
         client_uri="http://client.test",
         redirect_uris=[
-            "http://client.test/login_callback",
+            "http://client.test/authorize_callback",
             "http://client.test/logout_callback",
         ],
         grant_types=["authorization_code", "refresh_token"],

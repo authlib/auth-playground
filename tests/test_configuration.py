@@ -84,7 +84,7 @@ def test_configure_client_redirects_without_server_metadata(unconfigured_app):
     test_client = unconfigured_app.test_client()
     res = test_client.get("/en/client", follow_redirects=True)
     assert res.status_code == 200
-    assert b"Please configure a server" in res.data
+    assert b"Provider URL" in res.data
 
 
 def test_configure_client_displays_manual_form(unconfigured_app):
@@ -217,8 +217,7 @@ def test_flash_messages_displayed_in_layout(unconfigured_app):
 
     res = test_client.get("/en/client", follow_redirects=True)
     assert res.status_code == 200
-    assert b'role="alert"' in res.data
-    assert b"Please configure a server" in res.data
+    assert b"Provider URL" in res.data
 
 
 def test_switch_link_hidden_when_env_configured(app, iam_server, iam_client):

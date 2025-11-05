@@ -6,17 +6,19 @@ def test_index_shows_signin_when_unauthenticated(iam_server, test_client):
 
 
 def test_index_shows_signup_when_server_supports_prompt_create(iam_server, test_client):
-    """Test that signup button appears when server supports prompt=create."""
+    """Test that registration option appears in prompt selector when server supports prompt=create."""
     res = test_client.get("/en/playground")
     assert res.status_code == 200
-    assert b"Sign up" in res.data
+    assert b"Create - Registration" in res.data
 
 
 def test_registration_redirects_to_iam(iam_server, iam_client, test_client):
-    """Test that registration redirects to IAM with prompt=create."""
-    res = test_client.get("/register")
-    assert res.status_code == 302
-    assert "prompt=create" in res.location
+    """Test that the authorization parameters form includes create option."""
+    res = test_client.get("/en/playground")
+    assert res.status_code == 200
+    # Verify that the prompt select includes the create option
+    assert b'value="create"' in res.data
+    assert b"Create - Registration" in res.data
 
 
 def test_login_flow_fast(iam_server, iam_client, user, test_client):
@@ -24,7 +26,7 @@ def test_login_flow_fast(iam_server, iam_client, user, test_client):
     iam_server.login(user)
     iam_server.consent(user, iam_client)
 
-    res = test_client.get("/login")
+    res = test_client.get("/authorize")
     assert res.status_code == 302
 
     res = iam_server.test_client.get(res.location)
@@ -38,14 +40,14 @@ def test_login_flow_fast(iam_server, iam_client, user, test_client):
         assert sess["user"]["sub"] == user.user_name
 
 
-def test_login_callback_stores_user_in_session(
+def test_authorize_callback_stores_user_in_session(
     iam_server, iam_client, user, test_client
 ):
-    """Test that login callback stores user info in session."""
+    """Test that authorize callback stores user info in session."""
     iam_server.login(user)
     iam_server.consent(user, iam_client)
 
-    res = test_client.get("/login")
+    res = test_client.get("/authorize")
     res = iam_server.test_client.get(res.location)
     res = test_client.get(res.location)
 
@@ -56,11 +58,13 @@ def test_login_callback_stores_user_in_session(
         assert sess["user"]["sub"] == user.user_name
 
 
-def test_consent_redirects_with_prompt(test_client):
-    """Test that consent route includes prompt=consent parameter."""
-    res = test_client.get("/consent")
-    assert res.status_code == 302
-    assert "prompt=consent" in res.location
+def test_consent_redirects_with_prompt(iam_server, test_client):
+    """Test that the authorization parameters form includes consent option."""
+    res = test_client.get("/en/playground")
+    assert res.status_code == 200
+    # Verify that the prompt select includes the consent option
+    assert b'value="consent"' in res.data
+    assert b"Consent - Consent page" in res.data
 
 
 def test_logout_redirects_to_end_session(iam_server, iam_client, user, test_client):
@@ -68,7 +72,7 @@ def test_logout_redirects_to_end_session(iam_server, iam_client, user, test_clie
     iam_server.login(user)
     iam_server.consent(user, iam_client)
 
-    res = test_client.get("/login")
+    res = test_client.get("/authorize")
     res = iam_server.test_client.get(res.location)
     res = test_client.get(res.location)
 
@@ -116,7 +120,7 @@ def test_authenticated_user_can_access_index(iam_server, iam_client, user, test_
     iam_server.login(user)
     iam_server.consent(user, iam_client)
 
-    res = test_client.get("/login")
+    res = test_client.get("/authorize")
     res = iam_server.test_client.get(res.location)
     res = test_client.get(res.location)
 
@@ -130,7 +134,7 @@ def test_login_with_prompt_login(iam_server, iam_client, user, test_client):
     with test_client.session_transaction() as sess:
         sess["user"] = {"sub": user.user_name}
 
-    res = test_client.get("/login")
+    res = test_client.get("/authorize")
     assert res.status_code == 302
     assert "prompt=login" in res.location
 
@@ -140,7 +144,7 @@ def test_tos_route(iam_server, iam_client, user, test_client):
     iam_server.login(user)
     iam_server.consent(user, iam_client)
 
-    res = test_client.get("/login")
+    res = test_client.get("/authorize")
     res = iam_server.test_client.get(res.location)
     res = test_client.get(res.location)
 
@@ -154,7 +158,7 @@ def test_policy_route(iam_server, iam_client, user, test_client):
     iam_server.login(user)
     iam_server.consent(user, iam_client)
 
-    res = test_client.get("/login")
+    res = test_client.get("/authorize")
     res = iam_server.test_client.get(res.location)
     res = test_client.get(res.location)
 
@@ -194,7 +198,7 @@ def test_refresh_token_success(iam_server, iam_client, user, test_client):
     iam_server.login(user)
     iam_server.consent(user, iam_client)
 
-    res = test_client.get("/login")
+    res = test_client.get("/authorize")
     res = iam_server.test_client.get(res.location)
     res = test_client.get(res.location)
 

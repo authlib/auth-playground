@@ -10,6 +10,8 @@ from flask import url_for
 from flask_babel import gettext as _
 
 import auth_playground
+from auth_playground.decorators import server_config_needed
+from auth_playground.forms import AuthorizationParamsForm
 from auth_playground.forms import ClientConfigForm
 from auth_playground.forms import DynamicRegistrationForm
 from auth_playground.forms import RefreshTokenForm
@@ -30,7 +32,7 @@ def fetch_server_metadata(issuer_url: str, timeout: int = 10) -> tuple[dict, str
         return response.json(), "oidc"
     except requests.exceptions.HTTPError as e:
         if e.response.status_code != 404:
-            raise  # Only try OAuth2 endpoint if OIDC endpoint is not found
+            raise
 
     oauth2_url = f"{issuer_url}/.well-known/oauth-authorization-server"
     response = requests.get(oauth2_url, timeout=timeout)
@@ -38,18 +40,14 @@ def fetch_server_metadata(issuer_url: str, timeout: int = 10) -> tuple[dict, str
     return response.json(), "oauth2"
 
 
-def handle_fetch_metadata_errors(issuer_url: str, on_error):
-    """Fetch server metadata and handle errors with custom error handler."""
-    try:
-        return fetch_server_metadata(issuer_url)
-    except requests.exceptions.ConnectionError:
+def _flash_metadata_error(exception: Exception) -> None:
+    """Flash user-friendly error messages for metadata loading errors."""
+    if isinstance(exception, requests.exceptions.ConnectionError):
         flash(_("Cannot connect to the server. Please check the URL."), "error")
-        return on_error()
-    except requests.exceptions.Timeout:
+    elif isinstance(exception, requests.exceptions.Timeout):
         flash(_("Connection timeout. The server is not responding."), "error")
-        return on_error()
-    except requests.exceptions.HTTPError as e:
-        if e.response.status_code == 404:
+    elif isinstance(exception, requests.exceptions.HTTPError):
+        if exception.response.status_code == 404:
             flash(
                 _(
                     "This server does not support OIDC Discovery or OAuth 2.0 Authorization Server Metadata"
@@ -59,17 +57,14 @@ def handle_fetch_metadata_errors(issuer_url: str, on_error):
         else:
             flash(
                 _("Server returned an error: HTTP {status_code}").format(
-                    status_code=e.response.status_code
+                    status_code=exception.response.status_code
                 ),
                 "error",
             )
-        return on_error()
-    except requests.RequestException:
+    elif isinstance(exception, requests.RequestException):
         flash(_("Failed to connect to the server. Please check the URL."), "error")
-        return on_error()
-    except ValueError:
+    elif isinstance(exception, ValueError):
         flash(_("Invalid response from server"), "error")
-        return on_error()
 
 
 def clear_server_session():
@@ -83,13 +78,49 @@ def clear_server_session():
         pass
 
 
+def load_server_metadata(
+    issuer_url: str | None = None,
+    *,
+    update_config: bool = True,
+    flash_errors: bool = False,
+) -> tuple[dict, str] | None:
+    """Load server metadata.
+
+    If issuer_url is None, tries to get it from environment.
+    If update_config is True, updates g.server_config with metadata.
+    If flash_errors is True, displays user-friendly error messages and returns None on error.
+    If flash_errors is False, raises the exception.
+    """
+    if update_config and g.server_config and g.server_config.metadata:
+        return g.server_config.metadata, g.server_config.server_type
+
+    if not issuer_url:
+        issuer_url = current_app.config.get("OAUTH_AUTH_SERVER")
+
+    if not issuer_url:
+        return None
+
+    try:
+        metadata, server_type = fetch_server_metadata(issuer_url)
+    except Exception as e:
+        if flash_errors:
+            _flash_metadata_error(e)
+            return None
+        raise
+
+    if update_config and g.server_config:
+        g.server_config.metadata = metadata
+        g.server_config.server_type = server_type
+        g.server_config.issuer_url = issuer_url.rstrip("/")
+
+    return metadata, server_type
+
+
 @bp.route("/")
 def index():
     """Redirect to the appropriate configuration step or main page."""
-    server_configured = auth_playground.is_oauth_server_from_env(current_app) or (
-        g.server_config and g.server_config.issuer_url
-    )
-    client_configured = auth_playground.is_oauth_configured()
+    server_configured = auth_playground.is_server_configured()
+    client_configured = auth_playground.is_client_configured()
 
     if not server_configured:
         return redirect(url_for("routes.configure_server"))
@@ -130,11 +161,9 @@ def configure_server(domain=None):
     else:
         issuer_url = form.issuer_url.data.rstrip("/")
 
-    result = handle_fetch_metadata_errors(
-        issuer_url, lambda: render_template("configure_server.html", form=form)
-    )
-    if not isinstance(result, tuple):
-        return result
+    result = load_server_metadata(issuer_url, update_config=False, flash_errors=True)
+    if not result:
+        return render_template("configure_server.html", form=form)
     metadata, server_type = result
 
     g.server_config = ServerConfig(
@@ -142,7 +171,6 @@ def configure_server(domain=None):
         issuer_url=issuer_url,
         server_type=server_type,
     )
-    g.server_config.save(session)
 
     flash(_("Server metadata successfully loaded"), "success")
 
@@ -150,6 +178,7 @@ def configure_server(domain=None):
 
 
 @bp.route("/client", methods=["GET", "POST"])
+@server_config_needed(client_needed=False)
 def configure_client():
     """Display options to configure OAuth client credentials."""
     if auth_playground.is_oauth_client_from_env(current_app):
@@ -158,23 +187,6 @@ def configure_client():
             "warning",
         )
         return redirect(url_for("routes.playground"))
-
-    issuer_url = g.server_config.issuer_url
-    if not issuer_url:
-        flash(_("Please configure a server"), "warning")
-        return redirect(url_for("routes.configure_server"))
-
-    if not g.server_config.metadata:
-        result = handle_fetch_metadata_errors(
-            issuer_url, lambda: redirect(url_for("routes.configure_server"))
-        )
-        if not isinstance(result, tuple):
-            return result
-        metadata, server_type = result
-        g.server_config.metadata = metadata
-        g.server_config.issuer_url = issuer_url.rstrip("/")
-        g.server_config.server_type = server_type
-        g.server_config.save(session)
 
     client_form = ClientConfigForm()
     dynamic_registration_form = DynamicRegistrationForm()
@@ -190,51 +202,33 @@ def configure_client():
         current_app,
         client_form.client_id.data,
         client_form.client_secret.data,
-        issuer_url,
+        g.server_config.issuer_url,
     )
     flash(_("OAuth configuration completed successfully"), "success")
     return redirect(url_for("routes.playground"))
 
 
 @bp.route("/playground")
+@server_config_needed
 def playground():
     """Display the main playground page with OAuth 2.0 demonstration controls."""
-    server_configured = auth_playground.is_oauth_server_from_env(current_app) or (
-        g.server_config and g.server_config.issuer_url
-    )
-    client_configured = auth_playground.is_oauth_configured()
-
-    if not server_configured:
-        return redirect(url_for("routes.configure_server"))
-
-    elif not client_configured:
-        return redirect(url_for("routes.configure_client"))
-
-    if g.server_config and not g.server_config.metadata:
-        issuer_url = current_app.config.get("OAUTH_AUTH_SERVER")
-        if issuer_url:
-            try:
-                metadata, server_type = fetch_server_metadata(issuer_url)
-                g.server_config.metadata = metadata
-                g.server_config.server_type = server_type
-                if not current_app.config.get("OAUTH_AUTH_SERVER"):
-                    g.server_config.save(session)
-            except Exception:
-                pass
-
     refresh_form = RefreshTokenForm()
     unregister_form = UnregisterClientForm()
+    auth_params_form = AuthorizationParamsForm()
+
     return render_template(
         "playground.html",
         refresh_form=refresh_form,
         unregister_form=unregister_form,
+        auth_params_form=auth_params_form,
     )
 
 
 @bp.route("/specs")
+@server_config_needed(client_needed=False)
 def specs():
     """Display server specifications."""
-    if not g.server_config or not g.server_config.specs:
+    if not g.server_config.specs:
         flash(_("No server configured"), "warning")
         return redirect(url_for("routes.configure_server"))
 

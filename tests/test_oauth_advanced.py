@@ -19,16 +19,26 @@ def test_get_software_version():
     assert isinstance(version, str)
 
 
-def test_dynamic_registration_invalid_form(test_client):
-    """Test dynamic registration with invalid form data."""
-    res = test_client.post("/client/dynamic-registration", data={})
+def test_dynamic_registration_invalid_form(iam_server, unconfigured_test_client):
+    """Test dynamic registration with valid empty form succeeds."""
+    with unconfigured_test_client.session_transaction() as sess:
+        sess["issuer_url"] = iam_server.url
+        sess["server_metadata"] = {
+            "issuer": iam_server.url,
+            "authorization_endpoint": f"{iam_server.url}/oauth/authorize",
+            "token_endpoint": f"{iam_server.url}/oauth/token",
+            "registration_endpoint": f"{iam_server.url}/oauth/register",
+        }
+        sess["server_type"] = "oidc"
+
+    res = unconfigured_test_client.post("/client/dynamic-registration", data={})
     assert res.status_code == 302
-    assert "/en/client" in res.location
+    assert "/en/playground" in res.location
 
 
 def test_dynamic_registration_without_server_metadata(unconfigured_test_client):
     """Test dynamic registration fails without server metadata."""
-    res = unconfigured_test_client.get("/en/client")
+    res = unconfigured_test_client.get("/en/client", follow_redirects=True)
     csrf_match = re.search(
         r'name="csrf_token" value="([^"]+)"', res.data.decode(), re.DOTALL
     )
@@ -39,7 +49,7 @@ def test_dynamic_registration_without_server_metadata(unconfigured_test_client):
         data={"csrf_token": csrf_token},
         follow_redirects=True,
     )
-    assert b"Server metadata not found" in res.data
+    assert b"Provider URL" in res.data
 
 
 def test_dynamic_registration_request_exception(iam_server, unconfigured_test_client):

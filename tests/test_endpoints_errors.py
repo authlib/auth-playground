@@ -171,7 +171,7 @@ def test_handle_fetch_metadata_errors_value_error(unconfigured_test_client):
 def test_specs_endpoint_without_server_config(unconfigured_test_client):
     """Test specs endpoint redirects without server configuration."""
     res = unconfigured_test_client.get("/en/specs", follow_redirects=True)
-    assert b"No server configured" in res.data
+    assert b"Provider URL" in res.data
 
 
 def test_specs_endpoint_with_server_config(unconfigured_test_client):
@@ -195,8 +195,8 @@ def test_configure_client_refetches_metadata_when_missing(unconfigured_test_clie
     with unconfigured_test_client.session_transaction() as sess:
         sess["issuer_url"] = "https://test.example.com"
 
-    with patch("auth_playground.endpoints.fetch_server_metadata") as mock_fetch:
-        mock_fetch.return_value = (
+    with patch("auth_playground.endpoints.load_server_metadata") as mock_load:
+        mock_load.return_value = (
             {
                 "issuer": "https://test.example.com",
                 "authorization_endpoint": "https://test.example.com/oauth/authorize",
@@ -208,7 +208,7 @@ def test_configure_client_refetches_metadata_when_missing(unconfigured_test_clie
         res = unconfigured_test_client.get("/en/client")
 
     assert res.status_code == 200
-    assert mock_fetch.called
+    assert mock_load.called
 
 
 def test_configure_client_blocks_when_env_configured(app, iam_server, iam_client):

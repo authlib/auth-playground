@@ -62,7 +62,7 @@ export OAUTH_AUTH_SERVER="https://your-identity-provider.example.com"
 When registering this application with your identity provider, configure the following redirect URIs:
 
 ```
-http://localhost:4000/login_callback
+http://localhost:4000/authorize_callback
 http://localhost:4000/logout_callback
 ```
 

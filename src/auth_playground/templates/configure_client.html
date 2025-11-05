@@ -69,8 +69,7 @@
             <p>{% trans display_name=g.server_config.display_name %}When creating your OAuth client at the {{ display_name }}, configure these URIs:{% endtrans %}</p>
             <p><strong>{% trans %}Redirect URIs{% endtrans %} (<code>redirect_uris</code>):</strong></p>
             <ul>
-                <li><code>{{ url_for('oauth.login_callback', _external=True) }}</code></li>
-                <li><code>{{ url_for('oauth.register_callback', _external=True) }}</code></li>
+                <li><code>{{ url_for('oauth.authorize_callback', _external=True) }}</code></li>
             </ul>
             <p><strong>{% trans %}Post-Logout Redirect URIs{% endtrans %} (<code>post_logout_redirect_uris</code>):</strong></p>
             <ul>
