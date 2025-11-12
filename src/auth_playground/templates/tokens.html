@@ -3,7 +3,7 @@
 {% block content %}
     <section>
 
-        {% if session.token.id_token and session.user %}
+        {% if session.token and session.token.id_token and session.user %}
             <article>
                 <h3>{% trans %}ID token & user information{% endtrans %}</h3>
                 <p><small>{% trans %}Contains user identity information in JWT format.{% endtrans %}</small></p>
