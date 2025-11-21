@@ -3,6 +3,12 @@
 {% block content %}
     <section>
 
+        {% if not session.token %}
+            <article class="pico-background-amber-550">
+                <p>{% trans %}No token found in session. Please log in first.{% endtrans %}</p>
+            </article>
+        {% endif %}
+
         {% if session.token and session.token.id_token and session.user %}
             <article>
                 <h3>{% trans %}ID token & user information{% endtrans %}</h3>
@@ -176,7 +182,7 @@
         {% endif %}
 
         <div class="grid">
-            {% if session.token.access_token %}
+            {% if session.token and session.token.access_token %}
                 <article>
                     <h3>{% trans %}Access token{% endtrans %}</h3>
                     <p><small>{% trans %}Used to access protected resources on behalf of the user.{% endtrans %}</small></p>
@@ -201,7 +207,7 @@
                 </article>
             {% endif %}
 
-            {% if session.token.refresh_token %}
+            {% if session.token and session.token.refresh_token %}
                 <article>
                     <h3>{% trans %}Refresh token{% endtrans %}</h3>
                     <p><small>{% trans %}Used to obtain new access tokens without re-authentication.{% endtrans %}</small></p>
