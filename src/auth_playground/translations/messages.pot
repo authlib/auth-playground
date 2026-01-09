@@ -1,14 +1,14 @@
 # Translations template for PROJECT.
-# Copyright (C) 2025 ORGANIZATION
+# Copyright (C) 2026 ORGANIZATION
 # This file is distributed under the same license as the PROJECT project.
-# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-11-21 11:43+0100\n"
+"POT-Creation-Date: 2026-01-09 12:39+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -68,121 +68,123 @@ msgstr ""
 msgid "No server configured"
 msgstr ""
 
-#: src/auth_playground/forms.py:37 src/auth_playground/forms.py:48
+#: src/auth_playground/forms.py:39 src/auth_playground/forms.py:50
 msgid "Default"
 msgstr ""
 
-#: src/auth_playground/forms.py:38
+#: src/auth_playground/forms.py:40
 msgid "None - No UI"
 msgstr ""
 
-#: src/auth_playground/forms.py:39
+#: src/auth_playground/forms.py:41
 msgid "Login - Authentication page"
 msgstr ""
 
-#: src/auth_playground/forms.py:40
+#: src/auth_playground/forms.py:42
 msgid "Consent - Consent page"
 msgstr ""
 
-#: src/auth_playground/forms.py:41
+#: src/auth_playground/forms.py:43
 msgid "Select account - Account selection page"
 msgstr ""
 
-#: src/auth_playground/forms.py:42
+#: src/auth_playground/forms.py:44
 msgid "Create - Registration page"
 msgstr ""
 
-#: src/auth_playground/forms.py:76
+#: src/auth_playground/forms.py:78
 msgid "Renew tokens"
 msgstr ""
 
-#: src/auth_playground/forms.py:84
+#: src/auth_playground/forms.py:86
 msgid "URL must start with http:// or https://"
 msgstr ""
 
-#: src/auth_playground/forms.py:91
-msgid "HTTP is only allowed in debug or testing mode. Use HTTPS in production."
+#: src/auth_playground/forms.py:101
+msgid ""
+"HTTP is only allowed for localhost or in debug/testing mode. Use HTTPS in"
+" production."
 msgstr ""
 
-#: src/auth_playground/forms.py:99
+#: src/auth_playground/forms.py:110
 msgid "Provider URL:"
 msgstr ""
 
-#: src/auth_playground/forms.py:101
+#: src/auth_playground/forms.py:112
 msgid "Provider URL is required"
 msgstr ""
 
-#: src/auth_playground/forms.py:105
+#: src/auth_playground/forms.py:116
 msgid ""
 "Enter the base URL of your OIDC/OAuth2 provider (e.g., "
 "https://auth.example.com)"
 msgstr ""
 
-#: src/auth_playground/forms.py:109
+#: src/auth_playground/forms.py:120
 msgid "Continue"
 msgstr ""
 
-#: src/auth_playground/forms.py:116
+#: src/auth_playground/forms.py:127
 msgid "Client ID:"
 msgstr ""
 
-#: src/auth_playground/forms.py:118
+#: src/auth_playground/forms.py:129
 msgid "Client ID is required"
 msgstr ""
 
-#: src/auth_playground/forms.py:122
+#: src/auth_playground/forms.py:133
 msgid "Client ID must be between 1 and 255 characters"
 msgstr ""
 
-#: src/auth_playground/forms.py:128
+#: src/auth_playground/forms.py:139
 msgid "Client secret:"
 msgstr ""
 
-#: src/auth_playground/forms.py:130 src/auth_playground/forms.py:131
+#: src/auth_playground/forms.py:141 src/auth_playground/forms.py:142
 msgid "Client Secret is required"
 msgstr ""
 
-#: src/auth_playground/forms.py:135
+#: src/auth_playground/forms.py:146
 msgid "Complete configuration"
 msgstr ""
 
-#: src/auth_playground/forms.py:142
+#: src/auth_playground/forms.py:153
 msgid "Initial access token:"
 msgstr ""
 
-#: src/auth_playground/forms.py:144
+#: src/auth_playground/forms.py:155
 msgid "Leave empty if not required"
 msgstr ""
 
-#: src/auth_playground/forms.py:146
+#: src/auth_playground/forms.py:157
 msgid "Register client"
 msgstr ""
 
-#: src/auth_playground/forms.py:152
+#: src/auth_playground/forms.py:163
 msgid "Unregister client"
 msgstr ""
 
-#: src/auth_playground/forms.py:159
+#: src/auth_playground/forms.py:170
 msgid "Scopes:"
 msgstr ""
 
-#: src/auth_playground/forms.py:162
+#: src/auth_playground/forms.py:173
 msgid "Select the scopes to request from the authorization server"
 msgstr ""
 
-#: src/auth_playground/forms.py:167
+#: src/auth_playground/forms.py:178
 msgid "Prompt:"
 msgstr ""
 
-#: src/auth_playground/forms.py:169
+#: src/auth_playground/forms.py:180
 msgid "Control the authentication UI behavior"
 msgstr ""
 
-#: src/auth_playground/forms.py:172
+#: src/auth_playground/forms.py:183
 msgid "UI Locale:"
 msgstr ""
 
-#: src/auth_playground/forms.py:174
+#: src/auth_playground/forms.py:185
 msgid "Preferred language for the authentication UI"
 msgstr ""
 

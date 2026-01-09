@@ -281,6 +281,25 @@ def test_validate_issuer_url_accepts_http_in_debug(app, test_client):
     assert b"HTTP is only allowed" not in res.data
 
 
+def test_validate_issuer_url_accepts_http_for_localhost(app, test_client):
+    """Test that HTTP URLs are accepted for localhost even without debug mode."""
+    app.debug = False
+
+    res = test_client.get("/en/server")
+    csrf_match = re.search(
+        r'name="csrf_token" value="([^"]+)"', res.data.decode(), re.DOTALL
+    )
+    csrf_token = csrf_match.group(1) if csrf_match else ""
+
+    for url in ["http://localhost:5000", "http://127.0.0.1:8000", "http://[::1]:8000"]:
+        res = test_client.post(
+            "/en/server",
+            data={"issuer_url": url, "csrf_token": csrf_token},
+            follow_redirects=False,
+        )
+        assert b"HTTP is only allowed" not in res.data
+
+
 def test_client_uri_included_in_dynamic_registration(unconfigured_app):
     """Test that client_uri is included in dynamic registration payload."""
     test_client = unconfigured_app.test_client()

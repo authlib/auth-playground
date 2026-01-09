@@ -1,3 +1,5 @@
+from urllib.parse import urlparse
+
 from babel import Locale
 from babel import UnknownLocaleError
 from flask import current_app
@@ -77,7 +79,7 @@ class RefreshTokenForm(FlaskForm):
 
 
 def validate_issuer_url(form, field):
-    """Validate issuer URL with relaxed rules in debug/testing mode."""
+    """Validate issuer URL with relaxed rules in debug/testing mode or for localhost."""
     url = field.data
 
     if not url.startswith(("http://", "https://")):
@@ -85,10 +87,19 @@ def validate_issuer_url(form, field):
 
     is_debug = current_app.debug
     is_testing = current_app.testing
+    parsed = urlparse(url)
+    hostname = parsed.hostname or ""
+    # RFC 8252 Section 8.3: HTTP is allowed for loopback interface redirect URIs
+    # https://datatracker.ietf.org/doc/html/rfc8252#section-8.3
+    is_localhost = hostname in ("localhost", "127.0.0.1", "::1")
 
-    if url.startswith("http://") and not (is_debug or is_testing):  # pragma: no cover
+    if url.startswith("http://") and not (
+        is_debug or is_testing or is_localhost
+    ):  # pragma: no cover
         raise ValidationError(
-            _("HTTP is only allowed in debug or testing mode. Use HTTPS in production.")
+            _(
+                "HTTP is only allowed for localhost or in debug/testing mode. Use HTTPS in production."
+            )
         )
 
 
