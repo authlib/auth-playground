@@ -1,4 +1,5 @@
 from flask import g
+from flask import session
 from flask_babel import Babel
 from flask_babel import get_locale
 from werkzeug.exceptions import NotFound
@@ -42,7 +43,9 @@ def setup_i18n(app):
             return
 
         if not g.get("lang_code"):
-            g.lang_code = app.config.get("BABEL_DEFAULT_LOCALE", "en")
+            g.lang_code = session.get(
+                "lang_code", app.config.get("BABEL_DEFAULT_LOCALE", "en")
+            )
 
         if "lang_code" not in values:
             values.setdefault("lang_code", g.lang_code)
@@ -52,6 +55,7 @@ def setup_i18n(app):
         """Extract language code from URL and store in g.lang_code for i18n routes."""
         if values is not None and "lang_code" in values:
             g.lang_code = values.pop("lang_code")
+            session["lang_code"] = g.lang_code
 
     @app.before_request
     def before_request():
