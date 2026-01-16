@@ -7,6 +7,7 @@ from authlib.oidc.discovery import get_well_known_url
 from cachelib.file import FileSystemCache
 from cachelib.simple import SimpleCache
 from flask import Flask
+from flask import abort
 from flask import current_app
 from flask import g
 from flask import has_request_context
@@ -14,6 +15,7 @@ from flask import redirect
 from flask import request
 from flask import session as flask_session
 from flask import url_for
+from flask_babel import gettext as _
 from flask_session import Session
 
 from auth_playground.endpoints import bp
@@ -125,6 +127,7 @@ def create_app():
     app.config["OAUTH_AUTH_SERVER"] = (
         oauth_auth_server_env.rstrip("/") if oauth_auth_server_env else None
     )
+    app.config["SERVER_NAME"] = os.environ.get("SERVER_NAME")
 
     sess.init_app(app)
     setup_i18n(app)
@@ -139,6 +142,26 @@ def create_app():
         default_lang = app.config.get("BABEL_DEFAULT_LOCALE", "en")
         lang = request.accept_languages.best_match(available_langs) or default_lang
         return redirect(url_for("routes.index", lang_code=lang))
+
+    @app.before_request
+    def redirect_to_server_name():
+        """Redirect requests to SERVER_NAME if host doesn't match."""
+        server_name = app.config.get("SERVER_NAME")
+        if not server_name or request.host == server_name:
+            return None
+
+        if request.method != "GET":
+            abort(
+                400,
+                _("This request should be sent to %(server_name)s")
+                % {"server_name": server_name},
+            )
+
+        url = f"{request.scheme}://{server_name}{request.path}"
+        if request.query_string:
+            url += "?" + request.query_string.decode()
+
+        return redirect(url)
 
     @app.before_request
     def load_server_config():
