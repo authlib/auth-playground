@@ -44,28 +44,76 @@
         <button type="submit">{% trans %}Sign in{% endtrans %}</button>
     </form>
 
-    <div class="buttons-right">
-        {% if g.server_config and g.server_config.registration_access_token %}
-            <div class="buttons-right">
-                <form method="POST" action="{{ url_for('oauth.unregister_client') }}">
-                    {{ unregister_form.hidden_tag() }}
-                    {{ unregister_form.submit() }}
-                </form>
-            </div>
-        {% endif %}
-        {% if session.token and session.token.refresh_token %}
-            <form method="POST" action="{{ url_for('oauth.refresh') }}">
-                {{ refresh_form.hidden_tag() }}
-                {{ refresh_form.submit() }}
-            </form>
-        {% endif %}
-        {% if session.token %}
-            <div role="group">
-                <a href="{{ url_for('oauth.logout_local') }}" role="button" class="secondary">{% trans %}Log out{% endtrans %}</a>
-                {% if g.server_config and g.server_config.specs and g.server_config.specs.oidc_rpinitiated_logout %}
-                    <a href="{{ url_for('oauth.logout') }}" role="button" class="contrast">{% trans %}Server log out{% endtrans %}</a>
+    {% if g.server_config and g.server_config.registration_access_token %}
+        <form method="POST" action="{{ url_for('oauth.unregister_client') }}">
+            {{ unregister_form.hidden_tag() }}
+            {{ unregister_form.submit() }}
+        </form>
+    {% endif %}
+
+    {% if session.token and session.token.refresh_token %}
+        <form method="POST" action="{{ url_for('oauth.refresh') }}">
+            {{ refresh_form.hidden_tag() }}
+            {{ refresh_form.submit() }}
+        </form>
+    {% endif %}
+
+    {% if session.token %}
+        <form method="POST" action="{{ url_for('oauth.logout_local') }}">
+            {{ logout_local_form.hidden_tag() }}
+            {{ logout_local_form.submit(class="secondary") }}
+        </form>
+    {% endif %}
+
+    {% if session.token and g.server_config and g.server_config.specs and g.server_config.specs.oidc_rpinitiated_logout %}
+        <form method="POST" action="{{ url_for('oauth.logout') }}" id="logout-params-form">
+            {{ logout_params_form.hidden_tag() }}
+            <details>
+                <summary role="button" class="outline">{% trans %}Logout parameters{% endtrans %}</summary>
+
+                <label>
+                    {{ logout_params_form.id_token_hint.label }}
+                    {{ logout_params_form.id_token_hint() }}
+                    {% if logout_params_form.id_token_hint.description %}
+                        <small>{{ logout_params_form.id_token_hint.description }}</small>
+                    {% endif %}
+                </label>
+
+                <label>
+                    {{ logout_params_form.client_id.label }}
+                    {{ logout_params_form.client_id() }}
+                    {% if logout_params_form.client_id.description %}
+                        <small>{{ logout_params_form.client_id.description }}</small>
+                    {% endif %}
+                </label>
+
+                <label>
+                    {{ logout_params_form.post_logout_redirect_uri.label }}
+                    {{ logout_params_form.post_logout_redirect_uri() }}
+                    {% if logout_params_form.post_logout_redirect_uri.description %}
+                        <small>{{ logout_params_form.post_logout_redirect_uri.description }}</small>
+                    {% endif %}
+                </label>
+
+                <label>
+                    {{ logout_params_form.logout_hint.label }}
+                    {{ logout_params_form.logout_hint() }}
+                    {% if logout_params_form.logout_hint.description %}
+                        <small>{{ logout_params_form.logout_hint.description }}</small>
+                    {% endif %}
+                </label>
+
+                {% if logout_params_form.ui_locales.choices|length > 1 %}
+                    <label>
+                        {{ logout_params_form.ui_locales.label }}
+                        {{ logout_params_form.ui_locales() }}
+                        {% if logout_params_form.ui_locales.description %}
+                            <small>{{ logout_params_form.ui_locales.description }}</small>
+                        {% endif %}
+                    </label>
                 {% endif %}
-            </div>
-        {% endif %}
-    </div>
+            </details>
+            <button type="submit" class="contrast">{% trans %}Server log out{% endtrans %}</button>
+        </form>
+    {% endif %}
 {% endblock %}

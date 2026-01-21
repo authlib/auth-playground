@@ -22,54 +22,54 @@ msgstr ""
 msgid "This request should be sent to %(server_name)s"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:46
+#: src/auth_playground/endpoints.py:48
 msgid "Cannot connect to the server. Please check the URL."
 msgstr ""
 
-#: src/auth_playground/endpoints.py:48
+#: src/auth_playground/endpoints.py:50
 msgid "Connection timeout. The server is not responding."
 msgstr ""
 
-#: src/auth_playground/endpoints.py:53
+#: src/auth_playground/endpoints.py:55
 msgid ""
 "This server does not support OIDC Discovery or OAuth 2.0 Authorization "
 "Server Metadata"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:59
+#: src/auth_playground/endpoints.py:61
 #, python-brace-format
 msgid "Server returned an error: HTTP {status_code}"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:65
+#: src/auth_playground/endpoints.py:67
 msgid "Failed to connect to the server. Please check the URL."
 msgstr ""
 
-#: src/auth_playground/endpoints.py:67
+#: src/auth_playground/endpoints.py:69
 msgid "Invalid response from server"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:141
+#: src/auth_playground/endpoints.py:143
 msgid "OAuth configuration is set via environment variables and cannot be changed"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:156
+#: src/auth_playground/endpoints.py:158
 msgid "You can now configure a different identity provider"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:175
+#: src/auth_playground/endpoints.py:177
 msgid "Server metadata successfully loaded"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:186
+#: src/auth_playground/endpoints.py:188
 msgid "OAuth client is set via environment variables and cannot be changed"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:207
+#: src/auth_playground/endpoints.py:209
 msgid "OAuth configuration completed successfully"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:232
+#: src/auth_playground/endpoints.py:248
 msgid "No server configured"
 msgstr ""
 
@@ -129,7 +129,7 @@ msgstr ""
 msgid "Continue"
 msgstr ""
 
-#: src/auth_playground/forms.py:127
+#: src/auth_playground/forms.py:127 src/auth_playground/forms.py:203
 msgid "Client ID:"
 msgstr ""
 
@@ -169,99 +169,135 @@ msgstr ""
 msgid "Unregister client"
 msgstr ""
 
-#: src/auth_playground/forms.py:170
+#: src/auth_playground/forms.py:169
+msgid "Log out"
+msgstr ""
+
+#: src/auth_playground/forms.py:176
 msgid "Scopes:"
 msgstr ""
 
-#: src/auth_playground/forms.py:173
+#: src/auth_playground/forms.py:179
 msgid "Select the scopes to request from the authorization server"
 msgstr ""
 
-#: src/auth_playground/forms.py:178
+#: src/auth_playground/forms.py:184
 msgid "Prompt:"
 msgstr ""
 
-#: src/auth_playground/forms.py:180
+#: src/auth_playground/forms.py:186
 msgid "Control the authentication UI behavior"
 msgstr ""
 
-#: src/auth_playground/forms.py:183
+#: src/auth_playground/forms.py:189 src/auth_playground/forms.py:215
 msgid "UI Locale:"
 msgstr ""
 
-#: src/auth_playground/forms.py:185
+#: src/auth_playground/forms.py:191
 msgid "Preferred language for the authentication UI"
 msgstr ""
 
-#: src/auth_playground/oauth.py:66 src/auth_playground/oauth.py:158
-#: src/auth_playground/oauth.py:301
+#: src/auth_playground/forms.py:199
+msgid "ID Token Hint:"
+msgstr ""
+
+#: src/auth_playground/forms.py:200
+msgid "ID Token previously issued, used to identify the user session"
+msgstr ""
+
+#: src/auth_playground/forms.py:204
+msgid "OAuth client identifier"
+msgstr ""
+
+#: src/auth_playground/forms.py:207
+msgid "Post-Logout Redirect URI:"
+msgstr ""
+
+#: src/auth_playground/forms.py:208
+msgid "URI to redirect to after logout"
+msgstr ""
+
+#: src/auth_playground/forms.py:211
+msgid "Logout Hint:"
+msgstr ""
+
+#: src/auth_playground/forms.py:212
+msgid "Hint about the user to log out"
+msgstr ""
+
+#: src/auth_playground/forms.py:217
+msgid "Preferred language for the logout UI"
+msgstr ""
+
+#: src/auth_playground/oauth.py:68 src/auth_playground/oauth.py:160
+#: src/auth_playground/oauth.py:263 src/auth_playground/oauth.py:323
 msgid "Invalid request"
 msgstr ""
 
-#: src/auth_playground/oauth.py:70
+#: src/auth_playground/oauth.py:72
 msgid "Dynamic client registration not supported"
 msgstr ""
 
-#: src/auth_playground/oauth.py:110
+#: src/auth_playground/oauth.py:112
 msgid "Dynamic client registration failed"
 msgstr ""
 
-#: src/auth_playground/oauth.py:116 src/auth_playground/oauth.py:120
+#: src/auth_playground/oauth.py:118 src/auth_playground/oauth.py:122
 #, python-brace-format
 msgid "Dynamic client registration failed: {error}"
 msgstr ""
 
-#: src/auth_playground/oauth.py:127
+#: src/auth_playground/oauth.py:129
 msgid "Invalid JSON response from registration endpoint"
 msgstr ""
 
-#: src/auth_playground/oauth.py:145
+#: src/auth_playground/oauth.py:147
 msgid "Client successfully registered!"
 msgstr ""
 
-#: src/auth_playground/oauth.py:165
+#: src/auth_playground/oauth.py:167
 msgid "Client registration management credentials not found"
 msgstr ""
 
-#: src/auth_playground/oauth.py:176
+#: src/auth_playground/oauth.py:178
 msgid "Client unregistration failed"
 msgstr ""
 
-#: src/auth_playground/oauth.py:181 src/auth_playground/oauth.py:185
+#: src/auth_playground/oauth.py:183 src/auth_playground/oauth.py:187
 #, python-brace-format
 msgid "Client unregistration failed: {error}"
 msgstr ""
 
-#: src/auth_playground/oauth.py:200
+#: src/auth_playground/oauth.py:202
 msgid "Client successfully unregistered"
 msgstr ""
 
-#: src/auth_playground/oauth.py:246
+#: src/auth_playground/oauth.py:248
 msgid "You have been successfully logged in."
 msgstr ""
 
-#: src/auth_playground/oauth.py:249
+#: src/auth_playground/oauth.py:251
 #, python-brace-format
 msgid "An error happened during login: {error}"
 msgstr ""
 
-#: src/auth_playground/oauth.py:260
+#: src/auth_playground/oauth.py:267
 msgid "You have been logged out"
 msgstr ""
 
-#: src/auth_playground/oauth.py:292
+#: src/auth_playground/oauth.py:314
 msgid "You have been logged out from the server"
 msgstr ""
 
-#: src/auth_playground/oauth.py:306
+#: src/auth_playground/oauth.py:328
 msgid "No refresh token available"
 msgstr ""
 
-#: src/auth_playground/oauth.py:327
+#: src/auth_playground/oauth.py:349
 msgid "Token successfully refreshed"
 msgstr ""
 
-#: src/auth_playground/oauth.py:330
+#: src/auth_playground/oauth.py:352
 #, python-brace-format
 msgid "An error happened during token refresh: {error}"
 msgstr ""

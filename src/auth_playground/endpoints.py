@@ -14,6 +14,8 @@ from auth_playground.decorators import server_config_needed
 from auth_playground.forms import AuthorizationParamsForm
 from auth_playground.forms import ClientConfigForm
 from auth_playground.forms import DynamicRegistrationForm
+from auth_playground.forms import LogoutLocalForm
+from auth_playground.forms import LogoutParamsForm
 from auth_playground.forms import RefreshTokenForm
 from auth_playground.forms import ServerConfigForm
 from auth_playground.forms import UnregisterClientForm
@@ -215,12 +217,26 @@ def playground():
     refresh_form = RefreshTokenForm()
     unregister_form = UnregisterClientForm()
     auth_params_form = AuthorizationParamsForm()
+    logout_local_form = LogoutLocalForm()
+
+    oauth_config = auth_playground.get_oauth_config(current_app)
+    logout_params_form = LogoutParamsForm(
+        data={
+            "id_token_hint": session.get("token", {}).get("id_token", ""),
+            "client_id": oauth_config["client_id"] if oauth_config else "",
+            "post_logout_redirect_uri": url_for(
+                "oauth.logout_callback", _external=True
+            ),
+        }
+    )
 
     return render_template(
         "playground.html",
         refresh_form=refresh_form,
         unregister_form=unregister_form,
         auth_params_form=auth_params_form,
+        logout_local_form=logout_local_form,
+        logout_params_form=logout_params_form,
     )
 
 

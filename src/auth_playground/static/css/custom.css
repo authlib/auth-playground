@@ -172,36 +172,3 @@ article[role="alert"][data-type="warning"] {
     background-color: #78350f;
     color: #fef3c7;
 }
-
-.buttons-right {
-    display: flex;
-    justify-content: center;
-    gap: 1rem;
-}
-
-.buttons-right > * {
-    width: auto;
-}
-
-/* Reduce button size in button bars */
-.buttons-right [role="button"],
-.buttons-right button,
-.buttons-right input[type="submit"] {
-    padding: 0.5rem 1rem;
-    font-size: 0.875rem;
-    line-height: 1.5;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.buttons-right [role="group"] [role="button"],
-.buttons-right [role="group"] button,
-.buttons-right [role="group"] input[type="submit"] {
-    padding: 0.5rem 1rem;
-    font-size: 0.875rem;
-    line-height: 1.5;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}

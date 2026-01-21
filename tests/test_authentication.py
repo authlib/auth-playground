@@ -105,7 +105,7 @@ def test_logout_local_clears_session_without_contacting_provider(test_client):
         sess["user"] = {"sub": "testuser"}
         sess["token"] = {"id_token": "test_token", "access_token": "test_access"}
 
-    res = test_client.get("/logout/local")
+    res = test_client.post("/logout/local")
     assert res.status_code == 302
     assert res.location.endswith("/playground")
     assert "end" not in res.location.lower()

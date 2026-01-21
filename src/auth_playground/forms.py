@@ -163,6 +163,12 @@ class UnregisterClientForm(FlaskForm):
     submit = SubmitField(_("Unregister client"))
 
 
+class LogoutLocalForm(FlaskForm):
+    """Form to trigger local logout with CSRF protection."""
+
+    submit = SubmitField(_("Log out"))
+
+
 class AuthorizationParamsForm(FlaskForm):
     """Form to customize OAuth authorization parameters."""
 
@@ -183,4 +189,30 @@ class AuthorizationParamsForm(FlaskForm):
         _("UI Locale:"),
         choices=get_ui_locales_choices,
         description=_("Preferred language for the authentication UI"),
+    )
+
+
+class LogoutParamsForm(FlaskForm):
+    """Form to customize RP-Initiated Logout parameters."""
+
+    id_token_hint = StringField(
+        _("ID Token Hint:"),
+        description=_("ID Token previously issued, used to identify the user session"),
+    )
+    client_id = StringField(
+        _("Client ID:"),
+        description=_("OAuth client identifier"),
+    )
+    post_logout_redirect_uri = StringField(
+        _("Post-Logout Redirect URI:"),
+        description=_("URI to redirect to after logout"),
+    )
+    logout_hint = StringField(
+        _("Logout Hint:"),
+        description=_("Hint about the user to log out"),
+    )
+    ui_locales = SelectField(
+        _("UI Locale:"),
+        choices=get_ui_locales_choices,
+        description=_("Preferred language for the logout UI"),
     )

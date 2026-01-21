@@ -3,7 +3,7 @@ import uuid
 
 import requests
 from authlib.common.errors import AuthlibBaseError
-from authlib.common.urls import add_params_to_uri
+from authlib.integrations.base_client import OAuthError
 from flask import Blueprint
 from flask import current_app
 from flask import flash
@@ -18,6 +18,8 @@ import auth_playground
 from auth_playground.decorators import server_config_needed
 from auth_playground.forms import AuthorizationParamsForm
 from auth_playground.forms import DynamicRegistrationForm
+from auth_playground.forms import LogoutLocalForm
+from auth_playground.forms import LogoutParamsForm
 from auth_playground.forms import RefreshTokenForm
 from auth_playground.forms import UnregisterClientForm
 
@@ -253,41 +255,61 @@ def authorize_callback():
     return redirect(url_for("routes.tokens"))
 
 
-@bp.route("/logout/local")
+@bp.route("/logout/local", methods=["POST"])
 def logout_local():
     """Log out locally without contacting the Identity Provider."""
+    form = LogoutLocalForm()
+    if not form.validate_on_submit():
+        flash(_("Invalid request"), "error")
+        return redirect(url_for("routes.playground"))
+
     clear_user_session()
     flash(_("You have been logged out"), "success")
     return redirect(url_for("routes.playground"))
 
 
-@bp.route("/logout")
+@bp.route("/logout", methods=["GET", "POST"])
 @server_config_needed
 def logout():
     """Redirect users to the Identity Provider logout page for global logout."""
-    auth_playground.oauth.default.load_server_metadata()
-    end_session_endpoint = auth_playground.oauth.default.server_metadata.get(
-        "end_session_endpoint"
-    )
-    id_token = session.get("token", {}).get("id_token")
+    kwargs = {}
 
-    oauth_config = auth_playground.get_oauth_config(current_app)
-    client_id = oauth_config["client_id"] if oauth_config else None
+    if request.method == "POST":
+        form = LogoutParamsForm()
+        if form.validate_on_submit():
+            if form.id_token_hint.data:
+                kwargs["id_token_hint"] = form.id_token_hint.data
+            if form.client_id.data:
+                kwargs["client_id"] = form.client_id.data
+            if form.post_logout_redirect_uri.data:
+                kwargs["post_logout_redirect_uri"] = form.post_logout_redirect_uri.data
+            if form.logout_hint.data:
+                kwargs["logout_hint"] = form.logout_hint.data
+            if form.ui_locales.data:
+                kwargs["ui_locales"] = form.ui_locales.data
+    else:
+        id_token = session.get("token", {}).get("id_token")
+        oauth_config = auth_playground.get_oauth_config(current_app)
+        client_id = oauth_config["client_id"] if oauth_config else None
+        kwargs = {
+            "id_token_hint": id_token,
+            "client_id": client_id,
+            "post_logout_redirect_uri": url_for(
+                "oauth.logout_callback", _external=True
+            ),
+        }
 
-    end_session_url = add_params_to_uri(
-        end_session_endpoint,
-        dict(
-            client_id=client_id,
-            id_token_hint=id_token,
-            post_logout_redirect_uri=url_for("oauth.logout_callback", _external=True),
-        ),
-    )
-    return redirect(end_session_url)
+    return auth_playground.oauth.default.logout_redirect(**kwargs)
 
 
 @bp.route("/logout_callback")
 def logout_callback():
     """Handle callback after server-side logout."""
+    try:
+        auth_playground.oauth.default.validate_logout_response()
+    except OAuthError:
+        pass
+
     clear_user_session()
     flash(_("You have been logged out from the server"), "success")
     return redirect(url_for("routes.playground"))
