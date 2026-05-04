@@ -22,6 +22,12 @@ pip install auth-playground
 uv add auth-playground
 ```
 
+### Using uvx
+
+```bash
+uvx auth-playground
+```
+
 ### Using Docker
 
 Run the pre-built image from GitHub Container Registry:
@@ -69,7 +75,7 @@ http://localhost:4000/logout_callback
 ## Usage
 
 ```bash
-auth-playground
+uv run auth-playground
 ```
 
 The application will be available at `http://localhost:4000`
