@@ -69,7 +69,7 @@ release = [
 
 [package.metadata]
 requires-dist = [
-    { name = "authlib", specifier = ">=1.6.5" },
+    { name = "authlib", specifier = ">=1.7.0" },
     { name = "cachelib", specifier = ">=0.10.0" },
     { name = "flask", specifier = ">=3.1.2" },
     { name = "flask-babel", specifier = ">=4.0.0" },

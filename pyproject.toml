@@ -14,7 +14,7 @@ authors = [{name="Yaal Coop", email="contact@yaal.coop"}]
 maintainers = [{name="Éloi Rivard", email="eloi@yaal.coop"}]
 
 dependencies = [
-    "authlib>=1.6.5",
+    "authlib>=1.7.0",
     "cachelib>=0.10.0",
     "flask>=3.1.2",
     "flask-babel>=4.0.0",
