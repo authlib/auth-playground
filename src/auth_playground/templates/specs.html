@@ -3,6 +3,8 @@
 {% block title %}{% trans %}Server Specifications{% endtrans %}{% endblock %}
 
 {% block content %}
+    {% include "_server_tabs.html" %}
+
     <h2>{% trans %}Server Specifications{% endtrans %}</h2>
 
     {% if supported_specs %}

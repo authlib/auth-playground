@@ -250,6 +250,6 @@ def test_playground_handles_metadata_fetch_exception(unconfigured_test_client):
     with patch("auth_playground.endpoints.fetch_server_metadata") as mock_fetch:
         mock_fetch.side_effect = Exception("Network error")
 
-        res = test_client.get("/en/playground")
+        res = test_client.get("/en/session", follow_redirects=True)
 
     assert res.status_code == 200

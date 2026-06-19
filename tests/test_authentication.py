@@ -1,20 +1,20 @@
 def test_index_shows_signin_when_unauthenticated(iam_server, test_client):
     """Test that unauthenticated users see signin button."""
-    res = test_client.get("/en/playground")
+    res = test_client.get("/en/session", follow_redirects=True)
     assert res.status_code == 200
     assert b"Sign in" in res.data
 
 
 def test_index_shows_signup_when_server_supports_prompt_create(iam_server, test_client):
     """Test that registration option appears in prompt selector when server supports prompt=create."""
-    res = test_client.get("/en/playground")
+    res = test_client.get("/en/session", follow_redirects=True)
     assert res.status_code == 200
     assert b"Create - Registration" in res.data
 
 
 def test_registration_redirects_to_iam(iam_server, iam_client, test_client):
     """Test that the authorization parameters form includes create option."""
-    res = test_client.get("/en/playground")
+    res = test_client.get("/en/session", follow_redirects=True)
     assert res.status_code == 200
     # Verify that the prompt select includes the create option
     assert b'value="create"' in res.data
@@ -60,7 +60,7 @@ def test_authorize_callback_stores_user_in_session(
 
 def test_consent_redirects_with_prompt(iam_server, test_client):
     """Test that the authorization parameters form includes consent option."""
-    res = test_client.get("/en/playground")
+    res = test_client.get("/en/session", follow_redirects=True)
     assert res.status_code == 200
     # Verify that the prompt select includes the consent option
     assert b'value="consent"' in res.data
@@ -107,7 +107,7 @@ def test_logout_local_clears_session_without_contacting_provider(test_client):
 
     res = test_client.post("/logout/local")
     assert res.status_code == 302
-    assert res.location.endswith("/playground")
+    assert res.location.endswith("/session")
     assert "end" not in res.location.lower()
 
     with test_client.session_transaction() as sess:
@@ -124,7 +124,7 @@ def test_authenticated_user_can_access_index(iam_server, iam_client, user, test_
     res = iam_server.test_client.get(res.location)
     res = test_client.get(res.location)
 
-    res = test_client.get("/en/playground")
+    res = test_client.get("/en/session", follow_redirects=True)
     assert res.status_code == 200
     assert b"Auth Playground" in res.data
 
@@ -178,7 +178,7 @@ def test_refresh_token_form_displays_when_refresh_token_present(test_client):
         }
         sess["user"] = {"sub": "testuser"}
 
-    res = test_client.get("/en/playground")
+    res = test_client.get("/en/session", follow_redirects=True)
     assert res.status_code == 200
     assert b"Renew tokens" in res.data
 

@@ -63,8 +63,8 @@ def test_configure_server_blocks_when_env_configured(app, test_client):
     assert b"environment variables" in res.data
 
 
-def test_playground_redirects_to_client_when_server_configured(unconfigured_app):
-    """Test that playground redirects to /client when server is configured but not client."""
+def test_session_redirects_to_client_when_server_configured(unconfigured_app):
+    """Test that the session page redirects to /client when server is configured but not client."""
     test_client = unconfigured_app.test_client()
     with test_client.session_transaction() as sess:
         sess["issuer_url"] = "https://test.example.com"
@@ -74,7 +74,7 @@ def test_playground_redirects_to_client_when_server_configured(unconfigured_app)
             "token_endpoint": "https://test.example.com/oauth/token",
         }
 
-    res = test_client.get("/en/playground")
+    res = test_client.get("/en/session")
     assert res.status_code == 302
     assert "/en/client" in res.location
 
@@ -240,8 +240,8 @@ def test_switch_link_hidden_when_env_configured(app, iam_server, iam_client):
     assert b"switch" not in res.data
 
 
-def test_switch_link_visible_when_session_configured(unconfigured_app):
-    """Test that switch link is visible when configuration is in session."""
+def test_server_link_visible_when_session_configured(unconfigured_app):
+    """Test that the server reconfigure link is visible when configuration is in session."""
     test_client = unconfigured_app.test_client()
 
     with test_client.session_transaction() as sess:
@@ -259,7 +259,7 @@ def test_switch_link_visible_when_session_configured(unconfigured_app):
 
     res = test_client.get("/en/", follow_redirects=True)
     assert res.status_code == 200
-    assert b"switch" in res.data
+    assert b"/en/server" in res.data
 
 
 def test_validate_issuer_url_accepts_http_in_debug(app, test_client):
@@ -352,7 +352,7 @@ def test_unregister_button_displayed_with_registration_token(unconfigured_app):
             "https://test.example.com/oauth/register/client-123"
         )
 
-    res = test_client.get("/en/playground")
+    res = test_client.get("/en/client")
     assert res.status_code == 200
     assert b"Unregister client" in res.data
 
@@ -373,6 +373,6 @@ def test_unregister_button_hidden_without_registration_token(unconfigured_app):
             "auth_server": "https://test.example.com",
         }
 
-    res = test_client.get("/en/playground")
+    res = test_client.get("/en/client")
     assert res.status_code == 200
     assert b"Unregister client" not in res.data

@@ -147,7 +147,7 @@ def client_dynamic_registration():
         _("Client successfully registered!"),
         "success",
     )
-    return redirect(url_for("routes.playground"))
+    return redirect(url_for("routes.session"))
 
 
 @bp.route("/unregister-client", methods=["POST"])
@@ -158,14 +158,14 @@ def unregister_client():
 
     if not form.validate_on_submit():
         flash(_("Invalid request"), "error")
-        return redirect(url_for("routes.playground"))
+        return redirect(url_for("routes.configure_client"))
 
     if (
         not g.server_config.registration_access_token
         or not g.server_config.registration_client_uri
     ):
         flash(_("Client registration management credentials not found"), "error")
-        return redirect(url_for("routes.playground"))
+        return redirect(url_for("routes.configure_client"))
 
     headers = {"Authorization": f"Bearer {g.server_config.registration_access_token}"}
 
@@ -190,7 +190,7 @@ def unregister_client():
             except ValueError:
                 pass  # Response is not JSON, use default message
         flash(error_message, "error")
-        return redirect(url_for("routes.playground"))
+        return redirect(url_for("routes.configure_client"))
 
     session.pop("oauth_config", None)
     session.pop("user", None)
@@ -222,6 +222,18 @@ def authorize():
             if form.ui_locales.data:
                 kwargs["ui_locales"] = form.ui_locales.data
 
+            if form.max_age.data is not None:
+                kwargs["max_age"] = form.max_age.data
+
+            if form.acr_values.data:
+                kwargs["acr_values"] = form.acr_values.data
+
+            if form.login_hint.data:
+                kwargs["login_hint"] = form.login_hint.data
+
+            if form.claims.data:
+                kwargs["claims"] = form.claims.data
+
     if request.method == "GET" and "user" in session:
         kwargs["prompt"] = "login"
 
@@ -252,7 +264,7 @@ def authorize_callback():
             "error",
         )
 
-    return redirect(url_for("routes.tokens"))
+    return redirect(url_for("routes.session"))
 
 
 @bp.route("/logout/local", methods=["POST"])
@@ -261,11 +273,11 @@ def logout_local():
     form = LogoutLocalForm()
     if not form.validate_on_submit():
         flash(_("Invalid request"), "error")
-        return redirect(url_for("routes.playground"))
+        return redirect(url_for("routes.session"))
 
     clear_user_session()
     flash(_("You have been logged out"), "success")
-    return redirect(url_for("routes.playground"))
+    return redirect(url_for("routes.session"))
 
 
 @bp.route("/logout", methods=["GET", "POST"])
@@ -312,7 +324,7 @@ def logout_callback():
 
     clear_user_session()
     flash(_("You have been logged out from the server"), "success")
-    return redirect(url_for("routes.playground"))
+    return redirect(url_for("routes.session"))
 
 
 @bp.route("/refresh", methods=["POST"])
@@ -321,12 +333,12 @@ def refresh():
     form = RefreshTokenForm()
     if not form.validate_on_submit():
         flash(_("Invalid request"), "error")
-        return redirect(url_for("routes.playground"))
+        return redirect(url_for("routes.session"))
 
     refresh_token = session.get("token", {}).get("refresh_token")
     if not refresh_token:
         flash(_("No refresh token available"), "error")
-        return redirect(url_for("routes.playground"))
+        return redirect(url_for("routes.session"))
 
     try:
         original_scope = session.get("token", {}).get("scope", "")
@@ -355,4 +367,4 @@ def refresh():
             "error",
         )
 
-    return redirect(url_for("routes.playground"))
+    return redirect(url_for("routes.session"))

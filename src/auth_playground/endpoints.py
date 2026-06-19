@@ -130,7 +130,7 @@ def index():
     elif not client_configured:
         return redirect(url_for("routes.configure_client"))
 
-    return redirect(url_for("routes.playground"))
+    return redirect(url_for("routes.session"))
 
 
 @bp.route("/server", methods=["GET", "POST"])
@@ -138,13 +138,7 @@ def index():
 def configure_server(domain=None):
     """Display form to configure and validate identity provider URL."""
     if auth_playground.is_oauth_server_from_env(current_app):
-        flash(
-            _(
-                "OAuth configuration is set via environment variables and cannot be changed"
-            ),
-            "warning",
-        )
-        return redirect(url_for("routes.playground"))
+        return render_template("configure_server.html", locked=True)
 
     form = ServerConfigForm()
 
@@ -184,20 +178,21 @@ def configure_server(domain=None):
 def configure_client():
     """Display options to configure OAuth client credentials."""
     if auth_playground.is_oauth_client_from_env(current_app):
-        flash(
-            _("OAuth client is set via environment variables and cannot be changed"),
-            "warning",
+        oauth_config = auth_playground.get_oauth_config(current_app)
+        return render_template(
+            "configure_client.html", locked=True, oauth_config=oauth_config
         )
-        return redirect(url_for("routes.playground"))
 
     client_form = ClientConfigForm()
     dynamic_registration_form = DynamicRegistrationForm()
+    unregister_form = UnregisterClientForm()
 
     if not client_form.validate_on_submit():
         return render_template(
             "configure_client.html",
             client_form=client_form,
             dynamic_registration_form=dynamic_registration_form,
+            unregister_form=unregister_form,
         )
 
     auth_playground.setup_oauth_runtime(
@@ -207,15 +202,29 @@ def configure_client():
         g.server_config.issuer_url,
     )
     flash(_("OAuth configuration completed successfully"), "success")
-    return redirect(url_for("routes.playground"))
+    return redirect(url_for("routes.session"))
 
 
-@bp.route("/playground")
+SESSION_TABS = ("authentication", "tokens", "logout")
+
+
+@bp.route("/session", endpoint="session")
+@bp.route("/session/<tab>", endpoint="session")
 @server_config_needed
-def playground():
-    """Display the main playground page with OAuth 2.0 demonstration controls."""
+def session_page(tab=None):
+    """Display the session area: authentication, tokens and logout sub-pages."""
+    logged_in = bool(session.get("token"))
+
+    if tab is None:
+        return redirect(
+            url_for("routes.session", tab="tokens" if logged_in else "authentication")
+        )
+    if tab not in SESSION_TABS:
+        return redirect(url_for("routes.session"))
+    if not logged_in and tab != "authentication":
+        return redirect(url_for("routes.session", tab="authentication"))
+
     refresh_form = RefreshTokenForm()
-    unregister_form = UnregisterClientForm()
     auth_params_form = AuthorizationParamsForm()
     logout_local_form = LogoutLocalForm()
 
@@ -231,9 +240,9 @@ def playground():
     )
 
     return render_template(
-        "playground.html",
+        "session.html",
+        tab=tab,
         refresh_form=refresh_form,
-        unregister_form=unregister_form,
         auth_params_form=auth_params_form,
         logout_local_form=logout_local_form,
         logout_params_form=logout_params_form,
@@ -292,10 +301,3 @@ def tos():
 def policy():
     """Display the Privacy Policy page."""
     return render_template("policy.html")
-
-
-@bp.route("/tokens")
-@server_config_needed
-def tokens():
-    """Display token information page."""
-    return render_template("tokens.html")

@@ -6,14 +6,18 @@ from flask import current_app
 from flask import g
 from flask_babel import lazy_gettext as _
 from flask_wtf import FlaskForm
+from wtforms import IntegerField
 from wtforms import PasswordField
 from wtforms import SelectField
 from wtforms import SelectMultipleField
 from wtforms import StringField
 from wtforms import SubmitField
+from wtforms import TextAreaField
 from wtforms import ValidationError
 from wtforms.validators import DataRequired
 from wtforms.validators import Length
+from wtforms.validators import NumberRange
+from wtforms.validators import Optional
 from wtforms.widgets import CheckboxInput
 from wtforms.widgets import ListWidget
 
@@ -189,6 +193,30 @@ class AuthorizationParamsForm(FlaskForm):
         _("UI Locale:"),
         choices=get_ui_locales_choices,
         description=_("Preferred language for the authentication UI"),
+    )
+    max_age = IntegerField(
+        _("Max age (seconds):"),
+        validators=[Optional(), NumberRange(min=0)],
+        description=_(
+            "Maximum authentication age. 0 forces re-authentication and refreshes auth_time."
+        ),
+        render_kw={"placeholder": "0"},
+    )
+    acr_values = StringField(
+        _("ACR values:"),
+        description=_(
+            "Requested authentication context classes, space-separated (step-up authentication)."
+        ),
+    )
+    login_hint = StringField(
+        _("Login hint:"),
+        description=_("Identifier to pre-fill on the provider's login screen."),
+    )
+    claims = TextAreaField(
+        _("Claims (JSON):"),
+        description=_(
+            "Specific claims to request, as an OIDC claims JSON object (advanced)."
+        ),
     )
 
 
