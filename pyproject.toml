@@ -35,7 +35,7 @@ dev = [
     "prek>=0.2.11",
     "pytest>=8.4.2",
     "pytest-coverage>=0.0",
-    "pytest-iam>=0.2.4",
+    "pytest-iam>=0.2.5",
     "tox-uv>=1.29.0",
     # Babel 2.14 does not directly depend on setuptools
     # https://github.com/python-babel/babel/blob/40e60a1f6cf178d9f57fcc14f157ea1b2ab77361/CHANGES.rst?plain=1#L22-L24
