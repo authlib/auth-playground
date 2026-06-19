@@ -33,7 +33,7 @@ def test_dynamic_registration_invalid_form(iam_server, unconfigured_test_client)
 
     res = unconfigured_test_client.post("/client/dynamic-registration", data={})
     assert res.status_code == 302
-    assert "/en/playground" in res.location
+    assert "/en/session" in res.location
 
 
 def test_dynamic_registration_without_server_metadata(unconfigured_test_client):
@@ -124,7 +124,7 @@ def test_unregister_client_invalid_form(test_client):
 
 def test_unregister_client_without_credentials(unconfigured_test_client):
     """Test unregister client fails without registration credentials."""
-    res = unconfigured_test_client.get("/en/playground")
+    res = unconfigured_test_client.get("/en/session")
     csrf_match = re.search(
         r'name="csrf_token" value="([^"]+)"', res.data.decode(), re.DOTALL
     )
@@ -166,7 +166,7 @@ def test_unregister_client_request_exception(unconfigured_test_client):
         sess["registration_access_token"] = "test-token"
         sess["registration_client_uri"] = "http://invalid-server.test/client"
 
-    res = unconfigured_test_client.get("/en/playground")
+    res = unconfigured_test_client.get("/en/session")
     csrf_match = re.search(
         r'name="csrf_token" value="([^"]+)"', res.data.decode(), re.DOTALL
     )
@@ -197,7 +197,7 @@ def test_unregister_client_success(unconfigured_test_client):
         sess["user"] = {"sub": "testuser"}
         sess["token"] = {"access_token": "test"}
 
-    res = unconfigured_test_client.get("/en/playground")
+    res = unconfigured_test_client.get("/en/session")
     csrf_match = re.search(
         r'name="csrf_token" value="([^"]+)"', res.data.decode(), re.DOTALL
     )

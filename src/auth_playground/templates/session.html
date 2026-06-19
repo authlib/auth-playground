@@ -1,0 +1,97 @@
+{% extends "layout.html" %}
+
+{% block content %}
+    {% if session.token %}
+        <nav class="subtabs">
+            <a href="{{ url_for('routes.session', tab='authentication') }}"{% if tab == 'authentication' %} aria-current="page"{% endif %}>{% trans %}Authentication{% endtrans %}</a>
+            <a href="{{ url_for('routes.session', tab='tokens') }}"{% if tab == 'tokens' %} aria-current="page"{% endif %}>{% trans %}Tokens{% endtrans %}</a>
+            <a href="{{ url_for('routes.session', tab='logout') }}"{% if tab == 'logout' %} aria-current="page"{% endif %}>{% trans %}Logout{% endtrans %}</a>
+        </nav>
+
+        {% if tab == 'authentication' %}
+            <p><small>{% trans %}Re-authenticate or adjust the request — updates auth_time, acr and amr.{% endtrans %}</small></p>
+            {% include "_auth_form.html" %}
+
+        {% elif tab == 'tokens' %}
+            {% if session.token.refresh_token %}
+                <form method="POST" action="{{ url_for('oauth.refresh') }}">
+                    {{ refresh_form.hidden_tag() }}
+                    {{ refresh_form.submit() }}
+                </form>
+                <p><small>{% trans %}Silent refresh — auth_time and acr stay unchanged.{% endtrans %}</small></p>
+            {% endif %}
+            {% include "_tokens.html" %}
+
+        {% elif tab == 'logout' %}
+            <form method="POST" action="{{ url_for('oauth.logout_local') }}">
+                {{ logout_local_form.hidden_tag() }}
+                {{ logout_local_form.submit(class="secondary") }}
+            </form>
+            <p><small>{% trans %}Local — this app only; you stay signed in at the provider, so the next sign-in may be silent (SSO).{% endtrans %}</small></p>
+
+            {% if g.server_config and g.server_config.specs and g.server_config.specs.oidc_rpinitiated_logout %}
+                <form method="POST" action="{{ url_for('oauth.logout') }}" id="logout-params-form">
+                    {{ logout_params_form.hidden_tag() }}
+
+                    <label>
+                        {{ logout_params_form.id_token_hint.label }}
+                        {{ logout_params_form.id_token_hint() }}
+                        {% if logout_params_form.id_token_hint.description %}
+                            <small>{{ logout_params_form.id_token_hint.description }}</small>
+                        {% endif %}
+                    </label>
+
+                    <label>
+                        {{ logout_params_form.client_id.label }}
+                        {{ logout_params_form.client_id() }}
+                        {% if logout_params_form.client_id.description %}
+                            <small>{{ logout_params_form.client_id.description }}</small>
+                        {% endif %}
+                    </label>
+
+                    <label>
+                        {{ logout_params_form.post_logout_redirect_uri.label }}
+                        {{ logout_params_form.post_logout_redirect_uri() }}
+                        {% if logout_params_form.post_logout_redirect_uri.description %}
+                            <small>{{ logout_params_form.post_logout_redirect_uri.description }}</small>
+                        {% endif %}
+                    </label>
+
+                    <label>
+                        {{ logout_params_form.logout_hint.label }}
+                        {{ logout_params_form.logout_hint() }}
+                        {% if logout_params_form.logout_hint.description %}
+                            <small>{{ logout_params_form.logout_hint.description }}</small>
+                        {% endif %}
+                    </label>
+
+                    {% if logout_params_form.ui_locales.choices|length > 1 %}
+                        <label>
+                            {{ logout_params_form.ui_locales.label }}
+                            {{ logout_params_form.ui_locales() }}
+                            {% if logout_params_form.ui_locales.description %}
+                                <small>{{ logout_params_form.ui_locales.description }}</small>
+                            {% endif %}
+                        </label>
+                    {% endif %}
+                    <button type="submit" class="contrast">{% trans %}Server log out{% endtrans %}</button>
+                </form>
+                <p><small>{% trans %}Global — also ends the session at the provider (RP-Initiated Logout), preventing a silent re-login.{% endtrans %}</small></p>
+            {% endif %}
+        {% endif %}
+
+    {% else %}
+        <hgroup>
+            <h2>{% trans %}No active session{% endtrans %}</h2>
+            <p>{% trans %}Sign in to explore OAuth 2.0 and OpenID Connect flows: authentication, token refresh, and logout.{% endtrans %}</p>
+        </hgroup>
+
+        {% include "_auth_form.html" %}
+    {% endif %}
+{% endblock %}
+
+{% block scripts %}
+    {% if tab == 'tokens' %}
+        <script src="{{ url_for('static', filename='js/copy-token.js') }}"></script>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,6 @@
+{% if server_configured %}
+    <nav class="subtabs">
+        <a href="{{ url_for('routes.configure_server') }}"{% if request.endpoint == 'routes.configure_server' %} aria-current="page"{% endif %}>{% trans %}Provider{% endtrans %}</a>
+        <a href="{{ url_for('routes.specs') }}"{% if request.endpoint == 'routes.specs' %} aria-current="page"{% endif %}>{% trans %}Specifications{% endtrans %}</a>
+    </nav>
+{% endif %}

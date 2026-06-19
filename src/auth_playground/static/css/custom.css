@@ -74,9 +74,24 @@ header h1 a:hover {
     text-decoration: underline;
 }
 
+/* Give the identity-provider block more room so wide names/nav stay on one line */
+header .grid {
+    grid-template-columns: auto 1fr;
+}
+
 /* Align Identity Provider to the right in header */
 header .grid > hgroup:last-child {
     text-align: right;
+}
+
+@media (max-width: 768px) {
+    header .grid {
+        grid-template-columns: 1fr;
+    }
+
+    header .grid > hgroup:last-child {
+        text-align: left;
+    }
 }
 
 /* Center footer content */
@@ -173,35 +188,28 @@ article[role="alert"][data-type="warning"] {
     color: #fef3c7;
 }
 
-.buttons-right {
+/* Sub-navigation (tabs) for object sections (Session, Server) */
+nav.subtabs {
     display: flex;
-    justify-content: center;
-    gap: 1rem;
+    gap: 0.25rem;
+    border-bottom: 1px solid var(--pico-muted-border-color);
+    margin-bottom: var(--pico-spacing);
 }
 
-.buttons-right > * {
-    width: auto;
-}
-
-/* Reduce button size in button bars */
-.buttons-right [role="button"],
-.buttons-right button,
-.buttons-right input[type="submit"] {
+nav.subtabs a {
     padding: 0.5rem 1rem;
-    font-size: 0.875rem;
-    line-height: 1.5;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    text-decoration: none;
+    color: var(--pico-secondary);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
 }
 
-.buttons-right [role="group"] [role="button"],
-.buttons-right [role="group"] button,
-.buttons-right [role="group"] input[type="submit"] {
-    padding: 0.5rem 1rem;
-    font-size: 0.875rem;
-    line-height: 1.5;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+nav.subtabs a:hover {
+    color: var(--pico-primary);
+}
+
+nav.subtabs a[aria-current="page"] {
+    color: var(--pico-primary);
+    border-bottom-color: var(--pico-primary);
+    font-weight: 600;
 }

@@ -196,6 +196,10 @@ def create_app():
         return {
             "app_version": importlib.metadata.version("auth-playground"),
             "repository_url": project_urls.get("repository"),
+            "server_configured": is_server_configured(),
+            "client_configured": is_client_configured(),
+            "server_locked": is_oauth_server_from_env(app),
+            "client_locked": is_oauth_client_from_env(app),
         }
 
     return app

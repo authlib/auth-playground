@@ -1,0 +1,67 @@
+<form method="POST" action="{{ url_for('oauth.authorize') }}" id="auth-params-form">
+    {{ auth_params_form.hidden_tag() }}
+
+    {% if auth_params_form.scopes.choices %}
+        <fieldset>
+            <legend>{{ auth_params_form.scopes.label.text }}</legend>
+            {% if auth_params_form.scopes.description %}
+                <small>{{ auth_params_form.scopes.description }}</small>
+            {% endif %}
+            {{ auth_params_form.scopes() }}
+        </fieldset>
+    {% endif %}
+
+    <label>
+        {{ auth_params_form.prompt.label }}
+        {{ auth_params_form.prompt() }}
+        {% if auth_params_form.prompt.description %}
+            <small>{{ auth_params_form.prompt.description }}</small>
+        {% endif %}
+    </label>
+
+    <label>
+        {{ auth_params_form.max_age.label }}
+        {{ auth_params_form.max_age() }}
+        {% if auth_params_form.max_age.description %}
+            <small>{{ auth_params_form.max_age.description }}</small>
+        {% endif %}
+    </label>
+
+    <label>
+        {{ auth_params_form.acr_values.label }}
+        {{ auth_params_form.acr_values() }}
+        {% if auth_params_form.acr_values.description %}
+            <small>{{ auth_params_form.acr_values.description }}</small>
+        {% endif %}
+    </label>
+
+    <label>
+        {{ auth_params_form.login_hint.label }}
+        {{ auth_params_form.login_hint() }}
+        {% if auth_params_form.login_hint.description %}
+            <small>{{ auth_params_form.login_hint.description }}</small>
+        {% endif %}
+    </label>
+
+    <label>
+        {{ auth_params_form.claims.label }}
+        {{ auth_params_form.claims() }}
+        {% if auth_params_form.claims.description %}
+            <small>{{ auth_params_form.claims.description }}</small>
+        {% endif %}
+    </label>
+
+    {% if auth_params_form.ui_locales.choices|length > 1 %}
+        <label>
+            {{ auth_params_form.ui_locales.label }}
+            {{ auth_params_form.ui_locales() }}
+            {% if auth_params_form.ui_locales.description %}
+                <small>{{ auth_params_form.ui_locales.description }}</small>
+            {% endif %}
+        </label>
+    {% endif %}
+
+    <button type="submit" class="primary">
+        {% if session.token %}{% trans %}Sign in again{% endtrans %}{% else %}{% trans %}Sign in{% endtrans %}{% endif %}
+    </button>
+</form>

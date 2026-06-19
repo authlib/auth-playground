@@ -31,7 +31,7 @@ repos:
     hooks:
       - id: pybabel-extract
         name: Extract translatable strings
-        entry: bash -c 'uv run pybabel extract -o src/auth_playground/translations/messages.pot src/auth_playground && git add src/auth_playground/translations/messages.pot'
+        entry: bash -c 'uv run pybabel extract --mapping-file pyproject.toml --copyright-holder="Yaal Coop" -o src/auth_playground/translations/messages.pot src && git add src/auth_playground/translations/messages.pot'
         language: system
         pass_filenames: false
         files: '\.(py|html)$'

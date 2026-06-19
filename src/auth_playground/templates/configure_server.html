@@ -3,48 +3,63 @@
 {% block title %}{% trans %}Configure Server{% endtrans %}{% endblock %}
 
 {% block content %}
-    <article>
-        <header>
-            <h2>{% trans %}Choose a provider{% endtrans %}</h2>
-        </header>
+    {% include "_server_tabs.html" %}
 
-        <p>{% trans %}Enter the URL of your OAuth2 or OpenID Connect provider to validate it and discover configuration options.{% endtrans %}</p>
+    {% if locked %}
+        <article>
+            <header>
+                <h2>{% trans %}Provider{% endtrans %}</h2>
+            </header>
+            <p>{% trans %}This provider is set via environment variables and cannot be changed.{% endtrans %}</p>
+            <p>
+                <strong>{% trans %}Issuer:{% endtrans %}</strong>
+                <a href="{{ g.server_config.issuer_url }}" target="_blank"><code>{{ g.server_config.issuer_url }}</code></a>
+            </p>
+        </article>
+    {% else %}
+        <article>
+            <header>
+                <h2>{% trans %}Choose a provider{% endtrans %}</h2>
+            </header>
 
-        <form method="POST" action="{{ url_for('routes.configure_server') }}">
-            {{ form.hidden_tag() }}
+            <p>{% trans %}Enter the URL of your OAuth2 or OpenID Connect provider to validate it and discover configuration options.{% endtrans %}</p>
 
-            <label for="{{ form.issuer_url.id }}">
-                {{ form.issuer_url.label }}
-            </label>
+            <form method="POST" action="{{ url_for('routes.configure_server') }}">
+                {{ form.hidden_tag() }}
 
-            {% if form.issuer_url.errors %}
-                {% for error in form.issuer_url.errors %}
-                    <small class="error">{{ error }}</small>
-                {% endfor %}
-            {% endif %}
+                <label for="{{ form.issuer_url.id }}">
+                    {{ form.issuer_url.label }}
+                </label>
 
-            <div role="group">
-                {{ form.issuer_url(class="form-control") }}
-                {{ form.submit(class="primary") }}
-            </div>
-        </form>
+                {% if form.issuer_url.errors %}
+                    {% for error in form.issuer_url.errors %}
+                        <small class="error">{{ error }}</small>
+                    {% endfor %}
+                {% endif %}
 
-        <details>
-            <summary role="button" class="outline">{% trans %}What happens next?{% endtrans %}</summary>
-            <ol>
-                <li>{% trans %}Auth Playground will fetch the server's metadata from{% endtrans %} <code>/.well-known/openid-configuration</code> {% trans %}or{% endtrans %} <code>/.well-known/oauth-authorization-server</code></li>
-                <li>{% trans %}If valid, Auth Playground will show you multiple configuration options:{% endtrans %}
-                    <ul>
-                        <li>{% trans %}Automatic registration (if supported){% endtrans %}</li>
-                        <li>{% trans %}Manual configuration via web form{% endtrans %}</li>
-                        <li>{% trans %}Environment variables setup{% endtrans %}</li>
-                    </ul>
-                </li>
-            </ol>
-        </details>
-    </article>
+                <div role="group">
+                    {{ form.issuer_url(class="form-control") }}
+                    {{ form.submit(class="primary") }}
+                </div>
+            </form>
 
-    {% if config.DEBUG %}
-        {% include "static-configuration.html" %}
+            <details>
+                <summary role="button" class="outline">{% trans %}What happens next?{% endtrans %}</summary>
+                <ol>
+                    <li>{% trans %}Auth Playground will fetch the server's metadata from{% endtrans %} <code>/.well-known/openid-configuration</code> {% trans %}or{% endtrans %} <code>/.well-known/oauth-authorization-server</code></li>
+                    <li>{% trans %}If valid, Auth Playground will show you multiple configuration options:{% endtrans %}
+                        <ul>
+                            <li>{% trans %}Automatic registration (if supported){% endtrans %}</li>
+                            <li>{% trans %}Manual configuration via web form{% endtrans %}</li>
+                            <li>{% trans %}Environment variables setup{% endtrans %}</li>
+                        </ul>
+                    </li>
+                </ol>
+            </details>
+        </article>
+
+        {% if config.DEBUG %}
+            {% include "static-configuration.html" %}
+        {% endif %}
     {% endif %}
 {% endblock %}
