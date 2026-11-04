@@ -86,7 +86,7 @@ dev = [
     { name = "prek", specifier = ">=0.2.11" },
     { name = "pytest", specifier = ">=8.4.2" },
     { name = "pytest-coverage", specifier = ">=0.0" },
-    { name = "pytest-iam", specifier = ">=0.2.5" },
+    { name = "pytest-iam", specifier = ">=0.2.6" },
     { name = "tox-uv", specifier = ">=1.29.0" },
 ]
 release = [{ name = "pyinstaller", specifier = ">=6.11.1" }]
