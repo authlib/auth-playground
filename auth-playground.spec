@@ -1,7 +1,6 @@
 # -*- mode: python ; coding: utf-8 -*-
 
 import os
-import re
 from pathlib import Path
 import importlib.resources
 from auth_playground import create_app
@@ -22,15 +21,6 @@ def filter_wtforms_catalogs(item):
         return False
 
     code = dest.split("/")[2].split("_")[0]
-    return code in codes
-
-
-def filter_babel_catalogs(item):
-    dest, _, _ = item
-    if not re.match(r"babel/locale-data/\w+\.dat", dest):
-        return True
-
-    code = Path(dest).stem.split("_")[0]
     return code in codes
 
 
@@ -55,7 +45,6 @@ a = Analysis(
 pyz = PYZ(a.pure)
 
 a.datas = list(filter(filter_wtforms_catalogs, a.datas))
-a.datas = list(filter(filter_babel_catalogs, a.datas))
 
 exe = EXE(
     pyz,

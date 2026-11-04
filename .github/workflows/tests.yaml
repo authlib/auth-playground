@@ -78,6 +78,14 @@ jobs:
           uv sync --group release --all-extras --no-dev
           uv run pyinstaller auth-playground.spec
           uv cache prune --ci
+      - name: Test binary
+        run: |
+          SECRET_KEY="test-secret-key-for-ci" FLASK_DEBUG="False" ./dist/auth-playground &
+          pid=$!
+          trap 'kill $pid' EXIT
+
+          curl -fsSL --retry 30 --retry-delay 1 --retry-connrefused -o /dev/null http://localhost:4000/en/
+          curl -fsSL -o /dev/null http://localhost:4000/fr/
 
   docker:
     name: docker build
@@ -108,11 +116,13 @@ jobs:
             exit 1
           }
 
-          curl -f http://localhost:4000/ || {
-            echo "App failed to respond"
-            docker logs test-app
-            exit 1
-          }
+          for path in / /fr/; do
+            curl -fsSL -o /dev/null "http://localhost:4000$path" || {
+              echo "App failed to respond on $path"
+              docker logs test-app
+              exit 1
+            }
+          done
 
           docker stop test-app
           docker rm test-app
