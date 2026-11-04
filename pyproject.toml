@@ -8,7 +8,7 @@ version = "0.1.7"
 description = "Demonstration OpenID Connect Client"
 readme = "README.md"
 license = {text = "MIT"}
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 keywords = ["oidc", "oauth", "oauth2", "openid", "identity", "authentication"]
 authors = [{name="Yaal Coop", email="contact@yaal.coop"}]
 maintainers = [{name="Éloi Rivard", email="eloi@yaal.coop"}]
@@ -123,7 +123,6 @@ docstring-code-format = true
 requires = ["tox>=4.19"]
 env_list = [
     "style",
-    "py310",
     "py311",
     "py312",
     "py313",
@@ -150,7 +149,7 @@ commands = [
 [tool.tox.env.minversions]
 runner = "uv-venv-runner"
 uv_resolution = "lowest-direct"
-basepython = ["python3.10"]
+basepython = ["python3.11"]
 
 [tool.tox.env.coverage]
 commands = [
