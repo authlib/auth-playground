@@ -60,7 +60,6 @@ dev = [
     { name = "pytest" },
     { name = "pytest-coverage" },
     { name = "pytest-iam" },
-    { name = "setuptools", marker = "python_full_version >= '3.12'" },
     { name = "tox-uv" },
 ]
 release = [
@@ -86,7 +85,6 @@ dev = [
     { name = "pytest", specifier = ">=8.4.2" },
     { name = "pytest-coverage", specifier = ">=0.0" },
     { name = "pytest-iam", specifier = ">=0.2.5" },
-    { name = "setuptools", marker = "python_full_version >= '3.12'", specifier = ">=50.0.0" },
     { name = "tox-uv", specifier = ">=1.29.0" },
 ]
 release = [{ name = "pyinstaller", specifier = ">=6.11.1" }]

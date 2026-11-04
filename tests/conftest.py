@@ -1,16 +1,15 @@
 import os
 
 import pytest
-from babel.messages.frontend import compile_catalog
+from babel.messages.frontend import CompileCatalog
 
 from auth_playground import create_app
 
 
 @pytest.fixture(autouse=True, scope="session")
 def babel_catalogs():
-    cmd = compile_catalog()
+    cmd = CompileCatalog()
     cmd.directory = os.path.dirname(__file__) + "/../src/auth_playground/translations"
-    cmd.quiet = True
     cmd.statistics = True
     cmd.finalize_options()
     cmd.run()

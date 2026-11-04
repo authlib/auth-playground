@@ -5,13 +5,12 @@ from hatchling.builders.hooks.plugin.interface import BuildHookInterface
 
 
 def create_mo_files():
-    from babel.messages.frontend import compile_catalog
+    from babel.messages.frontend import CompileCatalog
 
-    cmd = compile_catalog()
+    cmd = CompileCatalog()
     cmd.directory = os.path.join(
         os.path.dirname(__file__), "src", "auth_playground", "translations"
     )
-    cmd.quiet = True
     cmd.statistics = True
     cmd.finalize_options()
     return cmd.run()
