@@ -69,13 +69,13 @@ release = [
 
 [package.metadata]
 requires-dist = [
-    { name = "authlib", specifier = ">=1.7.0" },
+    { name = "authlib", specifier = ">=1.9.1" },
     { name = "babel", specifier = ">=2.14.0" },
     { name = "cachelib", specifier = ">=0.10.0" },
     { name = "flask", specifier = ">=3.1.2" },
     { name = "flask-babel", specifier = ">=4.0.0" },
     { name = "flask-session", specifier = ">=0.8.0" },
-    { name = "flask-wtf", specifier = ">=1.2.0" },
+    { name = "flask-wtf", specifier = ">=1.2.1" },
     { name = "python-dotenv", specifier = ">=1.0.0" },
     { name = "requests", specifier = ">=2.32.5" },
 ]
