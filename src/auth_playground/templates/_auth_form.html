@@ -1,16 +1,32 @@
 {% from "_form.html" import render_form %}
 {% call render_form(auth_params_form, url_for('oauth.authorize'), id="auth-params-form") %}
-    {% if auth_params_form.scopes.choices %}
-        {{ auth_params_form.scopes() }}
-    {% endif %}
-    {{ auth_params_form.prompt() }}
-    {{ auth_params_form.max_age() }}
-    {{ auth_params_form.acr_values() }}
-    {{ auth_params_form.login_hint() }}
-    {{ auth_params_form.claims() }}
-    {% if auth_params_form.ui_locales.choices|length > 1 %}
-        {{ auth_params_form.ui_locales() }}
-    {% endif %}
+    <div class="param-groups">
+        <fieldset>
+            <legend>{% trans %}Request{% endtrans %}</legend>
+            {{ auth_params_form.pkce() }}
+            {% if auth_params_form.scopes.choices %}
+                {{ auth_params_form.scopes() }}
+            {% endif %}
+            {{ auth_params_form.other_scopes() }}
+        </fieldset>
+        <fieldset>
+            <legend>{% trans %}Authentication{% endtrans %}</legend>
+            {{ auth_params_form.prompt() }}
+            {{ auth_params_form.max_age() }}
+            {% if auth_params_form.ui_locales.choices|length > 1 %}
+                {{ auth_params_form.ui_locales() }}
+            {% endif %}
+            {{ auth_params_form.acr_values() }}
+            {{ auth_params_form.login_hint() }}
+        </fieldset>
+        <fieldset>
+            <legend>{% trans %}Advanced{% endtrans %}</legend>
+            {{ auth_params_form.claims() }}
+            {{ auth_params_form.extra_params() }}
+        </fieldset>
+    </div>
+
+    {{ auth_params_form.preview() }}
 
     {% if session.token %}
         {{ auth_params_form.sign_in(label=_("Sign in again")) }}

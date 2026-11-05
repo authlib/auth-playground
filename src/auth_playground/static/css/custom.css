@@ -115,3 +115,53 @@ nav.subtabs a[aria-current="page"] {
     border-bottom-color: var(--pico-primary);
     font-weight: 600;
 }
+
+/* Authorization request parameters */
+.param-groups {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr));
+    gap: var(--pico-spacing);
+    margin-bottom: var(--pico-spacing);
+}
+
+.param-groups > fieldset {
+    margin: 0;
+    padding: var(--pico-spacing);
+    border: var(--pico-border-width) solid var(--pico-muted-border-color);
+    border-radius: var(--pico-border-radius);
+}
+
+.param-groups > fieldset > legend {
+    padding: 0 calc(var(--pico-spacing) / 2);
+    font-weight: 600;
+}
+
+.param-groups > fieldset:last-child {
+    grid-column: 1 / -1;
+}
+
+.request-preview pre {
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+/*
+ * Blades styles the helper text right after an input. Give the same style to
+ * the error message after a group, and to the description after an error.
+ */
+[role="group"]:has([aria-invalid="true"]) + small,
+small[id$="-error"] + small {
+    display: block;
+    width: 100%;
+    margin-top: calc(var(--pico-spacing) * -0.75);
+    margin-bottom: var(--pico-spacing);
+}
+
+[role="group"]:has([aria-invalid="true"]) + small {
+    color: var(--pico-del-color);
+}
+
+small[id$="-error"] + small {
+    color: var(--pico-muted-color);
+}

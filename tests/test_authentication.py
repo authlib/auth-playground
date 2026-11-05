@@ -1,3 +1,8 @@
+from unittest.mock import patch
+
+from authlib.integrations.base_client import OAuthError
+
+
 def test_index_shows_signin_when_unauthenticated(iam_server, test_client):
     """Test that unauthenticated users see signin button."""
     res = test_client.get("/en/session", follow_redirects=True)
@@ -225,3 +230,21 @@ def test_refresh_token_success(iam_server, iam_client, user, testapp):
 
         assert old_id_token is not None, "Old ID token should exist"
         assert new_id_token is not None, "ID token should still be present"
+
+
+def test_refresh_token_error_without_description(test_client, csrf_token):
+    """Test the error code is shown when the provider gives no description."""
+    with test_client.session_transaction() as sess:
+        sess["token"] = {"access_token": "a", "refresh_token": "stale"}
+
+    with patch(
+        "authlib.integrations.base_client.sync_app.OAuth2Mixin.fetch_access_token",
+        side_effect=OAuthError(error="invalid_grant"),
+    ):
+        res = test_client.post(
+            "/refresh",
+            data={"csrf_token": csrf_token(test_client)},
+            follow_redirects=True,
+        )
+
+    assert "An error happened during token refresh: invalid_grant" in res.text

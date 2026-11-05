@@ -406,16 +406,15 @@ def test_authorize_with_custom_parameters(testapp):
     assert params["claims"] == ['{"id_token": {"email": null}}']
 
 
-def test_authorize_ignores_parameters_without_csrf_token(test_client):
-    """Test authorization request ignores the form without CSRF token."""
+def test_authorize_refuses_form_without_csrf_token(test_client):
+    """Test authorization request is not sent without CSRF token."""
     fields = ("ui_locales", "max_age", "acr_values", "login_hint", "claims")
     res = test_client.post(
         "/authorize", data={"prompt": "consent", **dict.fromkeys(fields, "")}
     )
 
-    assert res.status_code == 302
-    params = parse_qs(urlsplit(res.location).query)
-    assert "prompt" not in params
+    assert res.status_code == 200
+    assert "Invalid request" in res.text
 
 
 def test_authorize_callback_shows_provider_error(test_client):

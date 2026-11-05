@@ -73,8 +73,16 @@ def setup_i18n(app):
         }
 
     def locale_selector():
-        # Language is always specified in URL prefix (mandatory)
-        return g.get("lang_code", app.config["BABEL_DEFAULT_LOCALE"])
+        """Use the language of the URL, else the one of the last localized page.
+
+        Routes without a language prefix, such as the htmx endpoints and the
+        OAuth callbacks, answer in the language the user browses in.
+        """
+        return (
+            g.get("lang_code")
+            or session.get("lang_code")
+            or app.config["BABEL_DEFAULT_LOCALE"]
+        )
 
     babel.init_app(app, locale_selector=locale_selector)
     app.url_map.converters["lang"] = LangConverter

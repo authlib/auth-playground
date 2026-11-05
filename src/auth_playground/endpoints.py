@@ -11,15 +11,12 @@ from flask_babel import gettext as _
 
 import auth_playground
 from auth_playground.decorators import server_config_needed
-from auth_playground.forms import AuthorizationParamsForm
 from auth_playground.forms import ClientConfigForm
 from auth_playground.forms import DynamicRegistrationForm
-from auth_playground.forms import LogoutLocalForm
-from auth_playground.forms import LogoutParamsForm
-from auth_playground.forms import RefreshTokenForm
 from auth_playground.forms import ServerConfigForm
 from auth_playground.forms import UnregisterClientForm
 from auth_playground.oauth import clear_user_session
+from auth_playground.pages import render_session_page
 from auth_playground.session import ServerConfig
 
 bp = Blueprint("routes", __name__)
@@ -233,29 +230,7 @@ def session_page(tab=None):
     if not logged_in and tab != "authentication":
         return redirect(url_for("routes.session", tab="authentication"))
 
-    refresh_form = RefreshTokenForm()
-    auth_params_form = AuthorizationParamsForm()
-    logout_local_form = LogoutLocalForm()
-
-    oauth_config = auth_playground.get_oauth_config(current_app)
-    logout_params_form = LogoutParamsForm(
-        data={
-            "id_token_hint": session.get("token", {}).get("id_token", ""),
-            "client_id": oauth_config["client_id"] if oauth_config else "",
-            "post_logout_redirect_uri": url_for(
-                "oauth.logout_callback", _external=True
-            ),
-        }
-    )
-
-    return render_template(
-        "session.html",
-        tab=tab,
-        refresh_form=refresh_form,
-        auth_params_form=auth_params_form,
-        logout_local_form=logout_local_form,
-        logout_params_form=logout_params_form,
-    )
+    return render_session_page(tab)
 
 
 @bp.route("/specs")

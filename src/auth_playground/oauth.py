@@ -3,6 +3,7 @@ import uuid
 
 import requests
 from authlib.common.errors import AuthlibBaseError
+from authlib.common.security import generate_token
 from authlib.integrations.base_client import OAuthError
 from flask import Blueprint
 from flask import current_app
@@ -15,6 +16,9 @@ from flask import url_for
 from flask_babel import gettext as _
 
 import auth_playground
+from auth_playground.authorization import authorization_params
+from auth_playground.authorization import new_code_verifier
+from auth_playground.authorization import pkce_params
 from auth_playground.client_auth import METHODS
 from auth_playground.client_auth import PUBLIC_METHOD
 from auth_playground.decorators import server_config_needed
@@ -24,8 +28,12 @@ from auth_playground.forms import LogoutLocalForm
 from auth_playground.forms import LogoutParamsForm
 from auth_playground.forms import RefreshTokenForm
 from auth_playground.forms import UnregisterClientForm
+from auth_playground.pages import render_session_page
 
 bp = Blueprint("oauth", __name__)
+
+# Authorization requests kept while waiting for their callback.
+MAX_PENDING_AUTHORIZATIONS = 5
 
 
 def get_software_id() -> str:
@@ -66,7 +74,7 @@ def get_response_error(exc: requests.RequestException) -> str | None:
 
 def clear_user_session():
     """Clear user and token data from the session."""
-    for key in ("user", "token"):
+    for key in ("user", "token", "authorization_requests"):
         session.pop(key, None)
 
 
@@ -240,63 +248,83 @@ def unregister_client():
 @server_config_needed
 def authorize():
     """Redirect users to the Identity Provider authorization page."""
-    kwargs = {}
+    form = AuthorizationParamsForm()
+    if request.method == "POST" and not form.validate_on_submit():
+        if "csrf_token" in form.errors:
+            flash(_("Invalid request"), "error")
+        return render_session_page("authentication", auth_params_form=form)
 
-    if request.method == "POST":
-        form = AuthorizationParamsForm()
-
-        if form.validate_on_submit():
-            if form.scopes.data:
-                kwargs["scope"] = " ".join(form.scopes.data)
-
-            if form.prompt.data:
-                kwargs["prompt"] = form.prompt.data
-
-            if form.ui_locales.data:
-                kwargs["ui_locales"] = form.ui_locales.data
-
-            if form.max_age.data is not None:
-                kwargs["max_age"] = form.max_age.data
-
-            if form.acr_values.data:
-                kwargs["acr_values"] = form.acr_values.data
-
-            if form.login_hint.data:
-                kwargs["login_hint"] = form.login_hint.data
-
-            if form.claims.data:
-                kwargs["claims"] = form.claims.data
-
+    params = authorization_params(form)
     if request.method == "GET" and "user" in session:
-        kwargs["prompt"] = "login"
+        params["prompt"] = "login"
 
+    pending = {}
+    if method := form.pkce.data:
+        code_verifier = new_code_verifier()
+        params.update(pkce_params(method, code_verifier))
+        pending["code_verifier"] = code_verifier
+
+    state = generate_token(30)
+    save_authorization_request(state, pending)
     return auth_playground.oauth.default.authorize_redirect(
-        url_for("oauth.authorize_callback", _external=True), **kwargs
+        url_for("oauth.authorize_callback", _external=True), state=state, **params
     )
+
+
+def save_authorization_request(state, pending):
+    """Keep what the callback needs, by state, for the recent requests only."""
+    requests = dict(session.get("authorization_requests", {}))
+    requests[state] = pending
+    session["authorization_requests"] = dict(
+        list(requests.items())[-MAX_PENDING_AUTHORIZATIONS:]
+    )
+
+
+def pop_authorization_request(state):
+    """Return and forget what the authorization request of ``state`` needs."""
+    requests = dict(session.get("authorization_requests", {}))
+    pending = requests.pop(state, {})
+    session["authorization_requests"] = requests
+    return pending
+
+
+def store_token(token):
+    """Store the token in the session."""
+    old_token = session.get("token", {})
+    session["token"] = {
+        "access_token": token.get("access_token"),
+        "refresh_token": token.get("refresh_token") or old_token.get("refresh_token"),
+        "id_token": token.get("id_token") or old_token.get("id_token"),
+        "token_type": token.get("token_type"),
+        "expires_in": token.get("expires_in"),
+        "expires_at": token.get("expires_at"),
+        "scope": token.get("scope"),
+    }
 
 
 @bp.route("/authorize_callback")
 def authorize_callback():
     """Handle OAuth callback after user authorization."""
+    pending = pop_authorization_request(request.args.get("state"))
+    kwargs = {}
+    if code_verifier := pending.get("code_verifier"):
+        kwargs["code_verifier"] = code_verifier
+
     try:
-        token = auth_playground.oauth.default.authorize_access_token()
-        session["user"] = token.get("userinfo")
-        session["token"] = {
-            "access_token": token.get("access_token"),
-            "refresh_token": token.get("refresh_token"),
-            "id_token": token.get("id_token"),
-            "token_type": token.get("token_type"),
-            "expires_in": token.get("expires_in"),
-            "expires_at": token.get("expires_at"),
-            "scope": token.get("scope"),
-        }
-        flash(_("You have been successfully logged in."), "success")
+        token = auth_playground.oauth.default.authorize_access_token(**kwargs)
     except AuthlibBaseError as exc:
         flash(
-            _("An error happened during login: {error}").format(error=exc.description),
+            _("An error happened during login: {error}").format(
+                error=exc.description or exc.error
+            ),
             "error",
         )
+        return redirect(url_for("routes.session"))
 
+    session.pop("token", None)
+    session["user"] = token.get("userinfo")
+    store_token(token)
+    flash(_("You have been successfully logged in."), "success")
     return redirect(url_for("routes.session"))
 
 
@@ -381,21 +409,12 @@ def refresh():
             scope=original_scope,
         )
 
-        old_token = session.get("token", {})
-        session["token"] = {
-            "access_token": new_token.get("access_token"),
-            "refresh_token": new_token.get("refresh_token") or refresh_token,
-            "id_token": new_token.get("id_token") or old_token.get("id_token"),
-            "token_type": new_token.get("token_type"),
-            "expires_in": new_token.get("expires_in"),
-            "expires_at": new_token.get("expires_at"),
-            "scope": new_token.get("scope"),
-        }
+        store_token(new_token)
         flash(_("Token successfully refreshed"), "success")
     except AuthlibBaseError as exc:
         flash(
             _("An error happened during token refresh: {error}").format(
-                error=exc.description
+                error=exc.description or exc.error
             ),
             "error",
         )

@@ -22,6 +22,7 @@ from flask_session import Session
 from werkzeug.local import LocalProxy
 from werkzeug.middleware.proxy_fix import ProxyFix
 
+from auth_playground.authorization import DEFAULT_SCOPE
 from auth_playground.client_auth import default_method
 from auth_playground.endpoints import bp
 from auth_playground.i18n import babel
@@ -111,7 +112,7 @@ def setup_oauth(app):
         client_secret=config.get("client_secret"),
         server_metadata_url=get_well_known_url(config["auth_server"], external=True),
         client_kwargs={
-            "scope": "openid profile email phone address groups",
+            "scope": DEFAULT_SCOPE,
             "token_endpoint_auth_method": config["token_endpoint_auth_method"],
         },
         client_auth_methods=[ClientSecretJWT()],
