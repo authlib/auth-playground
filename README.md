@@ -94,6 +94,17 @@ uv run pytest
 uv run prek run --all-files
 ```
 
+### Git Hooks
+
+Install the hooks once per clone:
+
+```bash
+uv run prek install
+```
+
+They check the code style before each commit.
+They also check that commit messages follow [Conventional Commits](https://www.conventionalcommits.org).
+
 ### Translations
 
 After you add or change a translatable string, update the catalog:
