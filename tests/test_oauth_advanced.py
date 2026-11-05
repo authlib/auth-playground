@@ -316,6 +316,33 @@ def test_dynamic_registration_invalid_json(unconfigured_testapp):
     assert "Invalid JSON response from registration endpoint" in res.text
 
 
+@pytest.mark.parametrize("client_data", [[], {"client_secret": "secret"}])
+def test_dynamic_registration_invalid_client_data(unconfigured_testapp, client_data):
+    """Test dynamic registration handles a response without a client."""
+    registration_session(unconfigured_testapp)
+
+    res = unconfigured_testapp.get("/en/client")
+    with patch("requests.post") as mock_post:
+        mock_post.return_value.json.return_value = client_data
+        res = res.forms["dynamic-registration-form"].submit("register").maybe_follow()
+
+    assert "Invalid response from registration endpoint" in res.text
+
+
+def test_dynamic_registration_without_client_secret(unconfigured_testapp):
+    """Test dynamic registration refuses a client without a secret."""
+    registration_session(unconfigured_testapp)
+
+    res = unconfigured_testapp.get("/en/client")
+    with patch("requests.post") as mock_post:
+        mock_post.return_value.json.return_value = {"client_id": "public-client"}
+        res = res.forms["dynamic-registration-form"].submit("register").maybe_follow()
+
+    assert "without a client secret" in res.text
+    with unconfigured_testapp.session_transaction() as sess:
+        assert "oauth_config" not in sess
+
+
 def test_unregister_client_shows_provider_error(unconfigured_testapp):
     """Test unregister client displays the provider error."""
     unregistration_session(unconfigured_testapp)

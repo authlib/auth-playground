@@ -139,6 +139,21 @@ def client_dynamic_registration():
             flash(_("Dynamic client registration failed"), "error")
         return redirect(url_for("routes.configure_client"))
 
+    if not isinstance(client_data, dict) or not client_data.get("client_id"):
+        flash(_("Invalid response from registration endpoint"), "error")
+        return redirect(url_for("routes.configure_client"))
+
+    if not client_data.get("client_secret"):
+        flash(
+            _(
+                "The server registered the client without a client secret. "
+                "Auth Playground only supports confidential clients. "
+                "The client is still registered on the server."
+            ),
+            "error",
+        )
+        return redirect(url_for("routes.configure_client"))
+
     auth_playground.setup_oauth_runtime(
         current_app,
         client_data["client_id"],
