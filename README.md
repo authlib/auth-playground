@@ -71,14 +71,17 @@ If the application runs behind a reverse proxy or a load balancer, enable the pr
 export PROXY_FIX=true
 ```
 
-The application then trusts the `X-Forwarded-Proto` header set by the closest proxy.
+The application then trusts the `X-Forwarded-Proto` and `X-Forwarded-Prefix` headers set by the closest proxy.
 For example, the redirect URIs use `https` when the proxy handles TLS.
+They also start with the path prefix when the application is served under a sub-path.
 It also trusts `X-Forwarded-For`, which only changes the client address shown in the logs.
 Only enable it when a proxy is present.
 Without a proxy, clients could forge these headers.
 
 The proxy must set `X-Forwarded-Proto` and forward the original `Host` header.
-With nginx:
+It must also set `X-Forwarded-Prefix`, or clear it when the application is served at the root.
+Otherwise clients could send their own prefix.
+With nginx, at the root of the domain:
 
 ```nginx
 location / {
@@ -86,10 +89,23 @@ location / {
     proxy_set_header Host $http_host;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-Prefix "";
 }
 ```
 
-With several proxies, the inner proxies must pass on the `X-Forwarded-Proto` header they receive.
+Under a sub-path, the proxy removes the prefix from the request path and sends it in `X-Forwarded-Prefix`:
+
+```nginx
+location /playground/ {
+    proxy_pass http://127.0.0.1:4000/;
+    proxy_set_header Host $http_host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-Prefix /playground;
+}
+```
+
+With several proxies, the inner proxies must pass on the `X-Forwarded-Proto` and `X-Forwarded-Prefix` headers they receive.
 
 ### Registering with your Identity Provider
 

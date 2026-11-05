@@ -27,6 +27,21 @@ def test_forwarded_proto_is_used_behind_a_proxy(test_client):
     assert get_redirect_uri(res) == "https://client.test/authorize_callback"
 
 
+def test_forwarded_prefix_is_ignored_by_default(test_client):
+    """Test that X-Forwarded-Prefix is ignored without PROXY_FIX."""
+    res = test_client.get("/authorize", headers={"X-Forwarded-Prefix": "/playground"})
+
+    assert get_redirect_uri(res) == "http://client.test/authorize_callback"
+
+
+@pytest.mark.parametrize("proxy_fix", [True])
+def test_forwarded_prefix_is_used_behind_a_proxy(test_client):
+    """Test that the URLs start with the path prefix forwarded by the proxy."""
+    res = test_client.get("/authorize", headers={"X-Forwarded-Prefix": "/playground"})
+
+    assert get_redirect_uri(res) == "http://client.test/playground/authorize_callback"
+
+
 @pytest.mark.parametrize("proxy_fix", [True])
 def test_forwarded_host_is_ignored_behind_a_proxy(test_client):
     """Test that X-Forwarded-Host is never trusted."""

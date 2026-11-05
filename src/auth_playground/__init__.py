@@ -140,7 +140,7 @@ def create_app():
     )
     app.config["SERVER_NAME"] = os.environ.get("SERVER_NAME")
     if is_proxy_fix_enabled():
-        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1)
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_prefix=1)
 
     sess.init_app(app)
     setup_i18n(app)
