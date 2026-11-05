@@ -1,5 +1,7 @@
 from unittest.mock import Mock
 from unittest.mock import patch
+from urllib.parse import parse_qs
+from urllib.parse import urlsplit
 
 import pytest
 import requests
@@ -126,6 +128,12 @@ def test_dynamic_registration_with_initial_access_token(
         )
 
     assert mock_post.call_args[1]["headers"]["Authorization"] == "Bearer test-token"
+    with unconfigured_test_client.session_transaction() as sess:
+        assert sess["registration_access_token"] == "reg-token"
+        assert (
+            sess["registration_client_uri"]
+            == f"{iam_server.url}/oauth/register/new-client"
+        )
 
 
 def test_unregister_client_rejects_missing_csrf_token(test_client):
@@ -293,6 +301,37 @@ def registration_session(client, **metadata):
         }
 
 
+def test_dynamic_registration_with_rp_initiated_logout(
+    unconfigured_test_client, csrf_token
+):
+    """Test dynamic registration sends the post logout redirect URI."""
+    registration_session(
+        unconfigured_test_client,
+        end_session_endpoint="https://test.example.com/oauth/end_session",
+    )
+
+    with patch("requests.post") as mock_post:
+        mock_post.return_value.json.return_value = {
+            "client_id": "new-client-id",
+            "client_secret": "new-client-secret",
+        }
+        res = unconfigured_test_client.post(
+            "/client/dynamic-registration",
+            data={"csrf_token": csrf_token(unconfigured_test_client)},
+            follow_redirects=True,
+        )
+
+    payload = mock_post.call_args.kwargs["json"]
+    assert payload["post_logout_redirect_uris"] == [
+        "http://client.test/logout_callback"
+    ]
+    assert b"Client successfully registered!" in res.data
+    with unconfigured_test_client.session_transaction() as sess:
+        assert sess["oauth_config"]["client_id"] == "new-client-id"
+        assert sess.get("registration_access_token") is None
+        assert sess.get("registration_client_uri") is None
+
+
 def test_dynamic_registration_shows_provider_error(
     unconfigured_test_client, csrf_token
 ):
@@ -353,3 +392,137 @@ def test_unregister_client_shows_provider_error(unconfigured_test_client, csrf_t
         )
 
     assert b"Client unregistration failed: invalid_token" in res.data
+
+
+def test_authorize_with_custom_parameters(test_client, csrf_token):
+    """Test authorization request with the parameters from the form."""
+    res = test_client.post(
+        "/authorize",
+        data={
+            "csrf_token": csrf_token(test_client),
+            "scopes": ["openid", "profile"],
+            "prompt": "consent",
+            "ui_locales": "fr",
+            "max_age": "0",
+            "acr_values": "urn:example:acr",
+            "login_hint": "user@example.com",
+            "claims": '{"id_token": {"email": null}}',
+        },
+    )
+
+    assert res.status_code == 302
+    params = parse_qs(urlsplit(res.location).query)
+    assert params["scope"] == ["openid profile"]
+    assert params["prompt"] == ["consent"]
+    assert params["ui_locales"] == ["fr"]
+    assert params["max_age"] == ["0"]
+    assert params["acr_values"] == ["urn:example:acr"]
+    assert params["login_hint"] == ["user@example.com"]
+    assert params["claims"] == ['{"id_token": {"email": null}}']
+
+
+def test_authorize_ignores_parameters_without_csrf_token(test_client):
+    """Test authorization request ignores the form without CSRF token."""
+    fields = ("ui_locales", "max_age", "acr_values", "login_hint", "claims")
+    res = test_client.post(
+        "/authorize", data={"prompt": "consent", **dict.fromkeys(fields, "")}
+    )
+
+    assert res.status_code == 302
+    params = parse_qs(urlsplit(res.location).query)
+    assert "prompt" not in params
+
+
+def test_authorize_callback_shows_provider_error(test_client):
+    """Test authorization callback displays the provider error."""
+    res = test_client.get(
+        "/authorize_callback?error=access_denied&error_description=Access+denied",
+        follow_redirects=True,
+    )
+
+    assert b"An error happened during login: Access denied" in res.data
+
+
+def test_logout_with_custom_parameters(test_client, csrf_token):
+    """Test logout request with the parameters from the form."""
+    res = test_client.post(
+        "/logout",
+        data={
+            "csrf_token": csrf_token(test_client),
+            "id_token_hint": "test-id-token",
+            "client_id": "test-client",
+            "post_logout_redirect_uri": "http://client.test/logout_callback",
+            "logout_hint": "user@example.com",
+            "ui_locales": "fr",
+        },
+    )
+
+    assert res.status_code == 302
+    params = parse_qs(urlsplit(res.location).query)
+    assert params["id_token_hint"] == ["test-id-token"]
+    assert params["client_id"] == ["test-client"]
+    assert params["post_logout_redirect_uri"] == ["http://client.test/logout_callback"]
+    assert params["logout_hint"] == ["user@example.com"]
+    assert params["ui_locales"] == ["fr"]
+
+
+def test_logout_ignores_parameters_without_csrf_token(test_client):
+    """Test logout request ignores the form without CSRF token."""
+    fields = ("id_token_hint", "client_id", "post_logout_redirect_uri", "ui_locales")
+    res = test_client.post(
+        "/logout",
+        data={"logout_hint": "user@example.com", **dict.fromkeys(fields, "")},
+    )
+
+    assert res.status_code == 302
+    params = parse_qs(urlsplit(res.location).query)
+    assert "logout_hint" not in params
+
+
+def test_refresh_shows_provider_error(test_client, csrf_token):
+    """Test token refresh displays the provider error."""
+    with test_client.session_transaction() as sess:
+        sess["token"] = {"access_token": "test-access", "refresh_token": "invalid"}
+
+    res = test_client.post(
+        "/refresh",
+        data={"csrf_token": csrf_token(test_client)},
+        follow_redirects=True,
+    )
+
+    assert b"An error happened during token refresh" in res.data
+
+
+def test_authorize_with_empty_parameters(test_client, csrf_token):
+    """Test authorization request without optional parameters."""
+    fields = ("prompt", "ui_locales", "max_age", "acr_values", "login_hint", "claims")
+    res = test_client.post(
+        "/authorize",
+        data={"csrf_token": csrf_token(test_client), **dict.fromkeys(fields, "")},
+    )
+
+    assert res.status_code == 302
+    params = parse_qs(urlsplit(res.location).query)
+    assert params["scope"] == ["openid profile email phone address groups"]
+    for field in fields:
+        assert field not in params
+
+
+def test_logout_with_empty_parameters(test_client, csrf_token):
+    """Test logout request without optional parameters."""
+    fields = (
+        "id_token_hint",
+        "client_id",
+        "post_logout_redirect_uri",
+        "logout_hint",
+        "ui_locales",
+    )
+    res = test_client.post(
+        "/logout",
+        data={"csrf_token": csrf_token(test_client), **dict.fromkeys(fields, "")},
+    )
+
+    assert res.status_code == 302
+    params = parse_qs(urlsplit(res.location).query)
+    for field in fields:
+        assert field not in params

@@ -33,7 +33,7 @@ jobs:
         run: |
           export TZ=UTC
           uv sync --all-extras
-          uv run pytest
+          uv run pytest --cov --cov-fail-under=100 --cov-report term-missing:skip-covered
 
   minversions:
     name: minimum dependency versions

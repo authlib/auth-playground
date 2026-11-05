@@ -211,27 +211,12 @@ def test_configure_client_blocks_when_env_configured(app, iam_server, iam_client
     assert b"environment variables" in res.data
 
 
-def test_playground_handles_metadata_fetch_exception(unconfigured_test_client):
+def test_playground_handles_metadata_fetch_exception(unconfigured_app):
     """Test playground handles exception when fetching metadata."""
-    with unconfigured_test_client.session_transaction() as sess:
-        sess["issuer_url"] = "https://test.example.com"
-        sess["oauth_config"] = {
-            "client_id": "test-client",
-            "client_secret": "test-secret",
-            "auth_server": "https://test.example.com",
-        }
-
-    from auth_playground import create_app
-
-    app = create_app()
-    app.config["TESTING"] = True
-    app.config["SERVER_NAME"] = "client.test"
-    app.config["SECRET_KEY"] = "test-secret-key"
-    app.config["OAUTH_CLIENT_ID"] = "test-client"
-    app.config["OAUTH_CLIENT_SECRET"] = "test-secret"
-    app.config["OAUTH_AUTH_SERVER"] = "https://test.example.com"
-
-    test_client = app.test_client()
+    unconfigured_app.config["OAUTH_CLIENT_ID"] = "test-client"
+    unconfigured_app.config["OAUTH_CLIENT_SECRET"] = "test-secret"
+    unconfigured_app.config["OAUTH_AUTH_SERVER"] = "https://test.example.com"
+    test_client = unconfigured_app.test_client()
 
     with patch("auth_playground.endpoints.fetch_server_metadata") as mock_fetch:
         mock_fetch.side_effect = Exception("Network error")
@@ -239,3 +224,51 @@ def test_playground_handles_metadata_fetch_exception(unconfigured_test_client):
         res = test_client.get("/en/session", follow_redirects=True)
 
     assert res.status_code == 200
+    mock_fetch.assert_called()
+
+
+def test_specs_redirects_without_server_metadata(unconfigured_test_client):
+    """Test specs page redirects when the server metadata is missing."""
+    with unconfigured_test_client.session_transaction() as sess:
+        sess["issuer_url"] = "https://test.example.com"
+
+    res = unconfigured_test_client.get("/en/specs", follow_redirects=True)
+
+    assert b"No server configured" in res.data
+
+
+def test_session_redirects_unknown_tab(test_client):
+    """Test that an unknown session tab redirects to the session page."""
+    res = test_client.get("/en/session/unknown")
+
+    assert res.status_code == 302
+    assert res.location.endswith("/en/session")
+
+
+def test_session_redirects_to_authentication_when_logged_out(test_client):
+    """Test that session tabs need a logged in user."""
+    res = test_client.get("/en/session/tokens")
+
+    assert res.status_code == 302
+    assert res.location.endswith("/en/session/authentication")
+
+
+def test_ui_locales_falls_back_to_unknown_locale_code(unconfigured_test_client):
+    """Test that unknown UI locales are displayed with their raw code."""
+    with unconfigured_test_client.session_transaction() as sess:
+        sess["issuer_url"] = "https://test.example.com"
+        sess["server_metadata"] = {
+            "issuer": "https://test.example.com",
+            "ui_locales_supported": ["fr", "zz"],
+        }
+        sess["oauth_config"] = {
+            "client_id": "test-client",
+            "client_secret": "test-secret",
+            "auth_server": "https://test.example.com",
+        }
+
+    res = unconfigured_test_client.get("/en/session/authentication")
+
+    assert res.status_code == 200
+    assert '<option value="fr">français</option>' in res.text
+    assert '<option value="zz">zz</option>' in res.text

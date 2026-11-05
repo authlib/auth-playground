@@ -97,9 +97,7 @@ def validate_issuer_url(form, field):
     # https://datatracker.ietf.org/doc/html/rfc8252#section-8.3
     is_localhost = hostname in ("localhost", "127.0.0.1", "::1")
 
-    if url.startswith("http://") and not (
-        is_debug or is_testing or is_localhost
-    ):  # pragma: no cover
+    if url.startswith("http://") and not (is_debug or is_testing or is_localhost):
         raise ValidationError(
             _(
                 "HTTP is only allowed for localhost or in debug/testing mode. Use HTTPS in production."

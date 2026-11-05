@@ -1,3 +1,6 @@
+from unittest.mock import patch
+
+
 def test_root_redirects_to_default_language(unconfigured_app):
     """Test that root URL redirects to default language when no Accept-Language header."""
     test_client = unconfigured_app.test_client()
@@ -248,33 +251,158 @@ def test_server_link_visible_when_session_configured(unconfigured_app):
     assert b"/en/server" in res.data
 
 
-def test_validate_issuer_url_accepts_http_in_debug(app, test_client, csrf_token):
+def test_validate_issuer_url_accepts_http_in_debug(unconfigured_app, csrf_token):
     """Test that HTTP URLs are accepted when app is in debug mode."""
-    app.debug = True
+    unconfigured_app.testing = False
+    unconfigured_app.debug = True
+    test_client = unconfigured_app.test_client()
 
-    res = test_client.post(
-        "/en/server",
-        data={
-            "issuer_url": "http://localhost:5000",
-            "csrf_token": csrf_token(test_client),
-        },
-        follow_redirects=False,
-    )
-
-    assert b"HTTP is only allowed" not in res.data
-
-
-def test_validate_issuer_url_accepts_http_for_localhost(app, test_client, csrf_token):
-    """Test that HTTP URLs are accepted for localhost even without debug mode."""
-    app.debug = False
-
-    for url in ["http://localhost:5000", "http://127.0.0.1:8000", "http://[::1]:8000"]:
+    with patch("auth_playground.endpoints.fetch_server_metadata") as mock_fetch:
+        mock_fetch.return_value = ({"issuer": "http://auth.example.com"}, "oidc")
         res = test_client.post(
             "/en/server",
-            data={"issuer_url": url, "csrf_token": csrf_token(test_client)},
-            follow_redirects=False,
+            data={
+                "issuer_url": "http://auth.example.com",
+                "csrf_token": csrf_token(test_client),
+            },
         )
-        assert b"HTTP is only allowed" not in res.data
+
+    assert res.status_code == 302
+    assert "/en/client" in res.location
+
+
+def test_validate_issuer_url_accepts_http_for_localhost(unconfigured_app, csrf_token):
+    """Test that HTTP URLs are accepted for localhost even without debug mode."""
+    unconfigured_app.testing = False
+    unconfigured_app.debug = False
+    test_client = unconfigured_app.test_client()
+
+    for url in ["http://localhost:5000", "http://127.0.0.1:8000", "http://[::1]:8000"]:
+        with patch("auth_playground.endpoints.fetch_server_metadata") as mock_fetch:
+            mock_fetch.return_value = ({"issuer": url}, "oidc")
+            res = test_client.post(
+                "/en/server",
+                data={"issuer_url": url, "csrf_token": csrf_token(test_client)},
+            )
+
+        assert res.status_code == 302
+        assert "/en/client" in res.location
+
+
+def test_validate_issuer_url_rejects_http_in_production(unconfigured_app, csrf_token):
+    """Test that HTTP URLs are rejected outside debug mode and localhost."""
+    unconfigured_app.testing = False
+    unconfigured_app.debug = False
+    test_client = unconfigured_app.test_client()
+
+    with patch("auth_playground.endpoints.fetch_server_metadata") as mock_fetch:
+        res = test_client.post(
+            "/en/server",
+            data={
+                "issuer_url": "http://auth.example.com",
+                "csrf_token": csrf_token(test_client),
+            },
+        )
+
+    assert res.status_code == 200
+    assert b"HTTP is only allowed" in res.data
+    mock_fetch.assert_not_called()
+
+
+def test_configure_server_stores_metadata(unconfigured_test_client, csrf_token):
+    """Test that a valid provider URL stores the server metadata in session."""
+    metadata = {"issuer": "https://auth.example.com"}
+    with patch("auth_playground.endpoints.fetch_server_metadata") as mock_fetch:
+        mock_fetch.return_value = (metadata, "oidc")
+        res = unconfigured_test_client.post(
+            "/en/server",
+            data={
+                "issuer_url": "https://auth.example.com/",
+                "csrf_token": csrf_token(unconfigured_test_client),
+            },
+            follow_redirects=True,
+        )
+
+    mock_fetch.assert_called_once_with("https://auth.example.com")
+    assert b"Server metadata successfully loaded" in res.data
+    with unconfigured_test_client.session_transaction() as sess:
+        assert sess["issuer_url"] == "https://auth.example.com"
+        assert sess["server_metadata"] == metadata
+        assert sess["server_type"] == "oidc"
+
+
+def test_configure_server_from_url_path(unconfigured_test_client):
+    """Test that a provider domain in the URL path is loaded over HTTPS."""
+    with patch("auth_playground.endpoints.fetch_server_metadata") as mock_fetch:
+        mock_fetch.return_value = ({"issuer": "https://auth.example.com"}, "oidc")
+        res = unconfigured_test_client.get("/en/server/auth.example.com/")
+
+    mock_fetch.assert_called_once_with("https://auth.example.com")
+    assert res.status_code == 302
+    assert "/en/client" in res.location
+
+
+def test_configure_server_from_url_path_with_scheme(unconfigured_test_client):
+    """Test that a provider URL with a scheme in the URL path is kept as is."""
+    with patch("auth_playground.endpoints.fetch_server_metadata") as mock_fetch:
+        mock_fetch.return_value = ({"issuer": "http://localhost:5000"}, "oidc")
+        res = unconfigured_test_client.get("/en/server/http://localhost:5000")
+
+    mock_fetch.assert_called_once_with("http://localhost:5000")
+    assert res.status_code == 302
+    assert "/en/client" in res.location
+
+
+def test_configure_server_invites_to_change_provider(unconfigured_test_client):
+    """Test that the server page clears the current provider."""
+    with unconfigured_test_client.session_transaction() as sess:
+        sess["issuer_url"] = "https://test.example.com"
+        sess["server_metadata"] = {"issuer": "https://test.example.com"}
+
+    res = unconfigured_test_client.get("/en/server")
+
+    assert b"You can now configure a different identity provider" in res.data
+    with unconfigured_test_client.session_transaction() as sess:
+        assert "issuer_url" not in sess
+        assert "server_metadata" not in sess
+
+
+def test_index_redirects_to_configure_client_without_client(unconfigured_test_client):
+    """Test that index redirects to client configuration when only the server is set."""
+    with unconfigured_test_client.session_transaction() as sess:
+        sess["issuer_url"] = "https://test.example.com"
+        sess["server_metadata"] = {"issuer": "https://test.example.com"}
+
+    res = unconfigured_test_client.get("/en/")
+
+    assert res.status_code == 302
+    assert "/en/client" in res.location
+
+
+def test_get_request_redirects_to_server_name(unconfigured_test_client):
+    """Test that GET requests on another host redirect to SERVER_NAME."""
+    res = unconfigured_test_client.get(
+        "/en/server?foo=bar", base_url="http://other.test"
+    )
+
+    assert res.status_code == 302
+    assert res.location == "http://client.test/en/server?foo=bar"
+
+
+def test_get_request_redirects_to_server_name_without_query(unconfigured_test_client):
+    """Test that the SERVER_NAME redirection works without query string."""
+    res = unconfigured_test_client.get("/en/server", base_url="http://other.test")
+
+    assert res.status_code == 302
+    assert res.location == "http://client.test/en/server"
+
+
+def test_post_request_on_another_host_is_rejected(unconfigured_test_client):
+    """Test that POST requests on another host are rejected."""
+    res = unconfigured_test_client.post("/en/server", base_url="http://other.test")
+
+    assert res.status_code == 400
+    assert b"This request should be sent to client.test" in res.data
 
 
 def test_client_uri_included_in_dynamic_registration(unconfigured_app):
