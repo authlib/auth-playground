@@ -63,6 +63,17 @@ def test_configure_server_blocks_when_env_configured(app, test_client):
     assert b"environment variables" in res.data
 
 
+def test_fixed_server_without_client_shows_client_page(unconfigured_app):
+    """Test that a server set in the environment works before a client is set."""
+    unconfigured_app.config["OAUTH_AUTH_SERVER"] = "https://env-configured.example.com"
+    test_client = unconfigured_app.test_client()
+
+    with patch("auth_playground.endpoints.load_server_metadata"):
+        res = test_client.get("/en/client")
+
+    assert res.status_code == 200
+
+
 def test_session_redirects_to_client_when_server_configured(unconfigured_app):
     """Test that the session page redirects to /client when server is configured but not client."""
     test_client = unconfigured_app.test_client()

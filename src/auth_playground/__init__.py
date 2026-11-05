@@ -76,7 +76,7 @@ def setup_oauth(app):
         del oauth._registry["default"]
 
     config = get_oauth_config(app)
-    if not config:
+    if not config.get("client_id"):
         return False
 
     oauth.init_app(app)
