@@ -49,19 +49,23 @@ msgstr ""
 msgid "Failed to connect to the server. Please check the URL."
 msgstr ""
 
-#: src/auth_playground/endpoints.py:148
+#: src/auth_playground/endpoints.py:72
+msgid "Cannot load the server metadata."
+msgstr ""
+
+#: src/auth_playground/endpoints.py:151
 msgid "You can now configure a different identity provider"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:167
+#: src/auth_playground/endpoints.py:170
 msgid "Server metadata successfully loaded"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:200
+#: src/auth_playground/endpoints.py:203
 msgid "OAuth configuration completed successfully"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:253
+#: src/auth_playground/endpoints.py:256
 msgid "No server configured"
 msgstr ""
 

@@ -63,10 +63,13 @@ def _flash_metadata_error(exception: Exception) -> None:
                 ),
                 "error",
             )
-    elif isinstance(exception, ValueError):
+    elif isinstance(exception, requests.JSONDecodeError):
         flash(_("Invalid response from server"), "error")
     elif isinstance(exception, requests.RequestException):
         flash(_("Failed to connect to the server. Please check the URL."), "error")
+    else:
+        current_app.logger.error("Cannot load the server metadata", exc_info=exception)
+        flash(_("Cannot load the server metadata."), "error")
 
 
 def clear_server_session():

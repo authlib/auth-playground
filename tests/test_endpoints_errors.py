@@ -58,7 +58,9 @@ def http_error(status_code):
         (http_error(404), "not support"),
         (http_error(500), "HTTP 500"),
         (requests.RequestException(), "Failed to connect"),
+        (requests.exceptions.InvalidURL(), "Failed to connect"),
         (requests.JSONDecodeError("Expecting value", "", 0), "Invalid response"),
+        (KeyError("issuer"), "Cannot load the server metadata"),
     ],
 )
 def test_handle_fetch_metadata_errors(unconfigured_testapp, exception, message):
