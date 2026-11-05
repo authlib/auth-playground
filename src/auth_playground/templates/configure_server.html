@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% from "_form.html" import render_form %}
 
 {% block title %}{% trans %}Configure Server{% endtrans %}{% endblock %}
 
@@ -24,9 +25,7 @@
 
             <p>{% trans %}Enter the URL of your OAuth2 or OpenID Connect provider to validate it and discover configuration options.{% endtrans %}</p>
 
-            <form method="POST" action="{{ url_for('routes.configure_server') }}">
-                {{ form.hidden_tag() }}
-
+            {% call render_form(form, url_for('routes.configure_server'), id="server-form") %}
                 <label for="{{ form.issuer_url.id }}">
                     {{ form.issuer_url.label }}
                 </label>
@@ -41,7 +40,7 @@
                     {{ form.issuer_url(class="form-control") }}
                     {{ form.submit(class="primary") }}
                 </div>
-            </form>
+            {% endcall %}
 
             <details>
                 <summary role="button" class="outline">{% trans %}What happens next?{% endtrans %}</summary>

@@ -1,6 +1,5 @@
-<form method="POST" action="{{ url_for('oauth.authorize') }}" id="auth-params-form">
-    {{ auth_params_form.hidden_tag() }}
-
+{% from "_form.html" import render_form %}
+{% call render_form(auth_params_form, url_for('oauth.authorize'), id="auth-params-form") %}
     {% if auth_params_form.scopes.choices %}
         <fieldset>
             <legend>{{ auth_params_form.scopes.label.text }}</legend>
@@ -64,4 +63,4 @@
     <button type="submit" class="primary">
         {% if session.token %}{% trans %}Sign in again{% endtrans %}{% else %}{% trans %}Sign in{% endtrans %}{% endif %}
     </button>
-</form>
+{% endcall %}

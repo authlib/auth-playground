@@ -1,0 +1,6 @@
+{% macro render_form(form, action, id=None) -%}
+    <form method="POST" action="{{ action }}"{% if id %} id="{{ id }}"{% endif %}>
+        {{ form.hidden_tag() }}
+        {{ caller() }}
+    </form>
+{%- endmacro %}

@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% from "_form.html" import render_form %}
 
 {% block content %}
     {% if session.token %}
@@ -14,25 +15,21 @@
 
         {% elif tab == 'tokens' %}
             {% if session.token.refresh_token %}
-                <form method="POST" action="{{ url_for('oauth.refresh') }}">
-                    {{ refresh_form.hidden_tag() }}
+                {% call render_form(refresh_form, url_for('oauth.refresh'), id="refresh-form") %}
                     {{ refresh_form.submit() }}
-                </form>
+                {% endcall %}
                 <p><small>{% trans %}Silent refresh — auth_time and acr stay unchanged.{% endtrans %}</small></p>
             {% endif %}
             {% include "_tokens.html" %}
 
         {% elif tab == 'logout' %}
-            <form method="POST" action="{{ url_for('oauth.logout_local') }}">
-                {{ logout_local_form.hidden_tag() }}
+            {% call render_form(logout_local_form, url_for('oauth.logout_local'), id="logout-local-form") %}
                 {{ logout_local_form.submit(class="secondary") }}
-            </form>
+            {% endcall %}
             <p><small>{% trans %}Local — this app only; you stay signed in at the provider, so the next sign-in may be silent (SSO).{% endtrans %}</small></p>
 
             {% if g.server_config and g.server_config.specs and g.server_config.specs.oidc_rpinitiated_logout %}
-                <form method="POST" action="{{ url_for('oauth.logout') }}" id="logout-params-form">
-                    {{ logout_params_form.hidden_tag() }}
-
+                {% call render_form(logout_params_form, url_for('oauth.logout'), id="logout-params-form") %}
                     <label>
                         {{ logout_params_form.id_token_hint.label }}
                         {{ logout_params_form.id_token_hint() }}
@@ -75,7 +72,7 @@
                         </label>
                     {% endif %}
                     <button type="submit" class="contrast">{% trans %}Server log out{% endtrans %}</button>
-                </form>
+                {% endcall %}
                 <p><small>{% trans %}Global — also ends the session at the provider (RP-Initiated Logout), preventing a silent re-login.{% endtrans %}</small></p>
             {% endif %}
         {% endif %}
