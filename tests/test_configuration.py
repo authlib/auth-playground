@@ -193,7 +193,13 @@ def test_dynamic_registration_requires_registration_endpoint(
 
     res = test_client.post(
         "/client/dynamic-registration",
-        data={"csrf_token": csrf_token(test_client), "initial_access_token": ""},
+        data={
+            "csrf_token": csrf_token(test_client),
+            "client_type": "confidential",
+            "auth_method": "client_secret_basic",
+            "grant_types": "authorization_code",
+            "initial_access_token": "",
+        },
         follow_redirects=True,
     )
 

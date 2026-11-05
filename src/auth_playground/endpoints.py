@@ -191,8 +191,9 @@ def configure_client():
         )
 
     client_form = ClientConfigForm()
-    dynamic_registration_form = DynamicRegistrationForm()
-    unregister_form = UnregisterClientForm()
+    # The other forms post elsewhere: they must not read this form's data.
+    dynamic_registration_form = DynamicRegistrationForm(formdata=None)
+    unregister_form = UnregisterClientForm(formdata=None)
 
     if not client_form.validate_on_submit():
         return render_template(
@@ -205,8 +206,9 @@ def configure_client():
     auth_playground.setup_oauth_runtime(
         current_app,
         client_form.client_id.data,
-        client_form.client_secret.data,
+        client_form.client_secret.data or None,
         g.server_config.issuer_url,
+        client_form.token_endpoint_auth_method.data,
     )
     flash(_("OAuth configuration completed successfully"), "success")
     return redirect(url_for("routes.session"))

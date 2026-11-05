@@ -4,6 +4,7 @@ import tempfile
 import time
 
 from authlib.integrations.flask_client import OAuth
+from authlib.oauth2.rfc7523 import ClientSecretJWT
 from authlib.oidc.discovery import get_well_known_url
 from cachelib.file import FileSystemCache
 from cachelib.simple import SimpleCache
@@ -21,10 +22,12 @@ from flask_session import Session
 from werkzeug.local import LocalProxy
 from werkzeug.middleware.proxy_fix import ProxyFix
 
+from auth_playground.client_auth import default_method
 from auth_playground.endpoints import bp
 from auth_playground.i18n import babel
 from auth_playground.i18n import setup_i18n
 from auth_playground.oauth import bp as oauth_bp
+from auth_playground.oauth import clear_user_session
 from auth_playground.session import ServerConfig
 from auth_playground.session import server_metadata
 
@@ -78,6 +81,14 @@ def get_oauth_config(app):
         **session_config,
         **{k: v for k, v in env_config.items() if v is not None},
     }
+    if is_oauth_client_from_env(app):
+        config["token_endpoint_auth_method"] = default_method(
+            config.get("client_secret")
+        )
+    elif config.get("client_id"):
+        config.setdefault(
+            "token_endpoint_auth_method", default_method(config.get("client_secret"))
+        )
 
     return config
 
@@ -97,9 +108,13 @@ def setup_oauth(app):
     registry.register(
         name="default",
         client_id=config["client_id"],
-        client_secret=config["client_secret"],
+        client_secret=config.get("client_secret"),
         server_metadata_url=get_well_known_url(config["auth_server"], external=True),
-        client_kwargs={"scope": "openid profile email phone address groups"},
+        client_kwargs={
+            "scope": "openid profile email phone address groups",
+            "token_endpoint_auth_method": config["token_endpoint_auth_method"],
+        },
+        client_auth_methods=[ClientSecretJWT()],
     )
     if metadata := server_metadata():
         # Reuse the metadata already loaded, instead of fetching it again.
@@ -108,12 +123,19 @@ def setup_oauth(app):
     return True
 
 
-def setup_oauth_runtime(app, client_id, client_secret, auth_server):
-    """Set up OAuth with runtime configuration stored in session."""
+def setup_oauth_runtime(
+    app, client_id, client_secret, auth_server, token_endpoint_auth_method
+):
+    """Set up OAuth with runtime configuration stored in session.
+
+    The tokens of the previous client are forgotten.
+    """
+    clear_user_session()
     flask_session["oauth_config"] = {
         "client_id": client_id,
         "client_secret": client_secret,
         "auth_server": auth_server,
+        "token_endpoint_auth_method": token_endpoint_auth_method,
     }
 
     return setup_oauth(app)

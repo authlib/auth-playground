@@ -15,6 +15,8 @@ from flask import url_for
 from flask_babel import gettext as _
 
 import auth_playground
+from auth_playground.client_auth import METHODS
+from auth_playground.client_auth import PUBLIC_METHOD
 from auth_playground.decorators import server_config_needed
 from auth_playground.forms import AuthorizationParamsForm
 from auth_playground.forms import DynamicRegistrationForm
@@ -64,15 +66,8 @@ def get_response_error(exc: requests.RequestException) -> str | None:
 
 def clear_user_session():
     """Clear user and token data from the session."""
-    try:
-        del session["user"]
-    except KeyError:
-        pass
-
-    try:
-        del session["token"]
-    except KeyError:
-        pass
+    for key in ("user", "token"):
+        session.pop(key, None)
 
 
 @bp.route("/client/dynamic-registration", methods=["POST"])
@@ -82,7 +77,9 @@ def client_dynamic_registration():
     form = DynamicRegistrationForm()
 
     if not form.validate_on_submit():
-        flash(_("Invalid request"), "error")
+        errors = [] if "csrf_token" in form.errors else form.grant_types.errors
+        for error in errors or [_("Invalid request")]:
+            flash(error, "error")
         return redirect(url_for("routes.configure_client"))
 
     if not g.server_config.specs.oauth_2_dynamic_client_registration:
@@ -95,13 +92,18 @@ def client_dynamic_registration():
         url_for("oauth.authorize_callback", _external=True),
     ]
 
+    requested_auth_method = (
+        PUBLIC_METHOD if form.client_type.data == "public" else form.auth_method.data
+    )
     registration_data = {
         "client_name": "Auth Playground",
         "client_uri": url_for("routes.index", _external=True),
         "redirect_uris": redirect_uris,
-        "grant_types": ["authorization_code", "refresh_token"],
-        "response_types": ["code"],
-        "token_endpoint_auth_method": "client_secret_basic",
+        "grant_types": form.grant_types.data,
+        "response_types": ["code"]
+        if "authorization_code" in form.grant_types.data
+        else [],
+        "token_endpoint_auth_method": requested_auth_method,
         "scope": "openid profile email phone address groups",
         "tos_uri": url_for("routes.tos", _external=True),
         "policy_uri": url_for("routes.policy", _external=True),
@@ -143,13 +145,26 @@ def client_dynamic_registration():
         flash(_("Invalid response from registration endpoint"), "error")
         return redirect(url_for("routes.configure_client"))
 
-    if not client_data.get("client_secret"):
+    auth_method = client_data.get("token_endpoint_auth_method", requested_auth_method)
+    if auth_method not in METHODS:
         flash(
             _(
-                "The server registered the client without a client secret. "
-                "Auth Playground only supports confidential clients. "
+                "The server registered the client with the {auth_method} "
+                "authentication method, which Auth Playground does not support. "
                 "The client is still registered on the server."
-            ),
+            ).format(auth_method=auth_method),
+            "error",
+        )
+        return redirect(url_for("routes.configure_client"))
+
+    client_secret = client_data.get("client_secret")
+    if auth_method != PUBLIC_METHOD and not client_secret:
+        flash(
+            _(
+                "The server registered the client without a client secret, "
+                "but its authentication method {auth_method} needs one. "
+                "The client is still registered on the server."
+            ).format(auth_method=auth_method),
             "error",
         )
         return redirect(url_for("routes.configure_client"))
@@ -157,8 +172,9 @@ def client_dynamic_registration():
     auth_playground.setup_oauth_runtime(
         current_app,
         client_data["client_id"],
-        client_data["client_secret"],
+        client_secret if auth_method != PUBLIC_METHOD else None,
         g.server_config.issuer_url,
+        auth_method,
     )
 
     if "registration_access_token" in client_data:
@@ -211,8 +227,7 @@ def unregister_client():
         return redirect(url_for("routes.configure_client"))
 
     session.pop("oauth_config", None)
-    session.pop("user", None)
-    session.pop("token", None)
+    clear_user_session()
 
     g.server_config.registration_access_token = None
     g.server_config.registration_client_uri = None
