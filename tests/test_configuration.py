@@ -48,7 +48,7 @@ def test_configure_server_validates_url(unconfigured_testapp):
     """Test that server configuration validates URL format."""
     form = unconfigured_testapp.get("/en/server").forms["server-form"]
     form["issuer_url"] = "not-a-url"
-    res = form.submit()
+    res = form.submit("discover")
 
     assert res.status_int == 200
     assert "URL must start with http:// or https://" in res.text
@@ -156,7 +156,7 @@ def test_configure_client_manual_setup_stores_in_session(unconfigured_testapp):
     form = unconfigured_testapp.get("/en/client").forms["client-form"]
     form["client_id"] = "test-client-id"
     form["client_secret"] = "test-client-secret"
-    res = form.submit().maybe_follow()
+    res = form.submit("save").maybe_follow()
 
     assert "OAuth configuration completed successfully" in res.text
 
@@ -248,7 +248,7 @@ def submit_server_form(testapp, issuer_url):
     form["issuer_url"] = issuer_url
     with patch("auth_playground.endpoints.fetch_server_metadata") as mock_fetch:
         mock_fetch.return_value = ({"issuer": issuer_url.rstrip("/")}, "oidc")
-        return form.submit(), mock_fetch
+        return form.submit("discover"), mock_fetch
 
 
 def test_validate_issuer_url_accepts_http_in_debug(unconfigured_app):

@@ -16,7 +16,7 @@
         {% elif tab == 'tokens' %}
             {% if session.token.refresh_token %}
                 {% call render_form(refresh_form, url_for('oauth.refresh'), id="refresh-form") %}
-                    {{ refresh_form.submit() }}
+                    {{ refresh_form.refresh() }}
                 {% endcall %}
                 <p><small>{% trans %}Silent refresh — auth_time and acr stay unchanged.{% endtrans %}</small></p>
             {% endif %}
@@ -24,7 +24,7 @@
 
         {% elif tab == 'logout' %}
             {% call render_form(logout_local_form, url_for('oauth.logout_local'), id="logout-local-form") %}
-                {{ logout_local_form.submit(class="secondary") }}
+                {{ logout_local_form.logout(class="secondary") }}
             {% endcall %}
             <p><small>{% trans %}Local — this app only; you stay signed in at the provider, so the next sign-in may be silent (SSO).{% endtrans %}</small></p>
 
@@ -71,7 +71,7 @@
                             {% endif %}
                         </label>
                     {% endif %}
-                    <button type="submit" class="contrast">{% trans %}Server log out{% endtrans %}</button>
+                    {{ logout_params_form.server_logout(class="contrast") }}
                 {% endcall %}
                 <p><small>{% trans %}Global — also ends the session at the provider (RP-Initiated Logout), preventing a silent re-login.{% endtrans %}</small></p>
             {% endif %}

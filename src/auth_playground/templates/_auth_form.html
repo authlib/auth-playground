@@ -60,7 +60,9 @@
         </label>
     {% endif %}
 
-    <button type="submit" class="primary">
-        {% if session.token %}{% trans %}Sign in again{% endtrans %}{% else %}{% trans %}Sign in{% endtrans %}{% endif %}
-    </button>
+    {% if session.token %}
+        {{ auth_params_form.sign_in(class="primary", label=_("Sign in again")) }}
+    {% else %}
+        {{ auth_params_form.sign_in(class="primary") }}
+    {% endif %}
 {% endcall %}

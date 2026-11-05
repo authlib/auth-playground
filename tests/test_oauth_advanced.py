@@ -38,7 +38,7 @@ def test_dynamic_registration_success(iam_server, unconfigured_testapp):
         sess["server_type"] = "oidc"
 
     res = unconfigured_testapp.get("/en/client")
-    res = res.forms["dynamic-registration-form"].submit()
+    res = res.forms["dynamic-registration-form"].submit("register")
 
     assert res.status_int == 302
     assert "/en/session" in res.location
@@ -80,7 +80,7 @@ def test_dynamic_registration_request_exception(unconfigured_testapp):
 
     res = unconfigured_testapp.get("/en/client")
     with patch("requests.post", side_effect=requests.ConnectionError()):
-        res = res.forms["dynamic-registration-form"].submit().maybe_follow()
+        res = res.forms["dynamic-registration-form"].submit("register").maybe_follow()
 
     assert "Dynamic client registration failed" in res.text
 
@@ -99,7 +99,7 @@ def test_dynamic_registration_with_initial_access_token(unconfigured_testapp):
             "registration_access_token": "reg-token",
             "registration_client_uri": "https://test.example.com/oauth/register/1",
         }
-        form.submit()
+        form.submit("register")
 
     assert mock_post.call_args[1]["headers"]["Authorization"] == "Bearer test-token"
     with unconfigured_testapp.session_transaction() as sess:
@@ -152,7 +152,7 @@ def test_unregister_client_request_exception(unconfigured_testapp):
 
     res = unconfigured_testapp.get("/en/client")
     with patch("requests.delete", side_effect=requests.ConnectionError()):
-        res = res.forms["unregister-form"].submit().maybe_follow()
+        res = res.forms["unregister-form"].submit("unregister").maybe_follow()
 
     assert "Client unregistration failed" in res.text
 
@@ -166,7 +166,7 @@ def test_unregister_client_success(unconfigured_testapp):
 
     res = unconfigured_testapp.get("/en/client")
     with patch("requests.delete"):
-        res = res.forms["unregister-form"].submit().maybe_follow()
+        res = res.forms["unregister-form"].submit("unregister").maybe_follow()
 
     assert "successfully unregistered" in res.text
 
@@ -275,7 +275,7 @@ def test_dynamic_registration_with_rp_initiated_logout(unconfigured_testapp):
             "client_id": "new-client-id",
             "client_secret": "new-client-secret",
         }
-        res = res.forms["dynamic-registration-form"].submit().maybe_follow()
+        res = res.forms["dynamic-registration-form"].submit("register").maybe_follow()
 
     payload = mock_post.call_args.kwargs["json"]
     assert payload["post_logout_redirect_uris"] == [
@@ -297,7 +297,7 @@ def test_dynamic_registration_shows_provider_error(unconfigured_testapp):
         mock_post.return_value.raise_for_status.side_effect = response_error(
             json={"error_description": "Invalid redirect URI"}
         )
-        res = res.forms["dynamic-registration-form"].submit().maybe_follow()
+        res = res.forms["dynamic-registration-form"].submit("register").maybe_follow()
 
     assert "Dynamic client registration failed: Invalid redirect URI" in res.text
 
@@ -311,7 +311,7 @@ def test_dynamic_registration_invalid_json(unconfigured_testapp):
         mock_post.return_value.json.side_effect = requests.JSONDecodeError(
             "Expecting value", "", 0
         )
-        res = res.forms["dynamic-registration-form"].submit().maybe_follow()
+        res = res.forms["dynamic-registration-form"].submit("register").maybe_follow()
 
     assert "Invalid JSON response from registration endpoint" in res.text
 
@@ -325,7 +325,7 @@ def test_unregister_client_shows_provider_error(unconfigured_testapp):
         mock_delete.return_value.raise_for_status.side_effect = response_error(
             json={"error": "invalid_token"}
         )
-        res = res.forms["unregister-form"].submit().maybe_follow()
+        res = res.forms["unregister-form"].submit("unregister").maybe_follow()
 
     assert "Client unregistration failed: invalid_token" in res.text
 
@@ -348,7 +348,7 @@ def test_authorize_with_custom_parameters(testapp):
     form["acr_values"] = "urn:example:acr"
     form["login_hint"] = "user@example.com"
     form["claims"] = '{"id_token": {"email": null}}'
-    res = form.submit()
+    res = form.submit("sign_in")
 
     assert res.status_int == 302
     params = parse_qs(urlsplit(res.location).query)
@@ -398,7 +398,7 @@ def test_logout_with_custom_parameters(testapp):
     form["client_id"] = "custom-client"
     form["logout_hint"] = "user@example.com"
     form["ui_locales"] = "fr"
-    res = form.submit()
+    res = form.submit("server_logout")
 
     assert res.status_int == 302
     params = parse_qs(urlsplit(res.location).query)
@@ -428,7 +428,7 @@ def test_refresh_shows_provider_error(testapp):
         sess["token"] = {"access_token": "test-access", "refresh_token": "invalid"}
 
     res = testapp.get("/en/session/tokens")
-    res = res.forms["refresh-form"].submit().maybe_follow()
+    res = res.forms["refresh-form"].submit("refresh").maybe_follow()
 
     assert "An error happened during token refresh" in res.text
 
@@ -437,7 +437,7 @@ def test_authorize_with_empty_parameters(testapp):
     """Test authorization request without optional parameters."""
     form = testapp.get("/en/session/authentication").forms["auth-params-form"]
     check_scopes(form, [])
-    res = form.submit()
+    res = form.submit("sign_in")
 
     assert res.status_int == 302
     params = parse_qs(urlsplit(res.location).query)
@@ -459,7 +459,7 @@ def test_logout_with_empty_parameters(testapp):
     form = logout_form(testapp)
     for field in fields:
         form[field] = ""
-    res = form.submit()
+    res = form.submit("server_logout")
 
     assert res.status_int == 302
     params = parse_qs(urlsplit(res.location).query)

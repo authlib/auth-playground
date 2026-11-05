@@ -6,6 +6,7 @@ from flask import current_app
 from flask import g
 from flask_babel import lazy_gettext as _
 from flask_wtf import FlaskForm
+from wtforms import ButtonField
 from wtforms import IntegerField
 from wtforms import PasswordField
 from wtforms import SelectField
@@ -79,7 +80,7 @@ def get_ui_locales_choices():
 class RefreshTokenForm(FlaskForm):
     """Form to refresh access token using refresh token."""
 
-    submit = SubmitField(_("Renew tokens"))
+    refresh = SubmitField(_("Renew tokens"))
 
 
 def validate_issuer_url(form, field):
@@ -119,7 +120,7 @@ class ServerConfigForm(FlaskForm):
         ),
         render_kw={"placeholder": "https://auth.example.com", "type": "url"},
     )
-    submit = SubmitField(_("Continue"))
+    discover = SubmitField(_("Continue"))
 
 
 class ClientConfigForm(FlaskForm):
@@ -145,7 +146,7 @@ class ClientConfigForm(FlaskForm):
         ],
         render_kw={"placeholder": "******************"},
     )
-    submit = SubmitField(_("Complete configuration"))
+    save = SubmitField(_("Complete configuration"))
 
 
 class DynamicRegistrationForm(FlaskForm):
@@ -156,19 +157,19 @@ class DynamicRegistrationForm(FlaskForm):
         validators=[],
         render_kw={"placeholder": _("Leave empty if not required")},
     )
-    submit = SubmitField(_("Register client"))
+    register = SubmitField(_("Register client"))
 
 
 class UnregisterClientForm(FlaskForm):
     """Form to trigger client unregistration with CSRF protection."""
 
-    submit = SubmitField(_("Unregister client"))
+    unregister = SubmitField(_("Unregister client"))
 
 
 class LogoutLocalForm(FlaskForm):
     """Form to trigger local logout with CSRF protection."""
 
-    submit = SubmitField(_("Log out"))
+    logout = SubmitField(_("Log out"))
 
 
 class AuthorizationParamsForm(FlaskForm):
@@ -216,6 +217,7 @@ class AuthorizationParamsForm(FlaskForm):
             "Specific claims to request, as an OIDC claims JSON object (advanced)."
         ),
     )
+    sign_in = ButtonField(_("Sign in"))
 
 
 class LogoutParamsForm(FlaskForm):
@@ -242,3 +244,4 @@ class LogoutParamsForm(FlaskForm):
         choices=get_ui_locales_choices,
         description=_("Preferred language for the logout UI"),
     )
+    server_logout = ButtonField(_("Server log out"))

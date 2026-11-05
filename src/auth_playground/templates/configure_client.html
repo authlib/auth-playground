@@ -23,7 +23,7 @@
                 </header>
                 <p>{% trans %}This client was dynamically registered (RFC 7591). You can remove it from the server (RFC 7592).{% endtrans %}</p>
                 {% call render_form(unregister_form, url_for('oauth.unregister_client'), id="unregister-form") %}
-                    {{ unregister_form.submit(class="secondary") }}
+                    {{ unregister_form.unregister(class="secondary") }}
                 {% endcall %}
             </article>
         {% endif %}
@@ -60,7 +60,7 @@
 
                     <div role="group">
                         {{ dynamic_registration_form.initial_access_token(class="form-control") }}
-                        {{ dynamic_registration_form.submit(class="primary") }}
+                        {{ dynamic_registration_form.register(class="primary") }}
                     </div>
                 {% endcall %}
 
@@ -128,7 +128,7 @@
                     {% endfor %}
                 {% endif %}
 
-                {{ client_form.submit() }}
+                {{ client_form.save() }}
             {% endcall %}
         </article>
     {% endif %}

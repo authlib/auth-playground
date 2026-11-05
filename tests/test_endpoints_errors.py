@@ -68,7 +68,7 @@ def test_handle_fetch_metadata_errors(unconfigured_testapp, exception, message):
     with patch(
         "auth_playground.endpoints.fetch_server_metadata", side_effect=exception
     ):
-        res = form.submit()
+        res = form.submit("discover")
 
     assert message in res.text
 

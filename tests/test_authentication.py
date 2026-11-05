@@ -106,7 +106,7 @@ def test_logout_local_clears_session_without_contacting_provider(testapp):
         sess["token"] = {"id_token": "test_token", "access_token": "test_access"}
 
     res = testapp.get("/en/session/logout")
-    res = res.forms["logout-local-form"].submit()
+    res = res.forms["logout-local-form"].submit("logout")
     assert res.status_int == 302
     assert res.location.endswith("/session")
 
@@ -213,7 +213,7 @@ def test_refresh_token_success(iam_server, iam_client, user, testapp):
         assert old_refresh_token is not None, "Refresh token should exist after login"
 
     res = testapp.get("/en/session/tokens")
-    res = res.forms["refresh-form"].submit().maybe_follow()
+    res = res.forms["refresh-form"].submit("refresh").maybe_follow()
 
     assert "Token successfully refreshed" in res.text
 
