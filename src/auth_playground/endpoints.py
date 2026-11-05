@@ -5,6 +5,7 @@ from flask import flash
 from flask import g
 from flask import redirect
 from flask import render_template
+from flask import request
 from flask import session
 from flask import url_for
 from flask_babel import gettext as _
@@ -16,8 +17,9 @@ from auth_playground.forms import ClientConfigForm
 from auth_playground.forms import DynamicRegistrationForm
 from auth_playground.forms import ServerConfigForm
 from auth_playground.forms import UnregisterClientForm
+from auth_playground.grants import client_tokens
 from auth_playground.oauth import clear_user_session
-from auth_playground.pages import render_session_page
+from auth_playground.pages import render_tokens_page
 from auth_playground.session import ServerConfig
 
 bp = Blueprint("routes", __name__)
@@ -131,7 +133,7 @@ def index():
     elif not client_configured:
         return redirect(url_for("routes.configure_client"))
 
-    return redirect(url_for("routes.session"))
+    return redirect(url_for("routes.tokens"))
 
 
 @bp.route("/server", methods=["GET", "POST"])
@@ -232,29 +234,34 @@ def configure_client():
         client_form.token_endpoint_auth_method.data,
     )
     flash(_("OAuth configuration completed successfully"), "success")
-    return redirect(url_for("routes.session"))
+    return redirect(url_for("routes.tokens"))
 
 
-SESSION_TABS = ("authentication", "tokens", "logout")
+TOKENS_TABS = ("request", "current", "logout")
 
 
-@bp.route("/session", endpoint="session")
-@bp.route("/session/<tab>", endpoint="session")
+@bp.route("/tokens", endpoint="tokens")
+@bp.route("/tokens/<tab>", endpoint="tokens")
 @server_config_needed
-def session_page(tab=None):
-    """Display the session area: authentication, tokens and logout sub-pages."""
+def tokens_page(tab=None):
+    """Display the tokens area: request, current tokens and logout sub-pages.
+
+    Client tokens have no user to log out.
+    """
     logged_in = bool(session.get("token"))
+    args = request.args.to_dict()
 
     if tab is None:
-        return redirect(
-            url_for("routes.session", tab="tokens" if logged_in else "authentication")
-        )
-    if tab not in SESSION_TABS:
-        return redirect(url_for("routes.session"))
-    if not logged_in and tab != "authentication":
-        return redirect(url_for("routes.session", tab="authentication"))
+        tab = "current" if logged_in and "grant" not in args else "request"
+        return redirect(url_for("routes.tokens", tab=tab, **args))
+    if tab not in TOKENS_TABS:
+        return redirect(url_for("routes.tokens", **args))
+    if not logged_in and tab != "request":
+        return redirect(url_for("routes.tokens", tab="request", **args))
+    if tab == "logout" and client_tokens():
+        return redirect(url_for("routes.tokens", tab="current"))
 
-    return render_session_page(tab)
+    return render_tokens_page(tab)
 
 
 @bp.route("/specs")

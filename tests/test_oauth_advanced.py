@@ -41,7 +41,7 @@ def test_dynamic_registration_success(iam_server, unconfigured_testapp):
     res = res.forms["dynamic-registration-form"].submit("register")
 
     assert res.status_int == 302
-    assert "/en/session" in res.location
+    assert "/en/tokens" in res.location
 
 
 def test_dynamic_registration_rejects_missing_csrf_token(unconfigured_test_client):
@@ -385,7 +385,7 @@ def test_each_session_uses_its_own_client(iam_server, unconfigured_app):
 
 def test_authorize_with_custom_parameters(testapp):
     """Test authorization request with the parameters from the form."""
-    form = testapp.get("/en/session/authentication").forms["auth-params-form"]
+    form = testapp.get("/en/tokens/request").forms["auth-params-form"]
     check_scopes(form, ["openid", "profile"])
     form["prompt"] = "consent"
     form["ui_locales"] = "fr"
@@ -433,7 +433,7 @@ def logout_form(testapp):
         sess["user"] = {"sub": "testuser"}
         sess["token"] = {"access_token": "test-access", "id_token": "test-id-token"}
 
-    return testapp.get("/en/session/logout").forms["logout-params-form"]
+    return testapp.get("/en/tokens/logout").forms["logout-params-form"]
 
 
 def test_logout_with_custom_parameters(testapp):
@@ -471,7 +471,7 @@ def test_refresh_shows_provider_error(testapp):
     with testapp.session_transaction() as sess:
         sess["token"] = {"access_token": "test-access", "refresh_token": "invalid"}
 
-    res = testapp.get("/en/session/tokens")
+    res = testapp.get("/en/tokens/current")
     res = res.forms["refresh-form"].submit("refresh").maybe_follow()
 
     assert "An error happened during token refresh" in res.text
@@ -479,7 +479,7 @@ def test_refresh_shows_provider_error(testapp):
 
 def test_authorize_with_empty_parameters(testapp):
     """Test authorization request without optional parameters."""
-    form = testapp.get("/en/session/authentication").forms["auth-params-form"]
+    form = testapp.get("/en/tokens/request").forms["auth-params-form"]
     check_scopes(form, [])
     res = form.submit("sign_in")
 

@@ -140,7 +140,8 @@ footer p {
 }
 
 /* Flash messages styling */
-article[role="alert"] {
+article[role="alert"],
+article.notice {
     border-left: 4px solid;
     padding: var(--pico-spacing);
     margin-bottom: var(--pico-spacing);
@@ -164,7 +165,8 @@ article[role="alert"][data-type="info"] {
     color: light-dark(#1e3a8a, #bfdbfe);
 }
 
-article[role="alert"][data-type="warning"] {
+article[role="alert"][data-type="warning"],
+article.notice[data-type="warning"] {
     border-color: light-dark(#f59e0b, #fbbf24);
     background-color: light-dark(#fffbeb, #78350f);
     color: light-dark(#78350f, #fef3c7);
@@ -216,7 +218,8 @@ nav.subtabs a[aria-current="page"] {
     font-weight: 600;
 }
 
-.param-groups > fieldset:last-child {
+/* On two columns, the last group would be alone on its row. */
+.param-groups > fieldset:last-child:nth-child(odd) {
     grid-column: 1 / -1;
 }
 

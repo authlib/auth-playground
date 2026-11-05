@@ -29,7 +29,7 @@ def test_server_config_save_updates_changed_values():
 
 def test_read_only_request_does_not_store_the_session(test_client):
     """Test a request that changes nothing does not store the session again."""
-    test_client.get("/en/session/authentication")
+    test_client.get("/en/tokens/request")
     app = test_client.application
     calls = []
     original = app.session_interface.save_session
@@ -39,6 +39,6 @@ def test_read_only_request_does_not_store_the_session(test_client):
         return original(app, session, response)
 
     app.session_interface.save_session = save_session
-    test_client.get("/en/session/authentication")
+    test_client.get("/en/tokens/request")
 
     assert calls == [False]

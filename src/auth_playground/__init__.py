@@ -3,7 +3,6 @@ import os
 import tempfile
 import time
 
-from authlib.integrations.flask_client import OAuth
 from authlib.oauth2.rfc7523 import ClientSecretJWT
 from authlib.oidc.discovery import get_well_known_url
 from cachelib.file import FileSystemCache
@@ -29,6 +28,7 @@ from auth_playground.i18n import babel
 from auth_playground.i18n import setup_i18n
 from auth_playground.oauth import bp as oauth_bp
 from auth_playground.oauth import clear_user_session
+from auth_playground.oauth_client import PlaygroundOAuth
 from auth_playground.session import ServerConfig
 from auth_playground.session import server_metadata
 from auth_playground.steps import setup_steps
@@ -39,7 +39,7 @@ sess = Session()
 def get_oauth_registry():
     """Return the OAuth registry of the current request."""
     if "oauth" not in g:
-        g.oauth = OAuth(current_app)
+        g.oauth = PlaygroundOAuth(current_app)
     return g.oauth
 
 
@@ -100,7 +100,7 @@ def setup_oauth(app):
 
     Each request gets its own registry, so it uses the client of its own session.
     """
-    registry = OAuth(app)
+    registry = PlaygroundOAuth(app)
     g.oauth = registry
 
     config = get_oauth_config(app)

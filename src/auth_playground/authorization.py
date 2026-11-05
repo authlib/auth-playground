@@ -6,14 +6,14 @@ from flask import current_app
 from flask import url_for
 
 import auth_playground
+from auth_playground.preview import GENERATED
+from auth_playground.preview import RequestPreview
 from auth_playground.session import server_metadata
 
 PKCE_METHODS = ("S256", "plain")
 
 # Sent when the form requests no scope.
 DEFAULT_SCOPE = "openid profile email phone address groups"
-
-GENERATED = "[generated]"
 
 # Parameters the playground sets itself, from the form or from the protocol.
 RESERVED_PARAMS = frozenset(
@@ -43,10 +43,11 @@ RESERVED_PARAMS = frozenset(
 )
 
 
-def parse_extra_params(text):
+def parse_extra_params(text, reserved=RESERVED_PARAMS):
     """Parse ``name=value`` lines into a list of pairs and a list of errors.
 
-    A name can appear on several lines, as RFC 8707 ``resource`` does.
+    A name can appear on several lines, as RFC 8707 ``resource`` does. The
+    ``reserved`` names are errors.
     """
     pairs = []
     errors = []
@@ -61,7 +62,7 @@ def parse_extra_params(text):
             errors.append(line)
             continue
 
-        if name in RESERVED_PARAMS:
+        if name in reserved:
             errors.append(name)
             continue
 
@@ -117,6 +118,12 @@ def pkce_params(method, code_verifier):
 def new_code_verifier():
     """Generate a code verifier (RFC 7636 §4.1)."""
     return generate_token(48)
+
+
+def authorization_preview(form):
+    """Return the authorization request built from the form."""
+    params = list(preview_lines(preview_params(form)))
+    return RequestPreview("GET", authorization_endpoint(), params)
 
 
 def preview_params(form):

@@ -10,6 +10,7 @@ from flask_babel import gettext as _
 
 import auth_playground
 from auth_playground.client_auth import PUBLIC_METHOD
+from auth_playground.grants import client_tokens
 
 
 @dataclass
@@ -75,26 +76,29 @@ def client_step(provider):
     return Step(2, _("Client"), summary, url, done=True, locked=locked)
 
 
-def session_step(client):
-    """Return the session step."""
+def tokens_step(client):
+    """Return the tokens step."""
     if not client.done:
-        return Step(3, _("Session"), _("Available once the client is set"), None)
+        return Step(3, _("Tokens"), _("Available once the client is set"), None)
 
-    url = url_for("routes.session")
+    url = url_for("routes.tokens")
     if not session.get("token"):
-        return Step(3, _("Session"), _("No tokens yet"), url)
+        return Step(3, _("Tokens"), _("No tokens yet"), url)
+
+    if client_tokens():
+        return Step(3, _("Tokens"), _("Client tokens"), url, done=True)
 
     user = session.get("user") or {}
     if name := user.get("preferred_username") or user.get("sub"):
         return Step(
-            3, _("Session"), _("Signed in as {name}").format(name=name), url, done=True
+            3, _("Tokens"), _("Signed in as {name}").format(name=name), url, done=True
         )
 
-    return Step(3, _("Session"), _("Tokens obtained"), url, done=True)
+    return Step(3, _("Tokens"), _("Tokens obtained"), url, done=True)
 
 
 def setup_steps():
-    """Return the provider, client and session steps."""
+    """Return the provider, client and tokens steps."""
     provider = provider_step()
     client = client_step(provider)
-    return [provider, client, session_step(client)]
+    return [provider, client, tokens_step(client)]

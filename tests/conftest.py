@@ -1,4 +1,5 @@
 import os
+from unittest.mock import patch
 
 import pytest
 from babel.messages.frontend import CompileCatalog
@@ -7,6 +8,7 @@ from flask_webtest import TestApp
 from flask_wtf.csrf import generate_csrf
 
 from auth_playground import create_app
+from tests.fake_provider import METADATA
 
 
 @pytest.fixture(autouse=True, scope="session")
@@ -30,7 +32,7 @@ def iam_client(iam_server):
             "http://client.test/authorize_callback",
             "http://client.test/logout_callback",
         ],
-        grant_types=["authorization_code", "refresh_token"],
+        grant_types=["authorization_code", "refresh_token", "client_credentials"],
         response_types=["code"],
         token_endpoint_auth_method="client_secret_basic",
         scope=["openid", "profile", "email", "groups"],
@@ -115,3 +117,13 @@ def csrf_token():
         return token
 
     return get_token
+
+
+@pytest.fixture
+def provider_metadata():
+    """Serve the metadata of the fake provider without network."""
+    with patch(
+        "authlib.integrations.base_client.sync_app.OAuth2Mixin.load_server_metadata",
+        return_value=METADATA,
+    ):
+        yield

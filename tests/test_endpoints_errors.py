@@ -152,7 +152,7 @@ def test_playground_handles_metadata_fetch_exception(unconfigured_app):
     with patch("auth_playground.endpoints.fetch_server_metadata") as mock_fetch:
         mock_fetch.side_effect = Exception("Network error")
 
-        res = test_client.get("/en/session", follow_redirects=True)
+        res = test_client.get("/en/tokens", follow_redirects=True)
 
     assert res.status_code == 200
     mock_fetch.assert_called()
@@ -169,19 +169,19 @@ def test_specs_redirects_without_server_metadata(unconfigured_test_client):
 
 
 def test_session_redirects_unknown_tab(test_client):
-    """Test that an unknown session tab redirects to the session page."""
-    res = test_client.get("/en/session/unknown")
+    """Test that an unknown tab redirects to the tokens page."""
+    res = test_client.get("/en/tokens/unknown")
 
     assert res.status_code == 302
-    assert res.location.endswith("/en/session")
+    assert res.location.endswith("/en/tokens")
 
 
 def test_session_redirects_to_authentication_when_logged_out(test_client):
     """Test that session tabs need a logged in user."""
-    res = test_client.get("/en/session/tokens")
+    res = test_client.get("/en/tokens/current")
 
     assert res.status_code == 302
-    assert res.location.endswith("/en/session/authentication")
+    assert res.location.endswith("/en/tokens/request")
 
 
 def test_ui_locales_falls_back_to_unknown_locale_code(unconfigured_test_client):
@@ -198,7 +198,7 @@ def test_ui_locales_falls_back_to_unknown_locale_code(unconfigured_test_client):
             "auth_server": "https://test.example.com",
         }
 
-    res = unconfigured_test_client.get("/en/session/authentication")
+    res = unconfigured_test_client.get("/en/tokens/request")
 
     assert res.status_code == 200
     assert '<option value="fr">français</option>' in res.text
