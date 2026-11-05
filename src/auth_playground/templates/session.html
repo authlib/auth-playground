@@ -24,54 +24,20 @@
 
         {% elif tab == 'logout' %}
             {% call render_form(logout_local_form, url_for('oauth.logout_local'), id="logout-local-form") %}
-                {{ logout_local_form.logout(class="secondary") }}
+                {{ logout_local_form.logout() }}
             {% endcall %}
             <p><small>{% trans %}Local — this app only; you stay signed in at the provider, so the next sign-in may be silent (SSO).{% endtrans %}</small></p>
 
             {% if g.server_config and g.server_config.specs and g.server_config.specs.oidc_rpinitiated_logout %}
                 {% call render_form(logout_params_form, url_for('oauth.logout'), id="logout-params-form") %}
-                    <label>
-                        {{ logout_params_form.id_token_hint.label }}
-                        {{ logout_params_form.id_token_hint() }}
-                        {% if logout_params_form.id_token_hint.description %}
-                            <small>{{ logout_params_form.id_token_hint.description }}</small>
-                        {% endif %}
-                    </label>
-
-                    <label>
-                        {{ logout_params_form.client_id.label }}
-                        {{ logout_params_form.client_id() }}
-                        {% if logout_params_form.client_id.description %}
-                            <small>{{ logout_params_form.client_id.description }}</small>
-                        {% endif %}
-                    </label>
-
-                    <label>
-                        {{ logout_params_form.post_logout_redirect_uri.label }}
-                        {{ logout_params_form.post_logout_redirect_uri() }}
-                        {% if logout_params_form.post_logout_redirect_uri.description %}
-                            <small>{{ logout_params_form.post_logout_redirect_uri.description }}</small>
-                        {% endif %}
-                    </label>
-
-                    <label>
-                        {{ logout_params_form.logout_hint.label }}
-                        {{ logout_params_form.logout_hint() }}
-                        {% if logout_params_form.logout_hint.description %}
-                            <small>{{ logout_params_form.logout_hint.description }}</small>
-                        {% endif %}
-                    </label>
-
+                    {{ logout_params_form.id_token_hint() }}
+                    {{ logout_params_form.client_id() }}
+                    {{ logout_params_form.post_logout_redirect_uri() }}
+                    {{ logout_params_form.logout_hint() }}
                     {% if logout_params_form.ui_locales.choices|length > 1 %}
-                        <label>
-                            {{ logout_params_form.ui_locales.label }}
-                            {{ logout_params_form.ui_locales() }}
-                            {% if logout_params_form.ui_locales.description %}
-                                <small>{{ logout_params_form.ui_locales.description }}</small>
-                            {% endif %}
-                        </label>
+                        {{ logout_params_form.ui_locales() }}
                     {% endif %}
-                    {{ logout_params_form.server_logout(class="contrast") }}
+                    {{ logout_params_form.server_logout() }}
                 {% endcall %}
                 <p><small>{% trans %}Global — also ends the session at the provider (RP-Initiated Logout), preventing a silent re-login.{% endtrans %}</small></p>
             {% endif %}

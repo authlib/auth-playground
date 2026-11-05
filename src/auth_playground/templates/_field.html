@@ -1,0 +1,35 @@
+<div id="wrap-{{ field_id }}">
+    {% if fieldset %}
+        <fieldset>
+            <legend>{{ field.label.text }}</legend>
+            {% if field.description %}
+                <small>{{ field.description }}</small>
+            {% endif %}
+            {{ field.widget(field, **render_kw) }}
+        </fieldset>
+    {% elif button %}
+        <label for="{{ field_id }}">
+            {{ field.label.text }}
+            {% if field.description %}
+                <small>{{ field.description }}</small>
+            {% endif %}
+        </label>
+    {% else %}
+        <label for="{{ field_id }}">
+            {{ field.label.text }}
+            {{ field.widget(field, **render_kw) }}
+            {% if field.description %}
+                <small>{{ field.description }}</small>
+            {% endif %}
+        </label>
+    {% endif %}
+    {% for error in field.errors %}
+        <small class="error">{{ error }}</small>
+    {% endfor %}
+    {% if button %}
+        <div role="group">
+            {{ field.widget(field, **render_kw) }}
+            {{ button() }}
+        </div>
+    {% endif %}
+</div>

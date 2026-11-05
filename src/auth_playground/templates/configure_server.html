@@ -26,20 +26,7 @@
             <p>{% trans %}Enter the URL of your OAuth2 or OpenID Connect provider to validate it and discover configuration options.{% endtrans %}</p>
 
             {% call render_form(form, url_for('routes.configure_server'), id="server-form") %}
-                <label for="{{ form.issuer_url.id }}">
-                    {{ form.issuer_url.label }}
-                </label>
-
-                {% if form.issuer_url.errors %}
-                    {% for error in form.issuer_url.errors %}
-                        <small class="error">{{ error }}</small>
-                    {% endfor %}
-                {% endif %}
-
-                <div role="group">
-                    {{ form.issuer_url(class="form-control") }}
-                    {{ form.discover(class="primary") }}
-                </div>
+                {{ form.issuer_url() }}
             {% endcall %}
 
             <details>
