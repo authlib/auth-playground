@@ -1,17 +1,22 @@
 import ipaddress
+import json
 from urllib.parse import urlparse
 
 from babel import Locale
 from babel import UnknownLocaleError
 from flask import current_app
 from flask import g
+from flask import render_template
+from flask import url_for
 from flask_babel import lazy_gettext as _
 from flask_wtforms_htmx import HtmxFlaskForm
 from markupsafe import Markup
 from wtforms import ButtonField
+from wtforms import Field
 from wtforms import HiddenField
 from wtforms import IntegerField
 from wtforms import PasswordField
+from wtforms import RadioField
 from wtforms import SelectField
 from wtforms import SelectMultipleField
 from wtforms import StringField
@@ -19,13 +24,30 @@ from wtforms import SubmitField
 from wtforms import TextAreaField
 from wtforms import ValidationError
 from wtforms.csrf.core import CSRFTokenField
+from wtforms.fields import SelectChoice
 from wtforms.meta import clean_key
 from wtforms.validators import DataRequired
+from wtforms.validators import InputRequired
 from wtforms.validators import Length
 from wtforms.validators import NumberRange
 from wtforms.validators import Optional
 from wtforms.widgets import CheckboxInput
 from wtforms.widgets import ListWidget
+from wtforms.widgets import html_params
+
+import auth_playground
+from auth_playground.authorization import PKCE_METHODS
+from auth_playground.authorization import authorization_endpoint
+from auth_playground.authorization import parse_extra_params
+from auth_playground.authorization import preview_lines
+from auth_playground.authorization import preview_params
+from auth_playground.client_auth import METHODS
+from auth_playground.client_auth import PUBLIC_METHOD
+from auth_playground.client_auth import SECRET_METHODS
+from auth_playground.client_auth import advertised_methods
+from auth_playground.session import server_metadata
+
+REGISTRABLE_GRANT_TYPES = ("authorization_code", "refresh_token")
 
 BARE_FIELDS = (
     HiddenField,
@@ -52,13 +74,24 @@ class BaseForm(HtmxFlaskForm):
             if isinstance(field, BARE_FIELDS):
                 return field.widget(field, **render_kw)
 
+            field_id = render_kw.get("id", field.id)
+            fieldset = isinstance(field.widget, ListWidget)
+            error_id = f"{field_id}-error" if field.errors else None
+            if error_id and not fieldset:
+                render_kw = {
+                    **render_kw,
+                    "aria-invalid": "true",
+                    "aria-describedby": error_id,
+                }
+
             template = current_app.jinja_env.get_template("_field.html")
             return Markup(
                 template.render(
                     field=field,
                     render_kw=render_kw,
-                    field_id=render_kw.get("id", field.id),
-                    fieldset=isinstance(field.widget, ListWidget),
+                    field_id=field_id,
+                    fieldset=fieldset,
+                    error_id=error_id,
                     button=field._form[group_with] if group_with else None,
                 )
             )
@@ -173,6 +206,46 @@ class ServerConfigForm(BaseForm):
     discover = SubmitField(_("Continue"), render_kw={"class": "primary"})
 
 
+def advertised_choices(values, advertised):
+    """Build the choices of values, labelling the ones the server does not advertise."""
+    return [
+        SelectChoice(
+            value,
+            value
+            if value in advertised
+            else _("{value} (not advertised)").format(value=value),
+        )
+        for value in values
+    ]
+
+
+def auth_method_choices(methods):
+    """Label the authentication methods the server does not advertise."""
+    return advertised_choices(methods, advertised_methods(server_metadata()))
+
+
+def auth_method_default(methods):
+    """Return the first advertised method, or the first method."""
+    advertised = advertised_methods(server_metadata())
+    return next((method for method in methods if method in advertised), methods[0])
+
+
+def get_grant_type_choices():
+    """Label the grant types the server does not advertise.
+
+    Per RFC 8414 §2, the default is ``authorization_code`` and ``implicit``.
+    """
+    advertised = server_metadata().get(
+        "grant_types_supported", ["authorization_code", "implicit"]
+    )
+    return advertised_choices(REGISTRABLE_GRANT_TYPES, advertised)
+
+
+def disable_for_public_client(form, source, target):
+    """Disable the authentication method when the client is public."""
+    target.render_kw = {**(target.render_kw or {}), "disabled": source.data == "public"}
+
+
 class ClientConfigForm(BaseForm):
     """Form to configure OAuth client credentials manually."""
 
@@ -190,18 +263,56 @@ class ClientConfigForm(BaseForm):
     )
     client_secret = PasswordField(
         _("Client secret:"),
-        validators=[
-            DataRequired(message=_("Client Secret is required")),
-            Length(min=1, message=_("Client Secret is required")),
-        ],
+        description=_("Leave empty for a public client."),
         render_kw={"placeholder": "******************"},
     )
+    token_endpoint_auth_method = SelectField(
+        _("Token endpoint authentication:"),
+        choices=lambda: auth_method_choices(METHODS),
+        default=lambda: auth_method_default(METHODS),
+        description=_("How the client proves its identity to the token endpoint."),
+    )
     save = SubmitField(_("Complete configuration"))
+
+    def validate_client_secret(self, field):
+        if self.token_endpoint_auth_method.data != PUBLIC_METHOD:
+            if not field.data:
+                raise ValidationError(
+                    _("This authentication method needs a client secret.")
+                )
+            return
+
+        if field.data:
+            raise ValidationError(
+                _("A public client has no secret. Leave the secret empty.")
+            )
 
 
 class DynamicRegistrationForm(BaseForm):
     """Form to trigger dynamic client registration with CSRF protection."""
 
+    client_type = RadioField(
+        _("Client type:"),
+        choices=[
+            SelectChoice("confidential", _("Confidential, with a client secret")),
+            SelectChoice("public", _("Public, without a secret, with PKCE")),
+        ],
+        default="confidential",
+    )
+    auth_method = SelectField(
+        _("Token endpoint authentication:"),
+        choices=lambda: auth_method_choices(SECRET_METHODS),
+        default=lambda: auth_method_default(SECRET_METHODS),
+        description=_("A public client uses none."),
+    ).triggered_by("client_type", disable_for_public_client, on="change")
+    grant_types = SelectMultipleField(
+        _("Grant types to register:"),
+        choices=get_grant_type_choices,
+        default=list(REGISTRABLE_GRANT_TYPES),
+        validators=[InputRequired(message=_("Choose at least one grant type."))],
+        widget=ListWidget(prefix_label=False),
+        option_widget=CheckboxInput(),
+    )
     initial_access_token = StringField(
         _("Initial access token:"),
         validators=[],
@@ -211,6 +322,16 @@ class DynamicRegistrationForm(BaseForm):
         },
     )
     register = SubmitField(_("Register client"), render_kw={"class": "primary"})
+
+    def __init__(self, *args, **kwargs):
+        meta = {"htmx_endpoint": url_for("oauth.client_dynamic_registration")}
+        super().__init__(*args, meta={**meta, **kwargs.pop("meta", {})}, **kwargs)
+
+
+class ChangeServerForm(BaseForm):
+    """Form to forget the provider, and configure another one."""
+
+    change = SubmitField(_("Change provider"), render_kw={"class": "secondary"})
 
 
 class UnregisterClientForm(BaseForm):
@@ -225,9 +346,69 @@ class LogoutLocalForm(BaseForm):
     logout = SubmitField(_("Log out"), render_kw={"class": "secondary"})
 
 
+def get_pkce_choices():
+    """Label the PKCE methods the server does not advertise."""
+    advertised = server_metadata().get("code_challenge_methods_supported", [])
+    return advertised_choices(PKCE_METHODS, advertised) + [
+        SelectChoice("", _("Disabled"))
+    ]
+
+
+def get_pkce_default():
+    """Return the first advertised PKCE method.
+
+    A public client uses S256 even when the server advertises nothing, per
+    RFC 9700 §2.1.1. A confidential client uses no PKCE then.
+    """
+    advertised = server_metadata().get("code_challenge_methods_supported", [])
+    if method := next((m for m in PKCE_METHODS if m in advertised), None):
+        return method
+
+    oauth_config = auth_playground.get_oauth_config(current_app)
+    if oauth_config.get("token_endpoint_auth_method") == PUBLIC_METHOD:
+        return "S256"
+    return ""
+
+
+class AuthorizationPreviewWidget:
+    """Render the authorization request built from the form."""
+
+    def __call__(self, field, **kwargs):
+        kwargs.setdefault("id", field.id)
+        return Markup(
+            render_template(
+                "_auth_preview.html",
+                attributes=Markup(html_params(**kwargs)),
+                label=field.label.text,
+                endpoint=authorization_endpoint(),
+                params=list(preview_lines(preview_params(field._form))),
+            )
+        )
+
+
+class AuthorizationPreviewField(Field):
+    """A read-only preview of the authorization request."""
+
+    widget = AuthorizationPreviewWidget()
+
+    def process_formdata(self, valuelist):
+        pass
+
+
 class AuthorizationParamsForm(BaseForm):
     """Form to customize OAuth authorization parameters."""
 
+    class Meta:
+        htmx_inline_validation = True
+
+    pkce = SelectField(
+        _("PKCE:"),
+        choices=get_pkce_choices,
+        default=get_pkce_default,
+        description=_(
+            "Sends a code_challenge here, and the code_verifier with the token request."
+        ),
+    )
     scopes = SelectMultipleField(
         _("Scopes:"),
         choices=get_scopes_choices,
@@ -235,6 +416,10 @@ class AuthorizationParamsForm(BaseForm):
         description=_("Select the scopes to request from the authorization server"),
         widget=ListWidget(prefix_label=False),
         option_widget=CheckboxInput(),
+    )
+    other_scopes = StringField(
+        _("Other scopes:"),
+        description=_("Space-separated, sent as they are."),
     )
     prompt = SelectField(
         _("Prompt:"),
@@ -244,6 +429,7 @@ class AuthorizationParamsForm(BaseForm):
     ui_locales = SelectField(
         _("UI Locale:"),
         choices=get_ui_locales_choices,
+        default="",
         description=_("Preferred language for the authentication UI"),
     )
     max_age = IntegerField(
@@ -270,7 +456,41 @@ class AuthorizationParamsForm(BaseForm):
             "Specific claims to request, as an OIDC claims JSON object (advanced)."
         ),
     )
+    extra_params = TextAreaField(
+        _("Extra parameters:"),
+        description=_("One name=value per line, added to the request as they are."),
+        render_kw={"placeholder": "resource=https://api.example.com"},
+    )
+    preview = AuthorizationPreviewField(
+        _("Authorization request"), wrapper=False
+    ).triggered_by("*")
     sign_in = ButtonField(_("Sign in"), render_kw={"class": "primary"})
+
+    def __init__(self, *args, **kwargs):
+        meta = {"htmx_endpoint": url_for("oauth.authorize")}
+        super().__init__(*args, meta={**meta, **kwargs.pop("meta", {})}, **kwargs)
+
+    def validate_claims(self, field):
+        if not field.data:
+            return
+
+        try:
+            claims = json.loads(field.data)
+        except ValueError:
+            claims = None
+
+        if not isinstance(claims, dict):
+            raise ValidationError(_("Claims must be a JSON object."))
+
+    def validate_extra_params(self, field):
+        _pairs, errors = parse_extra_params(field.data)
+        if errors:
+            raise ValidationError(
+                _(
+                    "Each line must be name=value, with a parameter the playground "
+                    "does not set itself: {errors}"
+                ).format(errors=", ".join(errors))
+            )
 
 
 class LogoutParamsForm(BaseForm):

@@ -2,7 +2,15 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from flask import g
+
 from auth_playground.specs import ServerSpecs
+
+
+def server_metadata() -> dict:
+    """Return the metadata of the configured server, or an empty dict."""
+    server_config = g.get("server_config")
+    return (server_config.metadata if server_config else None) or {}
 
 
 @dataclass
@@ -61,13 +69,12 @@ class ServerConfig:
         )
 
     def save(self, session_data: dict):
-        """Save to session storage."""
-        serialized = self.serialize()
-        for key, value in serialized.items():
-            if value is not None:
+        """Save to session storage, without touching the values that did not change."""
+        for key, value in self.serialize().items():
+            if value is None and key in session_data:
+                del session_data[key]
+            elif value is not None and session_data.get(key) != value:
                 session_data[key] = value
-            else:
-                session_data.pop(key, None)
 
     @classmethod
     def clear(cls, session_data: dict):

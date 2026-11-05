@@ -1,5 +1,6 @@
 from unittest.mock import patch
 
+import requests
 from flask_webtest import TestApp
 
 
@@ -61,6 +62,17 @@ def test_configure_server_blocks_when_env_configured(app, test_client):
     res = test_client.get("/en/server", follow_redirects=True)
     assert res.status_code == 200
     assert b"environment variables" in res.data
+
+
+def test_fixed_server_without_client_shows_client_page(unconfigured_app):
+    """Test that a server set in the environment works before a client is set."""
+    unconfigured_app.config["OAUTH_AUTH_SERVER"] = "https://env-configured.example.com"
+    test_client = unconfigured_app.test_client()
+
+    with patch("auth_playground.endpoints.load_server_metadata"):
+        res = test_client.get("/en/client")
+
+    assert res.status_code == 200
 
 
 def test_session_redirects_to_client_when_server_configured(unconfigured_app):
@@ -182,7 +194,13 @@ def test_dynamic_registration_requires_registration_endpoint(
 
     res = test_client.post(
         "/client/dynamic-registration",
-        data={"csrf_token": csrf_token(test_client), "initial_access_token": ""},
+        data={
+            "csrf_token": csrf_token(test_client),
+            "client_type": "confidential",
+            "auth_method": "client_secret_basic",
+            "grant_types": "authorization_code",
+            "initial_access_token": "",
+        },
         follow_redirects=True,
     )
 
@@ -214,10 +232,8 @@ def test_switch_link_hidden_when_env_configured(app, iam_server, iam_client):
 
     res = test_client.get("/en/", follow_redirects=True)
     assert res.status_code == 200
-    assert (
-        b"OAuth 2.0 Authorization Server" in res.data or b"OpenID Provider" in res.data
-    )
-    assert b"switch" not in res.data
+    assert b"set by the environment" in res.data
+    assert b"change-server-form" not in res.data
 
 
 def test_server_link_visible_when_session_configured(unconfigured_app):
@@ -266,7 +282,6 @@ def test_validate_issuer_url_accepts_http_for_localhost(unconfigured_app):
     """Test that HTTP URLs are accepted for localhost even without debug mode."""
     unconfigured_app.testing = False
     unconfigured_app.debug = False
-    testapp = TestApp(unconfigured_app)
 
     for url in [
         "http://localhost:5000",
@@ -274,7 +289,7 @@ def test_validate_issuer_url_accepts_http_for_localhost(unconfigured_app):
         "http://127.0.0.2:8000",
         "http://[::1]:8000",
     ]:
-        res, _ = submit_server_form(testapp, url)
+        res, _ = submit_server_form(TestApp(unconfigured_app), url)
 
         assert res.status_int == 302
         assert "/en/client" in res.location
@@ -330,18 +345,146 @@ def test_configure_server_from_url_path_with_scheme(unconfigured_test_client):
     assert "/en/client" in res.location
 
 
-def test_configure_server_invites_to_change_provider(unconfigured_test_client):
-    """Test that the server page clears the current provider."""
+def test_configure_server_shows_the_current_provider(unconfigured_testapp):
+    """Test that the server page shows the provider and keeps the session."""
+    with unconfigured_testapp.session_transaction() as sess:
+        sess["issuer_url"] = "https://test.example.com"
+        sess["server_metadata"] = {"issuer": "https://test.example.com"}
+        sess["server_type"] = "oidc"
+        sess["oauth_config"] = {
+            "client_id": "c",
+            "client_secret": "s",
+            "auth_server": "https://test.example.com",
+        }
+
+    res = unconfigured_testapp.get("/en/server")
+
+    assert "https://test.example.com" in res.text
+    assert "OpenID Provider" in res.text
+    with unconfigured_testapp.session_transaction() as sess:
+        assert sess["issuer_url"] == "https://test.example.com"
+        assert "oauth_config" in sess
+
+
+def test_change_provider_forgets_the_configuration(unconfigured_testapp):
+    """Test that changing the provider clears the server, client and tokens."""
+    with unconfigured_testapp.session_transaction() as sess:
+        sess["issuer_url"] = "https://test.example.com"
+        sess["server_metadata"] = {"issuer": "https://test.example.com"}
+        sess["oauth_config"] = {
+            "client_id": "c",
+            "client_secret": "s",
+            "auth_server": "https://test.example.com",
+        }
+        sess["token"] = {"access_token": "a"}
+
+    page = unconfigured_testapp.get("/en/server")
+    res = page.forms["change-server-form"].submit("change").maybe_follow()
+
+    assert "You can now configure a different identity provider" in res.text
+    assert "server-form" in res.forms
+    with unconfigured_testapp.session_transaction() as sess:
+        assert not {"issuer_url", "server_metadata", "oauth_config", "token"} & set(
+            sess
+        )
+
+
+def test_loading_another_provider_forgets_the_previous_client(unconfigured_test_client):
+    """Test that loading a different issuer drops the client and the tokens."""
+    with unconfigured_test_client.session_transaction() as sess:
+        sess["issuer_url"] = "https://test.example.com"
+        sess["server_metadata"] = {"issuer": "https://test.example.com"}
+        sess["oauth_config"] = {
+            "client_id": "c",
+            "client_secret": "s",
+            "auth_server": "https://test.example.com",
+        }
+        sess["token"] = {"access_token": "a"}
+
+    with patch("auth_playground.endpoints.fetch_server_metadata") as mock_fetch:
+        mock_fetch.return_value = ({"issuer": "https://other.example.com"}, "oidc")
+        unconfigured_test_client.get("/en/server/other.example.com")
+
+    with unconfigured_test_client.session_transaction() as sess:
+        assert sess["issuer_url"] == "https://other.example.com"
+        assert not {"oauth_config", "token"} & set(sess)
+
+
+def test_reloading_the_same_provider_keeps_the_client(unconfigured_test_client):
+    """Test that loading the same issuer again keeps the client."""
+    with unconfigured_test_client.session_transaction() as sess:
+        sess["issuer_url"] = "https://test.example.com"
+        sess["server_metadata"] = {"issuer": "https://test.example.com"}
+        sess["oauth_config"] = {
+            "client_id": "c",
+            "client_secret": "s",
+            "auth_server": "https://test.example.com",
+        }
+
+    with patch("auth_playground.endpoints.fetch_server_metadata") as mock_fetch:
+        mock_fetch.return_value = ({"issuer": "https://test.example.com"}, "oidc")
+        unconfigured_test_client.get("/en/server/test.example.com")
+
+    with unconfigured_test_client.session_transaction() as sess:
+        assert sess["oauth_config"]["client_id"] == "c"
+
+
+def test_failed_provider_load_keeps_the_page(unconfigured_test_client):
+    """Test the provider page renders when loading another issuer fails."""
     with unconfigured_test_client.session_transaction() as sess:
         sess["issuer_url"] = "https://test.example.com"
         sess["server_metadata"] = {"issuer": "https://test.example.com"}
 
-    res = unconfigured_test_client.get("/en/server")
+    with patch(
+        "auth_playground.endpoints.fetch_server_metadata",
+        side_effect=requests.exceptions.ConnectionError(),
+    ):
+        res = unconfigured_test_client.get("/en/server/unreachable.example.com")
 
-    assert b"You can now configure a different identity provider" in res.data
+    assert res.status_code == 200
+    assert "Cannot connect to the server" in res.text
+
+
+def test_change_provider_without_provider(unconfigured_test_client, csrf_token):
+    """Test changing the provider without one shows no message."""
+    res = unconfigured_test_client.post(
+        "/en/server/change",
+        data={"csrf_token": csrf_token(unconfigured_test_client)},
+        follow_redirects=True,
+    )
+
+    assert "You can now configure" not in res.text
+
+
+def test_change_provider_needs_a_csrf_token(unconfigured_test_client):
+    """Test that the provider is kept without a valid CSRF token."""
     with unconfigured_test_client.session_transaction() as sess:
-        assert "issuer_url" not in sess
-        assert "server_metadata" not in sess
+        sess["issuer_url"] = "https://test.example.com"
+        sess["server_metadata"] = {"issuer": "https://test.example.com"}
+
+    res = unconfigured_test_client.post("/en/server/change", follow_redirects=True)
+
+    assert "Invalid request" in res.text
+    with unconfigured_test_client.session_transaction() as sess:
+        assert sess["issuer_url"] == "https://test.example.com"
+
+
+def test_change_provider_is_refused_when_set_by_the_environment(
+    app, test_client, csrf_token
+):
+    """Test that a provider set in the environment cannot be changed."""
+    with test_client.session_transaction() as sess:
+        sess["token"] = {"access_token": "a"}
+
+    res = test_client.post(
+        "/en/server/change", data={"csrf_token": csrf_token(test_client)}
+    )
+
+    assert res.status_code == 302
+    assert res.location.endswith("/en/server")
+    with test_client.session_transaction() as sess:
+        assert sess["token"] == {"access_token": "a"}
+        assert "_flashes" not in sess
 
 
 def test_index_redirects_to_configure_client_without_client(unconfigured_test_client):

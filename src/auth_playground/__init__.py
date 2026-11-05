@@ -1,8 +1,10 @@
 import importlib.metadata
 import os
 import tempfile
+import time
 
 from authlib.integrations.flask_client import OAuth
+from authlib.oauth2.rfc7523 import ClientSecretJWT
 from authlib.oidc.discovery import get_well_known_url
 from cachelib.file import FileSystemCache
 from cachelib.simple import SimpleCache
@@ -17,16 +19,31 @@ from flask import session as flask_session
 from flask import url_for
 from flask_babel import gettext as _
 from flask_session import Session
+from werkzeug.local import LocalProxy
 from werkzeug.middleware.proxy_fix import ProxyFix
 
+from auth_playground.authorization import DEFAULT_SCOPE
+from auth_playground.client_auth import default_method
 from auth_playground.endpoints import bp
 from auth_playground.i18n import babel
 from auth_playground.i18n import setup_i18n
 from auth_playground.oauth import bp as oauth_bp
+from auth_playground.oauth import clear_user_session
 from auth_playground.session import ServerConfig
+from auth_playground.session import server_metadata
+from auth_playground.steps import setup_steps
 
-oauth = OAuth()
 sess = Session()
+
+
+def get_oauth_registry():
+    """Return the OAuth registry of the current request."""
+    if "oauth" not in g:
+        g.oauth = OAuth(current_app)
+    return g.oauth
+
+
+oauth = LocalProxy(get_oauth_registry)
 
 
 def is_client_configured():
@@ -66,37 +83,61 @@ def get_oauth_config(app):
         **session_config,
         **{k: v for k, v in env_config.items() if v is not None},
     }
+    if is_oauth_client_from_env(app):
+        config["token_endpoint_auth_method"] = default_method(
+            config.get("client_secret")
+        )
+    elif config.get("client_id"):
+        config.setdefault(
+            "token_endpoint_auth_method", default_method(config.get("client_secret"))
+        )
 
     return config
 
 
 def setup_oauth(app):
-    """Initialize OAuth client with configuration from environment or session."""
-    if "default" in oauth._registry:
-        del oauth._registry["default"]
+    """Initialize OAuth client with configuration from environment or session.
+
+    Each request gets its own registry, so it uses the client of its own session.
+    """
+    registry = OAuth(app)
+    g.oauth = registry
 
     config = get_oauth_config(app)
-    if not config:
+    if not config.get("client_id"):
         return False
 
-    oauth.init_app(app)
-
-    oauth.register(
+    registry.register(
         name="default",
         client_id=config["client_id"],
-        client_secret=config["client_secret"],
+        client_secret=config.get("client_secret"),
         server_metadata_url=get_well_known_url(config["auth_server"], external=True),
-        client_kwargs={"scope": "openid profile email phone address groups"},
+        client_kwargs={
+            "scope": DEFAULT_SCOPE,
+            "token_endpoint_auth_method": config["token_endpoint_auth_method"],
+        },
+        client_auth_methods=[ClientSecretJWT()],
     )
+    if metadata := server_metadata():
+        # Reuse the metadata already loaded, instead of fetching it again.
+        client = registry.create_client("default")
+        client.server_metadata.update(metadata, _loaded_at=time.time())
     return True
 
 
-def setup_oauth_runtime(app, client_id, client_secret, auth_server):
-    """Set up OAuth with runtime configuration stored in session."""
+def setup_oauth_runtime(
+    app, client_id, client_secret, auth_server, token_endpoint_auth_method
+):
+    """Set up OAuth with runtime configuration stored in session.
+
+    The tokens of the previous client are forgotten.
+    """
+    clear_user_session()
     flask_session["oauth_config"] = {
         "client_id": client_id,
         "client_secret": client_secret,
         "auth_server": auth_server,
+        "token_endpoint_auth_method": token_endpoint_auth_method,
     }
 
     return setup_oauth(app)
@@ -128,6 +169,9 @@ def create_app():
         else FileSystemCache(os.path.join(tempfile.gettempdir(), "flask_sessions"))
     )
     app.config["SESSION_PERMANENT"] = False
+    # Only store the session when a request changes it. Otherwise concurrent
+    # requests, such as htmx ones, overwrite each other's changes.
+    app.config["SESSION_REFRESH_EACH_REQUEST"] = False
 
     app.config["BABEL_DEFAULT_LOCALE"] = "en"
     app.config["BABEL_DEFAULT_TIMEZONE"] = "UTC"
@@ -179,14 +223,14 @@ def create_app():
     @app.before_request
     def load_server_config():
         """Load server configuration into flask.g."""
-        setup_oauth(app)
-
         if not g.get("server_config"):
             g.server_config = ServerConfig.deserialize(flask_session)
             if not g.server_config:
                 g.server_config = ServerConfig()
             if issuer_url := app.config.get("OAUTH_AUTH_SERVER"):
                 g.server_config.issuer_url = issuer_url
+
+        setup_oauth(app)
 
     @app.after_request
     def save_server_config(response):
@@ -210,9 +254,7 @@ def create_app():
             "app_version": importlib.metadata.version("auth-playground"),
             "repository_url": project_urls.get("repository"),
             "server_configured": is_server_configured(),
-            "client_configured": is_client_configured(),
-            "server_locked": is_oauth_server_from_env(app),
-            "client_locked": is_oauth_client_from_env(app),
+            "setup_steps": setup_steps,
         }
 
     return app

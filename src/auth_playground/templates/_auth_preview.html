@@ -1,0 +1,7 @@
+<article class="request-preview" {{ attributes }}>
+  <header><strong>{{ label }}</strong></header>
+    <pre><code>GET {{ endpoint }}
+{%- for name, value in params %}
+  {{ "?" if loop.first else "&" }}{{ name }}={{ value }}
+{%- endfor %}</code></pre>
+</article>

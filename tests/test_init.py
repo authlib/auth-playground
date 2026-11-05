@@ -1,3 +1,6 @@
+from flask import g
+
+import auth_playground
 from auth_playground.session import ServerConfig
 
 
@@ -26,3 +29,10 @@ def test_root_redirects_to_language_based_on_accept_language(unconfigured_app):
     res = test_client.get("/", headers={"Accept-Language": "en-US,en;q=0.9"})
     assert res.status_code == 302
     assert res.location.startswith("/en/")
+
+
+def test_oauth_registry_outside_a_configured_request(unconfigured_app):
+    """Test a registry is created when the request did not set one up."""
+    with unconfigured_app.test_request_context():
+        assert not auth_playground.is_client_configured()
+        assert "oauth" in g

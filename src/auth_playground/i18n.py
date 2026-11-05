@@ -55,7 +55,8 @@ def setup_i18n(app):
         """Extract language code from URL and store in g.lang_code for i18n routes."""
         if values is not None and "lang_code" in values:
             g.lang_code = values.pop("lang_code")
-            session["lang_code"] = g.lang_code
+            if session.get("lang_code") != g.lang_code:
+                session["lang_code"] = g.lang_code
 
     @app.before_request
     def before_request():
@@ -72,8 +73,16 @@ def setup_i18n(app):
         }
 
     def locale_selector():
-        # Language is always specified in URL prefix (mandatory)
-        return g.get("lang_code", app.config["BABEL_DEFAULT_LOCALE"])
+        """Use the language of the URL, else the one of the last localized page.
+
+        Routes without a language prefix, such as the htmx endpoints and the
+        OAuth callbacks, answer in the language the user browses in.
+        """
+        return (
+            g.get("lang_code")
+            or session.get("lang_code")
+            or app.config["BABEL_DEFAULT_LOCALE"]
+        )
 
     babel.init_app(app, locale_selector=locale_selector)
     app.url_map.converters["lang"] = LangConverter

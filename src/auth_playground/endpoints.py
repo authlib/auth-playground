@@ -11,15 +11,13 @@ from flask_babel import gettext as _
 
 import auth_playground
 from auth_playground.decorators import server_config_needed
-from auth_playground.forms import AuthorizationParamsForm
+from auth_playground.forms import ChangeServerForm
 from auth_playground.forms import ClientConfigForm
 from auth_playground.forms import DynamicRegistrationForm
-from auth_playground.forms import LogoutLocalForm
-from auth_playground.forms import LogoutParamsForm
-from auth_playground.forms import RefreshTokenForm
 from auth_playground.forms import ServerConfigForm
 from auth_playground.forms import UnregisterClientForm
 from auth_playground.oauth import clear_user_session
+from auth_playground.pages import render_session_page
 from auth_playground.session import ServerConfig
 
 bp = Blueprint("routes", __name__)
@@ -84,11 +82,7 @@ def clear_server_session():
     """Clear all server-related data from the session."""
     clear_user_session()
     ServerConfig.clear(session)
-
-    try:
-        del session["oauth_config"]
-    except KeyError:
-        pass
+    session.pop("oauth_config", None)
 
 
 def load_server_metadata(
@@ -145,6 +139,7 @@ def index():
 def configure_server(domain=None):
     """Display form to configure and validate identity provider URL."""
     if auth_playground.is_oauth_server_from_env(current_app):
+        load_server_metadata()
         return render_template("configure_server.html", locked=True)
 
     form = ServerConfigForm()
@@ -155,19 +150,19 @@ def configure_server(domain=None):
         issuer_url = domain.rstrip("/")
 
     elif not form.validate_on_submit():
-        if g.server_config and g.server_config.issuer_url:
-            flash(_("You can now configure a different identity provider"), "info")
-        clear_server_session()
-        g.server_config = ServerConfig()
-        return render_template("configure_server.html", form=form)
+        return render_server_page(form)
 
     else:
         issuer_url = form.issuer_url.data.rstrip("/")
 
     result = load_server_metadata(issuer_url, update_config=False)
     if not result:
-        return render_template("configure_server.html", form=form)
+        return render_server_page(form)
     metadata, server_type = result
+
+    # The client and the tokens belong to the previous provider.
+    if g.server_config.issuer_url and g.server_config.issuer_url != issuer_url:
+        clear_server_session()
 
     g.server_config = ServerConfig(
         metadata=metadata,
@@ -178,6 +173,32 @@ def configure_server(domain=None):
     flash(_("Server metadata successfully loaded"), "success")
 
     return redirect(url_for("routes.configure_client"))
+
+
+def render_server_page(form):
+    """Render the provider page, with the form to change the provider."""
+    return render_template(
+        "configure_server.html", form=form, change_form=ChangeServerForm()
+    )
+
+
+@bp.route("/server/change", methods=["POST"])
+def change_server():
+    """Forget the provider, its client and the tokens."""
+    if auth_playground.is_oauth_server_from_env(current_app):
+        return redirect(url_for("routes.configure_server"))
+
+    form = ChangeServerForm()
+    if not form.validate_on_submit():
+        flash(_("Invalid request"), "error")
+        return redirect(url_for("routes.configure_server"))
+
+    if g.server_config.issuer_url:
+        clear_server_session()
+        # Otherwise save_server_config would store the old provider again.
+        g.server_config = ServerConfig()
+        flash(_("You can now configure a different identity provider"), "info")
+    return redirect(url_for("routes.configure_server"))
 
 
 @bp.route("/client", methods=["GET", "POST"])
@@ -191,8 +212,9 @@ def configure_client():
         )
 
     client_form = ClientConfigForm()
-    dynamic_registration_form = DynamicRegistrationForm()
-    unregister_form = UnregisterClientForm()
+    # The other forms post elsewhere: they must not read this form's data.
+    dynamic_registration_form = DynamicRegistrationForm(formdata=None)
+    unregister_form = UnregisterClientForm(formdata=None)
 
     if not client_form.validate_on_submit():
         return render_template(
@@ -205,8 +227,9 @@ def configure_client():
     auth_playground.setup_oauth_runtime(
         current_app,
         client_form.client_id.data,
-        client_form.client_secret.data,
+        client_form.client_secret.data or None,
         g.server_config.issuer_url,
+        client_form.token_endpoint_auth_method.data,
     )
     flash(_("OAuth configuration completed successfully"), "success")
     return redirect(url_for("routes.session"))
@@ -231,29 +254,7 @@ def session_page(tab=None):
     if not logged_in and tab != "authentication":
         return redirect(url_for("routes.session", tab="authentication"))
 
-    refresh_form = RefreshTokenForm()
-    auth_params_form = AuthorizationParamsForm()
-    logout_local_form = LogoutLocalForm()
-
-    oauth_config = auth_playground.get_oauth_config(current_app)
-    logout_params_form = LogoutParamsForm(
-        data={
-            "id_token_hint": session.get("token", {}).get("id_token", ""),
-            "client_id": oauth_config["client_id"] if oauth_config else "",
-            "post_logout_redirect_uri": url_for(
-                "oauth.logout_callback", _external=True
-            ),
-        }
-    )
-
-    return render_template(
-        "session.html",
-        tab=tab,
-        refresh_form=refresh_form,
-        auth_params_form=auth_params_form,
-        logout_local_form=logout_local_form,
-        logout_params_form=logout_params_form,
-    )
+    return render_session_page(tab)
 
 
 @bp.route("/specs")
