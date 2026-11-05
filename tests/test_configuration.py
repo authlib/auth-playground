@@ -231,9 +231,7 @@ def test_switch_link_hidden_when_env_configured(app, iam_server, iam_client):
 
     res = test_client.get("/en/", follow_redirects=True)
     assert res.status_code == 200
-    assert (
-        b"OAuth 2.0 Authorization Server" in res.data or b"OpenID Provider" in res.data
-    )
+    assert b"set by the environment" in res.data
     assert b"switch" not in res.data
 
 

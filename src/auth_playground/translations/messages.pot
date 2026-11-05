@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-05 19:48+0100\n"
+"POT-Creation-Date: 2026-11-05 20:20+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: src/auth_playground/__init__.py:212
+#: src/auth_playground/__init__.py:213
 #, python-format
 msgid "This request should be sent to %(server_name)s"
 msgstr ""
@@ -125,7 +125,7 @@ msgid "{value} (not advertised)"
 msgstr ""
 
 #: src/auth_playground/forms.py:253 src/auth_playground/forms.py:498
-#: src/auth_playground/templates/configure_client.html:14
+#: src/auth_playground/templates/configure_client.html:15
 msgid "Client ID:"
 msgstr ""
 
@@ -447,12 +447,87 @@ msgstr ""
 msgid "An error happened during token refresh: {error}"
 msgstr ""
 
+#: src/auth_playground/steps.py:30
+#, python-brace-format
+msgid "Step {number}, done:"
+msgstr ""
+
+#: src/auth_playground/steps.py:31
+#, python-brace-format
+msgid "Step {number}:"
+msgstr ""
+
+#: src/auth_playground/steps.py:41 src/auth_playground/steps.py:50
+#: src/auth_playground/templates/_server_tabs.html:3
+#: src/auth_playground/templates/configure_server.html:13
+msgid "Provider"
+msgstr ""
+
+#: src/auth_playground/steps.py:41
+#: src/auth_playground/templates/configure_server.html:24
+msgid "Choose a provider"
+msgstr ""
+
+#: src/auth_playground/steps.py:46
+#, python-brace-format
+msgid "{provider}, set by the environment"
+msgstr ""
+
+#: src/auth_playground/steps.py:61 src/auth_playground/steps.py:65
+#: src/auth_playground/steps.py:75
+#: src/auth_playground/templates/configure_client.html:11
+msgid "Client"
+msgstr ""
+
+#: src/auth_playground/steps.py:61
+msgid "Available once the provider is set"
+msgstr ""
+
+#: src/auth_playground/steps.py:65
+msgid "Register or enter a client"
+msgstr ""
+
+#: src/auth_playground/steps.py:69
+msgid "Public"
+msgstr ""
+
+#: src/auth_playground/steps.py:69
+msgid "Confidential"
+msgstr ""
+
+#: src/auth_playground/steps.py:73
+#, python-brace-format
+msgid "{client}, set by the environment"
+msgstr ""
+
+#: src/auth_playground/steps.py:81 src/auth_playground/steps.py:85
+#: src/auth_playground/steps.py:90 src/auth_playground/steps.py:93
+msgid "Session"
+msgstr ""
+
+#: src/auth_playground/steps.py:81
+msgid "Available once the client is set"
+msgstr ""
+
+#: src/auth_playground/steps.py:85
+msgid "No tokens yet"
+msgstr ""
+
+#: src/auth_playground/steps.py:90
+#, python-brace-format
+msgid "Signed in as {name}"
+msgstr ""
+
+#: src/auth_playground/steps.py:93
+msgid "Tokens obtained"
+msgstr ""
+
 #: src/auth_playground/templates/_auth_form.html:5
 msgid "Request"
 msgstr ""
 
 #: src/auth_playground/templates/_auth_form.html:13
-#: src/auth_playground/templates/session.html:7
+#: src/auth_playground/templates/session.html:8
 msgid "Authentication"
 msgstr ""
 
@@ -464,13 +539,12 @@ msgstr ""
 msgid "Sign in again"
 msgstr ""
 
-#: src/auth_playground/templates/_server_tabs.html:3
-#: src/auth_playground/templates/configure_server.html:12
-msgid "Provider"
-msgstr ""
-
 #: src/auth_playground/templates/_server_tabs.html:4
 msgid "Specifications"
+msgstr ""
+
+#: src/auth_playground/templates/_steps.html:2
+msgid "Setup progress"
 msgstr ""
 
 #: src/auth_playground/templates/_tokens.html:4
@@ -580,7 +654,7 @@ msgid "Token metadata"
 msgstr ""
 
 #: src/auth_playground/templates/_tokens.html:134
-#: src/auth_playground/templates/configure_server.html:16
+#: src/auth_playground/templates/configure_server.html:17
 msgid "Issuer:"
 msgstr ""
 
@@ -662,33 +736,29 @@ msgstr ""
 msgid "Token response"
 msgstr ""
 
-#: src/auth_playground/templates/configure_client.html:4
+#: src/auth_playground/templates/configure_client.html:5
 msgid "Configure OAuth Client"
 msgstr ""
 
-#: src/auth_playground/templates/configure_client.html:10
-msgid "Client"
-msgstr ""
-
-#: src/auth_playground/templates/configure_client.html:12
+#: src/auth_playground/templates/configure_client.html:13
 msgid "This client is set via environment variables and cannot be changed."
 msgstr ""
 
-#: src/auth_playground/templates/configure_client.html:22
+#: src/auth_playground/templates/configure_client.html:23
 msgid "Registered client"
 msgstr ""
 
-#: src/auth_playground/templates/configure_client.html:24
+#: src/auth_playground/templates/configure_client.html:25
 msgid ""
 "This client was dynamically registered (RFC 7591). You can remove it from"
 " the server (RFC 7592)."
 msgstr ""
 
-#: src/auth_playground/templates/configure_client.html:31
+#: src/auth_playground/templates/configure_client.html:32
 msgid "Choose a configuration method"
 msgstr ""
 
-#: src/auth_playground/templates/configure_client.html:34
+#: src/auth_playground/templates/configure_client.html:35
 #, python-format
 msgid ""
 "The %(display_name)s configuration has been successfully loaded. Now "
@@ -696,150 +766,134 @@ msgid ""
 " options:"
 msgstr ""
 
-#: src/auth_playground/templates/configure_client.html:42
+#: src/auth_playground/templates/configure_client.html:43
 msgid "Dynamic registration"
 msgstr ""
 
-#: src/auth_playground/templates/configure_client.html:45
+#: src/auth_playground/templates/configure_client.html:46
 msgid "This server supports"
 msgstr ""
 
-#: src/auth_playground/templates/configure_client.html:45
+#: src/auth_playground/templates/configure_client.html:46
 msgid "dynamic client registration"
 msgstr ""
 
-#: src/auth_playground/templates/configure_client.html:45
+#: src/auth_playground/templates/configure_client.html:46
 msgid ""
 "Provide an Initial Access Token if required, then click the button to "
 "automatically register this application."
 msgstr ""
 
-#: src/auth_playground/templates/configure_client.html:59
-#: src/auth_playground/templates/configure_server.html:33
+#: src/auth_playground/templates/configure_client.html:60
+#: src/auth_playground/templates/configure_server.html:34
 msgid "What happens next?"
 msgstr ""
 
-#: src/auth_playground/templates/configure_client.html:62
+#: src/auth_playground/templates/configure_client.html:63
 #, python-format
 msgid ""
 "A new OAuth client will be created automatically at the %(display_name)s,"
 " with the correct configuration,"
 msgstr ""
 
-#: src/auth_playground/templates/configure_client.html:65
+#: src/auth_playground/templates/configure_client.html:66
 msgid ""
 "Client ID, and Secret for a confidential client, will be generated by the"
 " server,"
 msgstr ""
 
-#: src/auth_playground/templates/configure_client.html:66
+#: src/auth_playground/templates/configure_client.html:67
 msgid "Configuration will be stored in your session."
 msgstr ""
 
-#: src/auth_playground/templates/configure_client.html:74
+#: src/auth_playground/templates/configure_client.html:75
 msgid "Manual configuration"
 msgstr ""
 
-#: src/auth_playground/templates/configure_client.html:77
+#: src/auth_playground/templates/configure_client.html:78
 #, python-format
 msgid ""
 "Manually register the client at the %(display_name)s, then enter the "
 "client credentials below."
 msgstr ""
 
-#: src/auth_playground/templates/configure_client.html:81
+#: src/auth_playground/templates/configure_client.html:82
 #, python-format
 msgid "%(display_name)s configuration"
 msgstr ""
 
-#: src/auth_playground/templates/configure_client.html:82
+#: src/auth_playground/templates/configure_client.html:83
 #, python-format
 msgid ""
 "When creating your OAuth client at the %(display_name)s, configure these "
 "URIs:"
 msgstr ""
 
-#: src/auth_playground/templates/configure_client.html:83
+#: src/auth_playground/templates/configure_client.html:84
 #: src/auth_playground/templates/static-configuration.html:13
 msgid "Redirect URIs"
 msgstr ""
 
-#: src/auth_playground/templates/configure_client.html:87
+#: src/auth_playground/templates/configure_client.html:88
 #: src/auth_playground/templates/static-configuration.html:17
 msgid "Post-Logout Redirect URIs"
 msgstr ""
 
-#: src/auth_playground/templates/configure_server.html:4
+#: src/auth_playground/templates/configure_server.html:5
 msgid "Configure Server"
 msgstr ""
 
-#: src/auth_playground/templates/configure_server.html:14
+#: src/auth_playground/templates/configure_server.html:15
 msgid "This provider is set via environment variables and cannot be changed."
 msgstr ""
 
-#: src/auth_playground/templates/configure_server.html:23
-msgid "Choose a provider"
-msgstr ""
-
-#: src/auth_playground/templates/configure_server.html:26
+#: src/auth_playground/templates/configure_server.html:27
 msgid ""
 "Enter the URL of your OAuth2 or OpenID Connect provider to validate it "
 "and discover configuration options."
 msgstr ""
 
-#: src/auth_playground/templates/configure_server.html:35
+#: src/auth_playground/templates/configure_server.html:36
 msgid "Auth Playground will fetch the server's metadata from"
 msgstr ""
 
-#: src/auth_playground/templates/configure_server.html:35
+#: src/auth_playground/templates/configure_server.html:36
 msgid "or"
 msgstr ""
 
-#: src/auth_playground/templates/configure_server.html:36
+#: src/auth_playground/templates/configure_server.html:37
 msgid "If valid, Auth Playground will show you multiple configuration options:"
 msgstr ""
 
-#: src/auth_playground/templates/configure_server.html:38
+#: src/auth_playground/templates/configure_server.html:39
 msgid "Automatic registration (if supported)"
 msgstr ""
 
-#: src/auth_playground/templates/configure_server.html:39
+#: src/auth_playground/templates/configure_server.html:40
 msgid "Manual configuration via web form"
 msgstr ""
 
-#: src/auth_playground/templates/configure_server.html:40
+#: src/auth_playground/templates/configure_server.html:41
 msgid "Environment variables setup"
 msgstr ""
 
-#: src/auth_playground/templates/layout.html:19
+#: src/auth_playground/templates/layout.html:18
 msgid "OAuth 2.0 Demonstration Client"
 msgstr ""
 
-#: src/auth_playground/templates/layout.html:26
-msgid "server"
-msgstr ""
-
-#: src/auth_playground/templates/layout.html:27
-msgid "client"
-msgstr ""
-
-#: src/auth_playground/templates/layout.html:29
-msgid "session"
-msgstr ""
-
-#: src/auth_playground/templates/layout.html:61
+#: src/auth_playground/templates/layout.html:41
 #: src/auth_playground/templates/tos.html:3
 #: src/auth_playground/templates/tos.html:8
 msgid "Terms of Service"
 msgstr ""
 
-#: src/auth_playground/templates/layout.html:63
+#: src/auth_playground/templates/layout.html:43
 #: src/auth_playground/templates/policy.html:3
 #: src/auth_playground/templates/policy.html:8
 msgid "Privacy Policy"
 msgstr ""
 
-#: src/auth_playground/templates/layout.html:65
+#: src/auth_playground/templates/layout.html:45
 msgid "Powered by"
 msgstr ""
 
@@ -1026,63 +1080,63 @@ msgid "Server specifications"
 msgstr ""
 
 #: src/auth_playground/templates/server_specs.html:6
-#: src/auth_playground/templates/specs.html:12
+#: src/auth_playground/templates/specs.html:13
 #, python-format
 msgid "Supported specifications (%(count)s)"
 msgstr ""
 
 #: src/auth_playground/templates/server_specs.html:17
-#: src/auth_playground/templates/specs.html:23
+#: src/auth_playground/templates/specs.html:24
 #, python-format
 msgid "Unsupported specifications (%(count)s)"
 msgstr ""
 
 #: src/auth_playground/templates/server_specs.html:28
-#: src/auth_playground/templates/specs.html:34
+#: src/auth_playground/templates/specs.html:35
 #, python-format
 msgid "Unknown specifications (%(count)s)"
 msgstr ""
 
-#: src/auth_playground/templates/session.html:8
+#: src/auth_playground/templates/session.html:9
 msgid "Tokens"
 msgstr ""
 
-#: src/auth_playground/templates/session.html:9
+#: src/auth_playground/templates/session.html:10
 msgid "Logout"
 msgstr ""
 
-#: src/auth_playground/templates/session.html:13
+#: src/auth_playground/templates/session.html:14
 msgid "Re-authenticate or adjust the request — updates auth_time, acr and amr."
 msgstr ""
 
-#: src/auth_playground/templates/session.html:21
+#: src/auth_playground/templates/session.html:22
 msgid "Silent refresh — auth_time and acr stay unchanged."
 msgstr ""
 
-#: src/auth_playground/templates/session.html:29
+#: src/auth_playground/templates/session.html:30
 msgid ""
 "Local — this app only; you stay signed in at the provider, so the next "
 "sign-in may be silent (SSO)."
 msgstr ""
 
-#: src/auth_playground/templates/session.html:42
+#: src/auth_playground/templates/session.html:43
 msgid ""
 "Global — also ends the session at the provider (RP-Initiated Logout), "
 "preventing a silent re-login."
 msgstr ""
 
-#: src/auth_playground/templates/session.html:48
+#: src/auth_playground/templates/session.html:49
 msgid "No active session"
 msgstr ""
 
-#: src/auth_playground/templates/session.html:49
+#: src/auth_playground/templates/session.html:50
 msgid ""
 "Sign in to explore OAuth 2.0 and OpenID Connect flows: authentication, "
 "token refresh, and logout."
 msgstr ""
 
-#: src/auth_playground/templates/specs.html:3
-#: src/auth_playground/templates/specs.html:8
+#: src/auth_playground/templates/specs.html:4
+#: src/auth_playground/templates/specs.html:9
 msgid "Server Specifications"
 msgstr ""
 

@@ -28,24 +28,104 @@ header h1 a:hover {
     text-decoration: underline;
 }
 
-/* Give the identity-provider block more room so wide names/nav stay on one line */
-header .grid {
-    grid-template-columns: auto 1fr;
+/* Setup steps */
+.setup-steps ol {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--pico-spacing);
+    margin: 0;
+    padding: 0;
+    list-style: none;
 }
 
-/* Align Identity Provider to the right in header */
-header .grid > hgroup:last-child {
-    text-align: right;
+.setup-steps li {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.setup-steps li > a,
+.setup-steps li > span {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    min-height: 2.75rem;
+    color: var(--pico-color);
+    text-decoration: none;
+}
+
+.step-mark {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border: 2px solid var(--pico-muted-border-color);
+    border-radius: 50%;
+    color: var(--pico-muted-color);
+    font-weight: 700;
+}
+
+.step-mark svg {
+    width: 1.1rem;
+    height: 1.1rem;
+}
+
+.setup-steps .done .step-mark {
+    border-color: var(--pico-primary-background);
+    background-color: var(--pico-primary-background);
+    color: var(--pico-primary-inverse);
+}
+
+.setup-steps .locked .step-mark {
+    border-style: dashed;
+    border-color: var(--pico-muted-color);
+    background-color: transparent;
+    color: var(--pico-muted-color);
+}
+
+.setup-steps .current .step-mark {
+    box-shadow: 0 0 0 0.25rem var(--pico-primary-focus);
+}
+
+.step-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.step-text small {
+    color: var(--pico-muted-color);
+    overflow-wrap: anywhere;
+}
+
+.step-text strong {
+    color: var(--pico-h4-color);
+}
+
+.setup-steps .current .step-text strong {
+    color: var(--pico-primary);
+}
+
+.setup-steps .todo:not(.current) .step-text strong {
+    color: var(--pico-muted-color);
+    font-weight: 500;
 }
 
 @media (max-width: 768px) {
-    header .grid {
+    .setup-steps ol {
         grid-template-columns: 1fr;
     }
+}
 
-    header .grid > hgroup:last-child {
-        text-align: left;
-    }
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
 }
 
 /* Center footer content */

@@ -31,6 +31,7 @@ from auth_playground.oauth import bp as oauth_bp
 from auth_playground.oauth import clear_user_session
 from auth_playground.session import ServerConfig
 from auth_playground.session import server_metadata
+from auth_playground.steps import setup_steps
 
 sess = Session()
 
@@ -253,9 +254,7 @@ def create_app():
             "app_version": importlib.metadata.version("auth-playground"),
             "repository_url": project_urls.get("repository"),
             "server_configured": is_server_configured(),
-            "client_configured": is_client_configured(),
-            "server_locked": is_oauth_server_from_env(app),
-            "client_locked": is_oauth_client_from_env(app),
+            "setup_steps": setup_steps,
         }
 
     return app
