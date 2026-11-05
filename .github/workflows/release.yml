@@ -61,9 +61,20 @@ jobs:
         with:
           name: binary
           path: dist
-      - uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
-        with:
-          files: dist/auth-playground
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" dist/auth-playground \
+              --repo "$GITHUB_REPOSITORY" \
+              --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" dist/auth-playground \
+              --repo "$GITHUB_REPOSITORY" \
+              --verify-tag \
+              --generate-notes
+          fi
 
   publish:
     name: release to pypi
