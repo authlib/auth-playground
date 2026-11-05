@@ -1,6 +1,3 @@
-import re
-
-
 def test_root_redirects_to_default_language(unconfigured_app):
     """Test that root URL redirects to default language when no Accept-Language header."""
     test_client = unconfigured_app.test_client()
@@ -42,12 +39,12 @@ def test_configure_server_displays_form(unconfigured_app):
     assert b"Continue" in res.data
 
 
-def test_configure_server_validates_url(unconfigured_app):
+def test_configure_server_validates_url(unconfigured_app, csrf_token):
     """Test that server configuration validates URL format."""
     test_client = unconfigured_app.test_client()
     res = test_client.post(
         "/en/server",
-        data={"issuer_url": "not-a-url", "csrf_token": "test"},
+        data={"issuer_url": "not-a-url", "csrf_token": csrf_token(test_client)},
         follow_redirects=False,
     )
     assert res.status_code == 200
@@ -143,7 +140,7 @@ def test_configure_client_hides_dynamic_registration_when_not_supported(
     assert b"Register client" not in res.data
 
 
-def test_configure_client_manual_setup_stores_in_session(unconfigured_app):
+def test_configure_client_manual_setup_stores_in_session(unconfigured_app, csrf_token):
     """Test that manual client configuration stores credentials in session."""
     test_client = unconfigured_app.test_client()
     with test_client.session_transaction() as sess:
@@ -157,19 +154,12 @@ def test_configure_client_manual_setup_stores_in_session(unconfigured_app):
     res = test_client.get("/en/client")
     assert res.status_code == 200
 
-    import re
-
-    csrf_match = re.search(
-        r'name="csrf_token" value="([^"]+)"', res.data.decode(), re.DOTALL
-    )
-    csrf_token = csrf_match.group(1) if csrf_match else ""
-
     res = test_client.post(
         "/en/client",
         data={
             "client_id": "test-client-id",
             "client_secret": "test-client-secret",
-            "csrf_token": csrf_token,
+            "csrf_token": csrf_token(test_client),
         },
         follow_redirects=True,
     )
@@ -183,7 +173,9 @@ def test_configure_client_manual_setup_stores_in_session(unconfigured_app):
         assert sess["oauth_config"]["auth_server"] == "https://test.example.com"
 
 
-def test_dynamic_registration_requires_registration_endpoint(unconfigured_app):
+def test_dynamic_registration_requires_registration_endpoint(
+    unconfigured_app, csrf_token
+):
     """Test that dynamic client registration fails without registration endpoint."""
     test_client = unconfigured_app.test_client()
     with test_client.session_transaction() as sess:
@@ -194,15 +186,9 @@ def test_dynamic_registration_requires_registration_endpoint(unconfigured_app):
         }
         sess["issuer_url"] = "https://test.example.com"
 
-    res = test_client.get("/en/client")
-    csrf_match = re.search(
-        r'name="csrf_token" value="([^"]+)"', res.data.decode(), re.DOTALL
-    )
-    csrf_token = csrf_match.group(1) if csrf_match else ""
-
     res = test_client.post(
         "/client/dynamic-registration",
-        data={"csrf_token": csrf_token, "initial_access_token": ""},
+        data={"csrf_token": csrf_token(test_client), "initial_access_token": ""},
         follow_redirects=True,
     )
 
@@ -262,39 +248,30 @@ def test_server_link_visible_when_session_configured(unconfigured_app):
     assert b"/en/server" in res.data
 
 
-def test_validate_issuer_url_accepts_http_in_debug(app, test_client):
+def test_validate_issuer_url_accepts_http_in_debug(app, test_client, csrf_token):
     """Test that HTTP URLs are accepted when app is in debug mode."""
     app.debug = True
 
-    res = test_client.get("/en/server")
-    csrf_match = re.search(
-        r'name="csrf_token" value="([^"]+)"', res.data.decode(), re.DOTALL
-    )
-    csrf_token = csrf_match.group(1) if csrf_match else ""
-
     res = test_client.post(
         "/en/server",
-        data={"issuer_url": "http://localhost:5000", "csrf_token": csrf_token},
+        data={
+            "issuer_url": "http://localhost:5000",
+            "csrf_token": csrf_token(test_client),
+        },
         follow_redirects=False,
     )
 
     assert b"HTTP is only allowed" not in res.data
 
 
-def test_validate_issuer_url_accepts_http_for_localhost(app, test_client):
+def test_validate_issuer_url_accepts_http_for_localhost(app, test_client, csrf_token):
     """Test that HTTP URLs are accepted for localhost even without debug mode."""
     app.debug = False
-
-    res = test_client.get("/en/server")
-    csrf_match = re.search(
-        r'name="csrf_token" value="([^"]+)"', res.data.decode(), re.DOTALL
-    )
-    csrf_token = csrf_match.group(1) if csrf_match else ""
 
     for url in ["http://localhost:5000", "http://127.0.0.1:8000", "http://[::1]:8000"]:
         res = test_client.post(
             "/en/server",
-            data={"issuer_url": url, "csrf_token": csrf_token},
+            data={"issuer_url": url, "csrf_token": csrf_token(test_client)},
             follow_redirects=False,
         )
         assert b"HTTP is only allowed" not in res.data

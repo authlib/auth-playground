@@ -1,4 +1,3 @@
-import re
 from unittest.mock import Mock
 from unittest.mock import patch
 
@@ -44,124 +43,112 @@ def test_fetch_server_metadata_raises_non_404_errors():
             fetch_server_metadata("https://test.example.com")
 
 
-def test_handle_fetch_metadata_errors_connection_error(unconfigured_test_client):
+def test_handle_fetch_metadata_errors_connection_error(
+    unconfigured_test_client, csrf_token
+):
     """Test handle_fetch_metadata_errors with connection error."""
     with patch("auth_playground.endpoints.fetch_server_metadata") as mock_fetch:
         mock_fetch.side_effect = requests.exceptions.ConnectionError()
 
-        res = unconfigured_test_client.get("/en/server")
-        csrf_match = re.search(
-            r'name="csrf_token" value="([^"]+)"', res.data.decode(), re.DOTALL
-        )
-        csrf_token = csrf_match.group(1) if csrf_match else ""
-
         res = unconfigured_test_client.post(
             "/en/server",
-            data={"issuer_url": "https://test.example.com", "csrf_token": csrf_token},
+            data={
+                "issuer_url": "https://test.example.com",
+                "csrf_token": csrf_token(unconfigured_test_client),
+            },
             follow_redirects=False,
         )
 
         assert b"Cannot connect" in res.data
 
 
-def test_handle_fetch_metadata_errors_timeout(unconfigured_test_client):
+def test_handle_fetch_metadata_errors_timeout(unconfigured_test_client, csrf_token):
     """Test handle_fetch_metadata_errors with timeout error."""
     with patch("auth_playground.endpoints.fetch_server_metadata") as mock_fetch:
         mock_fetch.side_effect = requests.exceptions.Timeout()
 
-        res = unconfigured_test_client.get("/en/server")
-        csrf_match = re.search(
-            r'name="csrf_token" value="([^"]+)"', res.data.decode(), re.DOTALL
-        )
-        csrf_token = csrf_match.group(1) if csrf_match else ""
-
         res = unconfigured_test_client.post(
             "/en/server",
-            data={"issuer_url": "https://test.example.com", "csrf_token": csrf_token},
+            data={
+                "issuer_url": "https://test.example.com",
+                "csrf_token": csrf_token(unconfigured_test_client),
+            },
             follow_redirects=False,
         )
 
         assert b"timeout" in res.data
 
 
-def test_handle_fetch_metadata_errors_404(unconfigured_test_client):
+def test_handle_fetch_metadata_errors_404(unconfigured_test_client, csrf_token):
     """Test handle_fetch_metadata_errors with 404 error."""
     with patch("auth_playground.endpoints.fetch_server_metadata") as mock_fetch:
         response = Mock()
         response.status_code = 404
         mock_fetch.side_effect = requests.exceptions.HTTPError(response=response)
 
-        res = unconfigured_test_client.get("/en/server")
-        csrf_match = re.search(
-            r'name="csrf_token" value="([^"]+)"', res.data.decode(), re.DOTALL
-        )
-        csrf_token = csrf_match.group(1) if csrf_match else ""
-
         res = unconfigured_test_client.post(
             "/en/server",
-            data={"issuer_url": "https://test.example.com", "csrf_token": csrf_token},
+            data={
+                "issuer_url": "https://test.example.com",
+                "csrf_token": csrf_token(unconfigured_test_client),
+            },
             follow_redirects=False,
         )
 
         assert b"not support" in res.data
 
 
-def test_handle_fetch_metadata_errors_non_404_http_error(unconfigured_test_client):
+def test_handle_fetch_metadata_errors_non_404_http_error(
+    unconfigured_test_client, csrf_token
+):
     """Test handle_fetch_metadata_errors with non-404 HTTP error."""
     with patch("auth_playground.endpoints.fetch_server_metadata") as mock_fetch:
         response = Mock()
         response.status_code = 500
         mock_fetch.side_effect = requests.exceptions.HTTPError(response=response)
 
-        res = unconfigured_test_client.get("/en/server")
-        csrf_match = re.search(
-            r'name="csrf_token" value="([^"]+)"', res.data.decode(), re.DOTALL
-        )
-        csrf_token = csrf_match.group(1) if csrf_match else ""
-
         res = unconfigured_test_client.post(
             "/en/server",
-            data={"issuer_url": "https://test.example.com", "csrf_token": csrf_token},
+            data={
+                "issuer_url": "https://test.example.com",
+                "csrf_token": csrf_token(unconfigured_test_client),
+            },
             follow_redirects=False,
         )
 
         assert b"HTTP 500" in res.data
 
 
-def test_handle_fetch_metadata_errors_request_exception(unconfigured_test_client):
+def test_handle_fetch_metadata_errors_request_exception(
+    unconfigured_test_client, csrf_token
+):
     """Test handle_fetch_metadata_errors with generic request exception."""
     with patch("auth_playground.endpoints.fetch_server_metadata") as mock_fetch:
         mock_fetch.side_effect = requests.RequestException()
 
-        res = unconfigured_test_client.get("/en/server")
-        csrf_match = re.search(
-            r'name="csrf_token" value="([^"]+)"', res.data.decode(), re.DOTALL
-        )
-        csrf_token = csrf_match.group(1) if csrf_match else ""
-
         res = unconfigured_test_client.post(
             "/en/server",
-            data={"issuer_url": "https://test.example.com", "csrf_token": csrf_token},
+            data={
+                "issuer_url": "https://test.example.com",
+                "csrf_token": csrf_token(unconfigured_test_client),
+            },
             follow_redirects=False,
         )
 
         assert b"Failed to connect" in res.data
 
 
-def test_handle_fetch_metadata_errors_value_error(unconfigured_test_client):
+def test_handle_fetch_metadata_errors_value_error(unconfigured_test_client, csrf_token):
     """Test handle_fetch_metadata_errors with invalid JSON response."""
     with patch("auth_playground.endpoints.fetch_server_metadata") as mock_fetch:
         mock_fetch.side_effect = ValueError()
 
-        res = unconfigured_test_client.get("/en/server")
-        csrf_match = re.search(
-            r'name="csrf_token" value="([^"]+)"', res.data.decode(), re.DOTALL
-        )
-        csrf_token = csrf_match.group(1) if csrf_match else ""
-
         res = unconfigured_test_client.post(
             "/en/server",
-            data={"issuer_url": "https://test.example.com", "csrf_token": csrf_token},
+            data={
+                "issuer_url": "https://test.example.com",
+                "csrf_token": csrf_token(unconfigured_test_client),
+            },
             follow_redirects=False,
         )
 
@@ -240,7 +227,6 @@ def test_playground_handles_metadata_fetch_exception(unconfigured_test_client):
     app.config["TESTING"] = True
     app.config["SERVER_NAME"] = "client.test"
     app.config["SECRET_KEY"] = "test-secret-key"
-    app.config["WTF_CSRF_ENABLED"] = False
     app.config["OAUTH_CLIENT_ID"] = "test-client"
     app.config["OAUTH_CLIENT_SECRET"] = "test-secret"
     app.config["OAUTH_AUTH_SERVER"] = "https://test.example.com"

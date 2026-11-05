@@ -1,4 +1,3 @@
-import re
 from unittest.mock import patch
 
 from auth_playground.oauth import get_software_id
@@ -19,8 +18,8 @@ def test_get_software_version():
     assert isinstance(version, str)
 
 
-def test_dynamic_registration_invalid_form(iam_server, unconfigured_test_client):
-    """Test dynamic registration with valid empty form succeeds."""
+def test_dynamic_registration_success(iam_server, unconfigured_test_client, csrf_token):
+    """Test dynamic registration against the identity provider."""
     with unconfigured_test_client.session_transaction() as sess:
         sess["issuer_url"] = iam_server.url
         sess["server_metadata"] = {
@@ -31,28 +30,47 @@ def test_dynamic_registration_invalid_form(iam_server, unconfigured_test_client)
         }
         sess["server_type"] = "oidc"
 
-    res = unconfigured_test_client.post("/client/dynamic-registration", data={})
+    res = unconfigured_test_client.post(
+        "/client/dynamic-registration",
+        data={"csrf_token": csrf_token(unconfigured_test_client)},
+    )
     assert res.status_code == 302
     assert "/en/session" in res.location
 
 
-def test_dynamic_registration_without_server_metadata(unconfigured_test_client):
-    """Test dynamic registration fails without server metadata."""
-    res = unconfigured_test_client.get("/en/client", follow_redirects=True)
-    csrf_match = re.search(
-        r'name="csrf_token" value="([^"]+)"', res.data.decode(), re.DOTALL
-    )
-    csrf_token = csrf_match.group(1) if csrf_match else ""
+def test_dynamic_registration_rejects_missing_csrf_token(unconfigured_test_client):
+    """Test dynamic registration rejects a request without CSRF token."""
+    with unconfigured_test_client.session_transaction() as sess:
+        sess["issuer_url"] = "https://test.example.com"
+        sess["server_metadata"] = {
+            "issuer": "https://test.example.com",
+            "registration_endpoint": "https://test.example.com/oauth/register",
+        }
 
+    with patch("requests.post") as mock_post:
+        res = unconfigured_test_client.post(
+            "/client/dynamic-registration", data={}, follow_redirects=True
+        )
+
+    assert b"Invalid request" in res.data
+    mock_post.assert_not_called()
+
+
+def test_dynamic_registration_without_server_metadata(
+    unconfigured_test_client, csrf_token
+):
+    """Test dynamic registration fails without server metadata."""
     res = unconfigured_test_client.post(
         "/client/dynamic-registration",
-        data={"csrf_token": csrf_token},
+        data={"csrf_token": csrf_token(unconfigured_test_client)},
         follow_redirects=True,
     )
     assert b"Provider URL" in res.data
 
 
-def test_dynamic_registration_request_exception(iam_server, unconfigured_test_client):
+def test_dynamic_registration_request_exception(
+    iam_server, unconfigured_test_client, csrf_token
+):
     """Test dynamic registration handles request exceptions."""
     with unconfigured_test_client.session_transaction() as sess:
         sess["server_metadata"] = {
@@ -63,33 +81,19 @@ def test_dynamic_registration_request_exception(iam_server, unconfigured_test_cl
         }
         sess["issuer_url"] = iam_server.url
 
-    res = unconfigured_test_client.get("/en/client")
-    csrf_match = re.search(
-        r'name="csrf_token" value="([^"]+)"', res.data.decode(), re.DOTALL
-    )
-    csrf_token = csrf_match.group(1) if csrf_match else ""
-
     res = unconfigured_test_client.post(
         "/client/dynamic-registration",
-        data={"csrf_token": csrf_token},
+        data={"csrf_token": csrf_token(unconfigured_test_client)},
         follow_redirects=True,
     )
     assert b"failed" in res.data
 
 
-def test_dynamic_registration_with_initial_access_token(iam_server, iam_client):
+def test_dynamic_registration_with_initial_access_token(
+    iam_server, unconfigured_test_client, csrf_token
+):
     """Test dynamic registration with initial access token."""
-    from auth_playground import create_app
-
-    app = create_app()
-    app.config["TESTING"] = True
-    app.config["SERVER_NAME"] = "client.test"
-    app.config["SECRET_KEY"] = "test-secret-key"
-    app.config["WTF_CSRF_ENABLED"] = False
-
-    test_client = app.test_client()
-
-    with test_client.session_transaction() as sess:
+    with unconfigured_test_client.session_transaction() as sess:
         sess["server_metadata"] = {
             "issuer": iam_server.url,
             "authorization_endpoint": f"{iam_server.url}/oauth/authorize",
@@ -107,29 +111,33 @@ def test_dynamic_registration_with_initial_access_token(iam_server, iam_client):
         }
         mock_post.return_value.raise_for_status = lambda: None
 
-        test_client.post(
+        unconfigured_test_client.post(
             "/client/dynamic-registration",
-            data={"initial_access_token": "test-token"},
+            data={
+                "initial_access_token": "test-token",
+                "csrf_token": csrf_token(unconfigured_test_client),
+            },
             follow_redirects=True,
         )
 
     assert mock_post.call_args[1]["headers"]["Authorization"] == "Bearer test-token"
 
 
-def test_unregister_client_invalid_form(test_client):
-    """Test unregister client with invalid form data."""
-    res = test_client.post("/unregister-client", data={})
-    assert res.status_code == 302
+def test_unregister_client_rejects_missing_csrf_token(test_client):
+    """Test unregister client rejects a request without CSRF token."""
+    with test_client.session_transaction() as sess:
+        sess["registration_access_token"] = "test-token"
+        sess["registration_client_uri"] = "https://test.example.com/oauth/register/123"
+
+    with patch("requests.delete") as mock_delete:
+        res = test_client.post("/unregister-client", data={}, follow_redirects=True)
+
+    assert b"Invalid request" in res.data
+    mock_delete.assert_not_called()
 
 
-def test_unregister_client_without_credentials(unconfigured_test_client):
+def test_unregister_client_without_credentials(unconfigured_test_client, csrf_token):
     """Test unregister client fails without registration credentials."""
-    res = unconfigured_test_client.get("/en/session")
-    csrf_match = re.search(
-        r'name="csrf_token" value="([^"]+)"', res.data.decode(), re.DOTALL
-    )
-    csrf_token = csrf_match.group(1) if csrf_match else ""
-
     with unconfigured_test_client.session_transaction() as sess:
         sess["server_metadata"] = {
             "issuer": "https://test.example.com",
@@ -144,12 +152,14 @@ def test_unregister_client_without_credentials(unconfigured_test_client):
         }
 
     res = unconfigured_test_client.post(
-        "/unregister-client", data={"csrf_token": csrf_token}, follow_redirects=True
+        "/unregister-client",
+        data={"csrf_token": csrf_token(unconfigured_test_client)},
+        follow_redirects=True,
     )
     assert b"credentials not found" in res.data
 
 
-def test_unregister_client_request_exception(unconfigured_test_client):
+def test_unregister_client_request_exception(unconfigured_test_client, csrf_token):
     """Test unregister client handles request exceptions."""
     with unconfigured_test_client.session_transaction() as sess:
         sess["server_metadata"] = {
@@ -166,19 +176,15 @@ def test_unregister_client_request_exception(unconfigured_test_client):
         sess["registration_access_token"] = "test-token"
         sess["registration_client_uri"] = "http://invalid-server.test/client"
 
-    res = unconfigured_test_client.get("/en/session")
-    csrf_match = re.search(
-        r'name="csrf_token" value="([^"]+)"', res.data.decode(), re.DOTALL
-    )
-    csrf_token = csrf_match.group(1) if csrf_match else ""
-
     res = unconfigured_test_client.post(
-        "/unregister-client", data={"csrf_token": csrf_token}, follow_redirects=True
+        "/unregister-client",
+        data={"csrf_token": csrf_token(unconfigured_test_client)},
+        follow_redirects=True,
     )
     assert b"failed" in res.data
 
 
-def test_unregister_client_success(unconfigured_test_client):
+def test_unregister_client_success(unconfigured_test_client, csrf_token):
     """Test successful client unregistration."""
     with unconfigured_test_client.session_transaction() as sess:
         sess["server_metadata"] = {
@@ -197,17 +203,13 @@ def test_unregister_client_success(unconfigured_test_client):
         sess["user"] = {"sub": "testuser"}
         sess["token"] = {"access_token": "test"}
 
-    res = unconfigured_test_client.get("/en/session")
-    csrf_match = re.search(
-        r'name="csrf_token" value="([^"]+)"', res.data.decode(), re.DOTALL
-    )
-    csrf_token = csrf_match.group(1) if csrf_match else ""
-
     with patch("requests.delete") as mock_delete:
         mock_delete.return_value.raise_for_status = lambda: None
 
         res = unconfigured_test_client.post(
-            "/unregister-client", data={"csrf_token": csrf_token}, follow_redirects=True
+            "/unregister-client",
+            data={"csrf_token": csrf_token(unconfigured_test_client)},
+            follow_redirects=True,
         )
 
     assert b"successfully unregistered" in res.data
@@ -218,7 +220,26 @@ def test_unregister_client_success(unconfigured_test_client):
         assert "token" not in sess
 
 
-def test_refresh_invalid_form(test_client):
-    """Test refresh token with invalid form data."""
-    res = test_client.post("/refresh", data={})
-    assert res.status_code == 302
+def test_refresh_rejects_missing_csrf_token(test_client):
+    """Test refresh rejects a request without CSRF token."""
+    token = {"access_token": "test-access", "refresh_token": "test-refresh"}
+    with test_client.session_transaction() as sess:
+        sess["token"] = token
+
+    res = test_client.post("/refresh", data={}, follow_redirects=True)
+
+    assert b"Invalid request" in res.data
+    with test_client.session_transaction() as sess:
+        assert sess["token"] == token
+
+
+def test_logout_local_rejects_missing_csrf_token(test_client):
+    """Test local logout rejects a request without CSRF token."""
+    with test_client.session_transaction() as sess:
+        sess["user"] = {"sub": "testuser"}
+
+    res = test_client.post("/logout/local", data={}, follow_redirects=True)
+
+    assert b"Invalid request" in res.data
+    with test_client.session_transaction() as sess:
+        assert sess["user"] == {"sub": "testuser"}

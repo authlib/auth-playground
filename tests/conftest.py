@@ -2,6 +2,8 @@ import os
 
 import pytest
 from babel.messages.frontend import CompileCatalog
+from flask import session
+from flask_wtf.csrf import generate_csrf
 
 from auth_playground import create_app
 
@@ -51,7 +53,6 @@ def unconfigured_app():
     app.config["TESTING"] = True
     app.config["SERVER_NAME"] = "client.test"
     app.config["SECRET_KEY"] = "test-secret-key"
-    app.config["WTF_CSRF_ENABLED"] = False
     app.config["OAUTH_CLIENT_ID"] = None
     app.config["OAUTH_CLIENT_SECRET"] = None
     app.config["OAUTH_AUTH_SERVER"] = None
@@ -78,3 +79,19 @@ def test_client(app):
 def unconfigured_test_client(unconfigured_app):
     """Create a test client for the unconfigured Flask application."""
     return unconfigured_app.test_client()
+
+
+@pytest.fixture
+def csrf_token():
+    """Return a function that gives a valid CSRF token for a test client."""
+
+    def get_token(client):
+        app = client.application
+        with app.app_context(), app.test_request_context():
+            token = generate_csrf()
+            raw_token = session["csrf_token"]
+        with client.session_transaction() as sess:
+            sess["csrf_token"] = raw_token
+        return token
+
+    return get_token
