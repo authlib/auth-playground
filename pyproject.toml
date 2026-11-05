@@ -154,8 +154,14 @@ commands = [
 
 [tool.tox.env.minversions]
 runner = "uv-venv-runner"
-uv_resolution = "lowest-direct"
 basepython = ["python3.11"]
+skip_install = true
+dependency_groups = []
+allowlist_externals = ["uv"]
+# A single install step, so the test dependencies do not upgrade the lowest versions.
+commands_pre = [
+    ["uv", "pip", "install", "--python", "{env_python}", "--resolution", "lowest-direct", "--group", "dev", "-e", "."],
+]
 
 [tool.tox.env.coverage]
 commands = [
