@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-05 16:27+0100\n"
+"POT-Creation-Date: 2026-11-05 17:09+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -669,35 +669,35 @@ msgstr ""
 msgid "Environment variables setup"
 msgstr ""
 
-#: src/auth_playground/templates/layout.html:18
+#: src/auth_playground/templates/layout.html:19
 msgid "OAuth 2.0 Demonstration Client"
 msgstr ""
 
-#: src/auth_playground/templates/layout.html:25
+#: src/auth_playground/templates/layout.html:26
 msgid "server"
 msgstr ""
 
-#: src/auth_playground/templates/layout.html:26
+#: src/auth_playground/templates/layout.html:27
 msgid "client"
 msgstr ""
 
-#: src/auth_playground/templates/layout.html:28
+#: src/auth_playground/templates/layout.html:29
 msgid "session"
 msgstr ""
 
-#: src/auth_playground/templates/layout.html:60
+#: src/auth_playground/templates/layout.html:61
 #: src/auth_playground/templates/tos.html:3
 #: src/auth_playground/templates/tos.html:8
 msgid "Terms of Service"
 msgstr ""
 
-#: src/auth_playground/templates/layout.html:62
+#: src/auth_playground/templates/layout.html:63
 #: src/auth_playground/templates/policy.html:3
 #: src/auth_playground/templates/policy.html:8
 msgid "Privacy Policy"
 msgstr ""
 
-#: src/auth_playground/templates/layout.html:64
+#: src/auth_playground/templates/layout.html:65
 msgid "Powered by"
 msgstr ""
 
