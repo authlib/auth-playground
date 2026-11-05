@@ -37,10 +37,8 @@ from wtforms.widgets import html_params
 
 import auth_playground
 from auth_playground.authorization import PKCE_METHODS
-from auth_playground.authorization import authorization_endpoint
+from auth_playground.authorization import authorization_preview
 from auth_playground.authorization import parse_extra_params
-from auth_playground.authorization import preview_lines
-from auth_playground.authorization import preview_params
 from auth_playground.client_auth import METHODS
 from auth_playground.client_auth import PUBLIC_METHOD
 from auth_playground.client_auth import SECRET_METHODS
@@ -370,26 +368,29 @@ def get_pkce_default():
     return ""
 
 
-class AuthorizationPreviewWidget:
-    """Render the authorization request built from the form."""
+class RequestPreviewWidget:
+    """Render the request that the form builds."""
 
     def __call__(self, field, **kwargs):
         kwargs.setdefault("id", field.id)
         return Markup(
             render_template(
-                "_auth_preview.html",
+                "_request_preview.html",
                 attributes=Markup(html_params(**kwargs)),
                 label=field.label.text,
-                endpoint=authorization_endpoint(),
-                params=list(preview_lines(preview_params(field._form))),
+                request=field.build(field._form),
             )
         )
 
 
-class AuthorizationPreviewField(Field):
-    """A read-only preview of the authorization request."""
+class RequestPreviewField(Field):
+    """A read-only preview of the request that ``build(form)`` returns."""
 
-    widget = AuthorizationPreviewWidget()
+    widget = RequestPreviewWidget()
+
+    def __init__(self, label=None, build=None, **kwargs):
+        super().__init__(label, **kwargs)
+        self.build = build
 
     def process_formdata(self, valuelist):
         pass
@@ -461,8 +462,8 @@ class AuthorizationParamsForm(BaseForm):
         description=_("One name=value per line, added to the request as they are."),
         render_kw={"placeholder": "resource=https://api.example.com"},
     )
-    preview = AuthorizationPreviewField(
-        _("Authorization request"), wrapper=False
+    preview = RequestPreviewField(
+        _("Authorization request"), build=authorization_preview, wrapper=False
     ).triggered_by("*")
     sign_in = ButtonField(_("Sign in"), render_kw={"class": "primary"})
 

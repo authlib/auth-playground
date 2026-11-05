@@ -1,0 +1,4 @@
+<article class="request-preview" {{ attributes }}>
+  <header><strong>{{ label }}</strong></header>
+  <pre><code>{{ request.lines()|join("\n") }}</code></pre>
+</article>
