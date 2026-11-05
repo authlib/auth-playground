@@ -5,21 +5,21 @@ from authlib.integrations.base_client import OAuthError
 
 def test_index_shows_signin_when_unauthenticated(iam_server, test_client):
     """Test that unauthenticated users see signin button."""
-    res = test_client.get("/en/session", follow_redirects=True)
+    res = test_client.get("/en/tokens", follow_redirects=True)
     assert res.status_code == 200
     assert b"Sign in" in res.data
 
 
 def test_index_shows_signup_when_server_supports_prompt_create(iam_server, test_client):
     """Test that registration option appears in prompt selector when server supports prompt=create."""
-    res = test_client.get("/en/session", follow_redirects=True)
+    res = test_client.get("/en/tokens", follow_redirects=True)
     assert res.status_code == 200
     assert b"Create - Registration" in res.data
 
 
 def test_registration_redirects_to_iam(iam_server, iam_client, test_client):
     """Test that the authorization parameters form includes create option."""
-    res = test_client.get("/en/session", follow_redirects=True)
+    res = test_client.get("/en/tokens", follow_redirects=True)
     assert res.status_code == 200
     # Verify that the prompt select includes the create option
     assert b'value="create"' in res.data
@@ -65,7 +65,7 @@ def test_authorize_callback_stores_user_in_session(
 
 def test_consent_redirects_with_prompt(iam_server, test_client):
     """Test that the authorization parameters form includes consent option."""
-    res = test_client.get("/en/session", follow_redirects=True)
+    res = test_client.get("/en/tokens", follow_redirects=True)
     assert res.status_code == 200
     # Verify that the prompt select includes the consent option
     assert b'value="consent"' in res.data
@@ -110,10 +110,10 @@ def test_logout_local_clears_session_without_contacting_provider(testapp):
         sess["user"] = {"sub": "testuser"}
         sess["token"] = {"id_token": "test_token", "access_token": "test_access"}
 
-    res = testapp.get("/en/session/logout")
+    res = testapp.get("/en/tokens/logout")
     res = res.forms["logout-local-form"].submit("logout")
     assert res.status_int == 302
-    assert res.location.endswith("/session")
+    assert res.location.endswith("/tokens")
 
     with testapp.session_transaction() as sess:
         assert "user" not in sess
@@ -129,7 +129,7 @@ def test_authenticated_user_can_access_index(iam_server, iam_client, user, test_
     res = iam_server.test_client.get(res.location)
     res = test_client.get(res.location)
 
-    res = test_client.get("/en/session", follow_redirects=True)
+    res = test_client.get("/en/tokens", follow_redirects=True)
     assert res.status_code == 200
     assert b"Auth Playground" in res.data
 
@@ -183,7 +183,7 @@ def test_refresh_token_form_displays_when_refresh_token_present(test_client):
         }
         sess["user"] = {"sub": "testuser"}
 
-    res = test_client.get("/en/session", follow_redirects=True)
+    res = test_client.get("/en/tokens", follow_redirects=True)
     assert res.status_code == 200
     assert b"Renew tokens" in res.data
 
@@ -217,7 +217,7 @@ def test_refresh_token_success(iam_server, iam_client, user, testapp):
         old_refresh_token = sess["token"].get("refresh_token")
         assert old_refresh_token is not None, "Refresh token should exist after login"
 
-    res = testapp.get("/en/session/tokens")
+    res = testapp.get("/en/tokens/current")
     res = res.forms["refresh-form"].submit("refresh").maybe_follow()
 
     assert "Token successfully refreshed" in res.text
@@ -230,6 +230,11 @@ def test_refresh_token_success(iam_server, iam_client, user, testapp):
 
         assert old_id_token is not None, "Old ID token should exist"
         assert new_id_token is not None, "ID token should still be present"
+        assert sess["token_info"]["grant_type"] == "refresh_token"
+        assert sess["token_info"]["grant"] == "authorization_code"
+
+    res = testapp.get("/en/tokens/current")
+    assert "First obtained with:" in res.text
 
 
 def test_tokens_tab_shows_how_tokens_were_obtained(
@@ -242,7 +247,7 @@ def test_tokens_tab_shows_how_tokens_were_obtained(
     res = test_client.get("/authorize")
     res = iam_server.test_client.get(res.location)
     test_client.get(res.location)
-    res = test_client.get("/en/session/tokens")
+    res = test_client.get("/en/tokens/current")
 
     assert "How these tokens were obtained" in res.text
     assert "<code>authorization_code</code>" in res.text

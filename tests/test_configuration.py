@@ -76,7 +76,7 @@ def test_fixed_server_without_client_shows_client_page(unconfigured_app):
 
 
 def test_session_redirects_to_client_when_server_configured(unconfigured_app):
-    """Test that the session page redirects to /client when server is configured but not client."""
+    """Test that the tokens page redirects to /client when server is configured but not client."""
     test_client = unconfigured_app.test_client()
     with test_client.session_transaction() as sess:
         sess["issuer_url"] = "https://test.example.com"
@@ -86,7 +86,7 @@ def test_session_redirects_to_client_when_server_configured(unconfigured_app):
             "token_endpoint": "https://test.example.com/oauth/token",
         }
 
-    res = test_client.get("/en/session")
+    res = test_client.get("/en/tokens")
     assert res.status_code == 302
     assert "/en/client" in res.location
 

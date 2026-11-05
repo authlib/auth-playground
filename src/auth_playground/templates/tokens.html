@@ -5,23 +5,31 @@
 {% block content %}
     {% if session.token %}
         <nav class="subtabs">
-            <a href="{{ url_for('routes.session', tab='authentication') }}"{% if tab == 'authentication' %} aria-current="page"{% endif %}>{% trans %}Authentication{% endtrans %}</a>
-            <a href="{{ url_for('routes.session', tab='tokens') }}"{% if tab == 'tokens' %} aria-current="page"{% endif %}>{% trans %}Tokens{% endtrans %}</a>
-            <a href="{{ url_for('routes.session', tab='logout') }}"{% if tab == 'logout' %} aria-current="page"{% endif %}>{% trans %}Logout{% endtrans %}</a>
+            <a href="{{ url_for('routes.tokens', tab='request') }}"{% if tab == 'request' %} aria-current="page"{% endif %}>{% trans %}Request{% endtrans %}</a>
+            <a href="{{ url_for('routes.tokens', tab='current') }}"{% if tab == 'current' %} aria-current="page"{% endif %}>{% trans %}Current tokens{% endtrans %}</a>
+            {% if not client_tokens %}
+                <a href="{{ url_for('routes.tokens', tab='logout') }}"{% if tab == 'logout' %} aria-current="page"{% endif %}>{% trans %}Logout{% endtrans %}</a>
+            {% endif %}
         </nav>
 
-        {% if tab == 'authentication' %}
-            <p><small>{% trans %}Re-authenticate or adjust the request — updates auth_time, acr and amr.{% endtrans %}</small></p>
-            {% include "_auth_form.html" %}
+        {% if tab == 'request' %}
+            {% include "_grant_panel.html" %}
 
-        {% elif tab == 'tokens' %}
+        {% elif tab == 'current' %}
             {% if session.token.refresh_token %}
                 {% call render_form(refresh_form, url_for('oauth.refresh'), id="refresh-form") %}
                     {{ refresh_form.refresh() }}
                 {% endcall %}
-                <p><small>{% trans %}Silent refresh — auth_time and acr stay unchanged.{% endtrans %}</small></p>
+                {% if not client_tokens %}
+                    <p><small>{% trans %}Silent refresh — auth_time and acr stay unchanged.{% endtrans %}</small></p>
+                {% endif %}
             {% endif %}
             {% include "_tokens.html" %}
+            {% if client_tokens %}
+                {% call render_form(logout_local_form, url_for('oauth.logout_local'), id="forget-tokens-form") %}
+                    {{ logout_local_form.logout(value=_("Forget tokens")) }}
+                {% endcall %}
+            {% endif %}
 
         {% elif tab == 'logout' %}
             {% call render_form(logout_local_form, url_for('oauth.logout_local'), id="logout-local-form") %}
@@ -29,7 +37,7 @@
             {% endcall %}
             <p><small>{% trans %}Local — this app only; you stay signed in at the provider, so the next sign-in may be silent (SSO).{% endtrans %}</small></p>
 
-            {% if g.server_config and g.server_config.specs and g.server_config.specs.oidc_rpinitiated_logout %}
+            {% if not client_tokens and g.server_config and g.server_config.specs and g.server_config.specs.oidc_rpinitiated_logout %}
                 {% call render_form(logout_params_form, url_for('oauth.logout'), id="logout-params-form") %}
                     {{ logout_params_form.id_token_hint() }}
                     {{ logout_params_form.client_id() }}
@@ -46,16 +54,16 @@
 
     {% else %}
         <hgroup>
-            <h2>{% trans %}No active session{% endtrans %}</h2>
-            <p>{% trans %}Sign in to explore OAuth 2.0 and OpenID Connect flows: authentication, token refresh, and logout.{% endtrans %}</p>
+            <h2>{% trans %}Get tokens{% endtrans %}</h2>
+            <p>{% trans %}Choose how the client obtains its tokens: for a user who signs in, or for the client itself.{% endtrans %}</p>
         </hgroup>
 
-        {% include "_auth_form.html" %}
+        {% include "_grant_panel.html" %}
     {% endif %}
 {% endblock %}
 
 {% block scripts %}
-    {% if tab == 'tokens' %}
+    {% if tab == 'current' %}
         <script src="{{ url_for('static', filename='js/copy-token.js') }}"></script>
     {% endif %}
 {% endblock %}

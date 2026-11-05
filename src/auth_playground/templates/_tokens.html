@@ -4,6 +4,9 @@
             <h3>{% trans %}How these tokens were obtained{% endtrans %}</h3>
             <ul>
                 <li><strong>{% trans %}Grant type:{% endtrans %}</strong> <code>{{ session.token_info.grant_type }}</code></li>
+                {% if session.token_info.grant and session.token_info.grant != session.token_info.grant_type %}
+                    <li><strong>{% trans %}First obtained with:{% endtrans %}</strong> <code>{{ session.token_info.grant }}</code></li>
+                {% endif %}
                 {% if session.token_info.client_auth %}
                     <li><strong>{% trans %}Client authentication:{% endtrans %}</strong> <code>{{ session.token_info.client_auth }}</code></li>
                 {% endif %}
@@ -18,6 +21,9 @@
                 {% endif %}
                 <li><strong>{% trans %}Obtained at:{% endtrans %}</strong> {{ session.token_info.obtained_at|datetimeformat }}</li>
             </ul>
+            {% if client_tokens %}
+                <p><small>{% trans %}These tokens are not tied to a user, so there are no user claims to show.{% endtrans %}</small></p>
+            {% endif %}
         </article>
     {% endif %}
 
@@ -199,7 +205,11 @@
         {% if session.token and session.token.access_token %}
             <article>
                 <h3>{% trans %}Access token{% endtrans %}</h3>
-                <p><small>{% trans %}Used to access protected resources on behalf of the user.{% endtrans %}</small></p>
+                {% if client_tokens %}
+                    <p><small>{% trans %}Used to access protected resources on behalf of the client.{% endtrans %}</small></p>
+                {% else %}
+                    <p><small>{% trans %}Used to access protected resources on behalf of the user.{% endtrans %}</small></p>
+                {% endif %}
                 <div role="group">
                     <input type="text" value="{{ session.token.access_token }}" readonly aria-label="Access Token">
                     <button type="button" class="copy-token-btn secondary">{% trans %}Copy{% endtrans %}</button>

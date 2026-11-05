@@ -1,0 +1,27 @@
+<div id="grant-panel">
+    {% set grant_url = url_for('routes.tokens', tab=tab) %}
+    <form method="GET" action="{{ grant_url }}" id="grant-selector" hx-get="{{ grant_url }}" hx-trigger="change" hx-select="#grant-panel" hx-target="#grant-panel" hx-swap="outerHTML" hx-push-url="true">
+        {{ grant_selector.grant() }}
+        <noscript>{{ grant_selector.choose() }}</noscript>
+    </form>
+
+    <p class="grant-description">
+        {{ grant.description }}
+        {% for label, url in grant.references %}
+            <a href="{{ url }}" target="_blank" rel="noopener noreferrer">{{ label }}</a>{% if not loop.last %} ·{% endif %}
+        {% endfor %}
+    </p>
+
+    {% if not grant.advertised %}
+        <article class="notice" data-type="warning">
+            {% trans grant_type=grant.value %}The provider does not advertise the {{ grant_type }} grant type. It may reject the request.{% endtrans %}
+        </article>
+    {% endif %}
+    {% if grant.confidential_client and public_client %}
+        <article class="notice" data-type="warning">
+            {% trans %}This grant type is for confidential clients, and this client is public. The provider will likely reject the request.{% endtrans %}
+        </article>
+    {% endif %}
+
+    {% include "_grant_" ~ grant.value ~ ".html" %}
+</div>

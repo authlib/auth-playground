@@ -37,15 +37,22 @@ from wtforms.widgets import html_params
 
 import auth_playground
 from auth_playground.authorization import PKCE_METHODS
+from auth_playground.authorization import RESERVED_PARAMS
 from auth_playground.authorization import authorization_preview
 from auth_playground.authorization import parse_extra_params
 from auth_playground.client_auth import METHODS
 from auth_playground.client_auth import PUBLIC_METHOD
 from auth_playground.client_auth import SECRET_METHODS
 from auth_playground.client_auth import advertised_methods
+from auth_playground.grants import GRANTS
+from auth_playground.grants import advertised_grant_types
 from auth_playground.session import server_metadata
+from auth_playground.token_request import TOKEN_RESERVED_PARAMS
+from auth_playground.token_request import client_credentials_preview
 
-REGISTRABLE_GRANT_TYPES = ("authorization_code", "refresh_token")
+REGISTRABLE_GRANT_TYPES = ("authorization_code", "refresh_token", "client_credentials")
+
+DEFAULT_REGISTERED_GRANT_TYPES = ["authorization_code", "refresh_token"]
 
 BARE_FIELDS = (
     HiddenField,
@@ -204,15 +211,17 @@ class ServerConfigForm(BaseForm):
     discover = SubmitField(_("Continue"), render_kw={"class": "primary"})
 
 
+def advertised_label(label, advertised):
+    """Mark the label of a value the server does not advertise."""
+    if advertised:
+        return label
+    return _("{value} (not advertised)").format(value=label)
+
+
 def advertised_choices(values, advertised):
     """Build the choices of values, labelling the ones the server does not advertise."""
     return [
-        SelectChoice(
-            value,
-            value
-            if value in advertised
-            else _("{value} (not advertised)").format(value=value),
-        )
+        SelectChoice(value, advertised_label(value, value in advertised))
         for value in values
     ]
 
@@ -229,14 +238,8 @@ def auth_method_default(methods):
 
 
 def get_grant_type_choices():
-    """Label the grant types the server does not advertise.
-
-    Per RFC 8414 §2, the default is ``authorization_code`` and ``implicit``.
-    """
-    advertised = server_metadata().get(
-        "grant_types_supported", ["authorization_code", "implicit"]
-    )
-    return advertised_choices(REGISTRABLE_GRANT_TYPES, advertised)
+    """Label the grant types the server does not advertise."""
+    return advertised_choices(REGISTRABLE_GRANT_TYPES, advertised_grant_types())
 
 
 def disable_for_public_client(form, source, target):
@@ -306,7 +309,7 @@ class DynamicRegistrationForm(BaseForm):
     grant_types = SelectMultipleField(
         _("Grant types to register:"),
         choices=get_grant_type_choices,
-        default=list(REGISTRABLE_GRANT_TYPES),
+        default=DEFAULT_REGISTERED_GRANT_TYPES,
         validators=[InputRequired(message=_("Choose at least one grant type."))],
         widget=ListWidget(prefix_label=False),
         option_widget=CheckboxInput(),
@@ -396,11 +399,59 @@ class RequestPreviewField(Field):
         pass
 
 
-class AuthorizationParamsForm(BaseForm):
-    """Form to customize OAuth authorization parameters."""
+def scopes_field(default=None):
+    """Return a field to check the scopes the server supports."""
+    return SelectMultipleField(
+        _("Scopes:"),
+        choices=get_scopes_choices,
+        default=default,
+        description=_("Select the scopes to request from the authorization server"),
+        widget=ListWidget(prefix_label=False),
+        option_widget=CheckboxInput(),
+    )
+
+
+class RequestParamsForm(BaseForm):
+    """Parameters common to the requests that obtain tokens.
+
+    The form validates its fields inline at ``endpoint``, where it is posted.
+    """
+
+    endpoint = None
+    reserved_params = RESERVED_PARAMS
 
     class Meta:
         htmx_inline_validation = True
+
+    other_scopes = StringField(
+        _("Other scopes:"),
+        description=_("Space-separated, sent as they are."),
+    )
+    extra_params = TextAreaField(
+        _("Extra parameters:"),
+        description=_("One name=value per line, added to the request as they are."),
+        render_kw={"placeholder": "resource=https://api.example.com"},
+    )
+
+    def __init__(self, *args, **kwargs):
+        meta = {"htmx_endpoint": url_for(self.endpoint)}
+        super().__init__(*args, meta={**meta, **kwargs.pop("meta", {})}, **kwargs)
+
+    def validate_extra_params(self, field):
+        _pairs, errors = parse_extra_params(field.data, self.reserved_params)
+        if errors:
+            raise ValidationError(
+                _(
+                    "Each line must be name=value, with a parameter the playground "
+                    "does not set itself: {errors}"
+                ).format(errors=", ".join(errors))
+            )
+
+
+class AuthorizationParamsForm(RequestParamsForm):
+    """Form to customize OAuth authorization parameters."""
+
+    endpoint = "oauth.authorize"
 
     pkce = SelectField(
         _("PKCE:"),
@@ -410,18 +461,7 @@ class AuthorizationParamsForm(BaseForm):
             "Sends a code_challenge here, and the code_verifier with the token request."
         ),
     )
-    scopes = SelectMultipleField(
-        _("Scopes:"),
-        choices=get_scopes_choices,
-        default=get_scopes_default,
-        description=_("Select the scopes to request from the authorization server"),
-        widget=ListWidget(prefix_label=False),
-        option_widget=CheckboxInput(),
-    )
-    other_scopes = StringField(
-        _("Other scopes:"),
-        description=_("Space-separated, sent as they are."),
-    )
+    scopes = scopes_field(default=get_scopes_default)
     prompt = SelectField(
         _("Prompt:"),
         choices=get_prompt_choices,
@@ -457,19 +497,10 @@ class AuthorizationParamsForm(BaseForm):
             "Specific claims to request, as an OIDC claims JSON object (advanced)."
         ),
     )
-    extra_params = TextAreaField(
-        _("Extra parameters:"),
-        description=_("One name=value per line, added to the request as they are."),
-        render_kw={"placeholder": "resource=https://api.example.com"},
-    )
     preview = RequestPreviewField(
         _("Authorization request"), build=authorization_preview, wrapper=False
     ).triggered_by("*")
     sign_in = ButtonField(_("Sign in"), render_kw={"class": "primary"})
-
-    def __init__(self, *args, **kwargs):
-        meta = {"htmx_endpoint": url_for("oauth.authorize")}
-        super().__init__(*args, meta={**meta, **kwargs.pop("meta", {})}, **kwargs)
 
     def validate_claims(self, field):
         if not field.data:
@@ -483,15 +514,40 @@ class AuthorizationParamsForm(BaseForm):
         if not isinstance(claims, dict):
             raise ValidationError(_("Claims must be a JSON object."))
 
-    def validate_extra_params(self, field):
-        _pairs, errors = parse_extra_params(field.data)
-        if errors:
-            raise ValidationError(
-                _(
-                    "Each line must be name=value, with a parameter the playground "
-                    "does not set itself: {errors}"
-                ).format(errors=", ".join(errors))
-            )
+
+class ClientCredentialsForm(RequestParamsForm):
+    """Form to request tokens for the client itself (RFC 6749 §4.4)."""
+
+    endpoint = "oauth.client_credentials"
+    reserved_params = TOKEN_RESERVED_PARAMS
+
+    scopes = scopes_field()
+    preview = RequestPreviewField(
+        _("Token request"), build=client_credentials_preview, wrapper=False
+    ).triggered_by("*")
+    request_tokens = ButtonField(_("Request tokens"), render_kw={"class": "primary"})
+
+
+def get_grant_choices():
+    """Group the grant types, and label the ones the server does not advertise."""
+    return [
+        SelectChoice(
+            grant.value,
+            advertised_label(grant.label, grant.advertised),
+            optgroup=grant.group,
+        )
+        for grant in GRANTS
+    ]
+
+
+class GrantForm(BaseForm):
+    """Choose the grant type used to obtain tokens."""
+
+    class Meta:
+        csrf = False
+
+    grant = SelectField(_("Grant type:"), choices=get_grant_choices)
+    choose = SubmitField(_("Choose"), render_kw={"class": "secondary"})
 
 
 class LogoutParamsForm(BaseForm):

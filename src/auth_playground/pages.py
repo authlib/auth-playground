@@ -2,18 +2,32 @@
 
 from flask import current_app
 from flask import render_template
+from flask import request
 from flask import session
 from flask import url_for
 
 import auth_playground
+from auth_playground.client_auth import PUBLIC_METHOD
 from auth_playground.forms import AuthorizationParamsForm
+from auth_playground.forms import ClientCredentialsForm
+from auth_playground.forms import GrantForm
 from auth_playground.forms import LogoutLocalForm
 from auth_playground.forms import LogoutParamsForm
 from auth_playground.forms import RefreshTokenForm
+from auth_playground.grants import client_tokens
+from auth_playground.grants import get_grant
+
+GRANT_FORMS = {
+    "authorization_code": AuthorizationParamsForm,
+    "client_credentials": ClientCredentialsForm,
+}
 
 
-def render_session_page(tab, auth_params_form=None):
-    """Render a tab of the session page."""
+def render_tokens_page(tab, grant=None, grant_form=None):
+    """Render a tab of the tokens page.
+
+    The grant type comes from ``grant``, or else from the query string.
+    """
     oauth_config = auth_playground.get_oauth_config(current_app)
     logout_params_form = LogoutParamsForm(
         data={
@@ -24,14 +38,22 @@ def render_session_page(tab, auth_params_form=None):
             ),
         }
     )
-    if auth_params_form is None:
-        auth_params_form = AuthorizationParamsForm()
+    grant = get_grant(grant or request.args.get("grant"))
+    grant_forms = {}
+    if tab == "request":
+        grant_forms = {
+            "grant_selector": GrantForm(data={"grant": grant.value}),
+            "grant_form": grant_form or GRANT_FORMS[grant.value](),
+        }
 
     return render_template(
-        "session.html",
+        "tokens.html",
         tab=tab,
         refresh_form=RefreshTokenForm(),
-        auth_params_form=auth_params_form,
+        grant=grant,
+        client_tokens=client_tokens(),
+        public_client=oauth_config.get("token_endpoint_auth_method") == PUBLIC_METHOD,
+        **grant_forms,
         logout_local_form=LogoutLocalForm(),
         logout_params_form=logout_params_form,
     )

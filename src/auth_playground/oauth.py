@@ -1,6 +1,7 @@
 import importlib.metadata
 import time
 import uuid
+from urllib.parse import urlencode
 
 import requests
 from authlib.common.errors import AuthlibBaseError
@@ -20,17 +21,21 @@ import auth_playground
 from auth_playground.authorization import authorization_params
 from auth_playground.authorization import new_code_verifier
 from auth_playground.authorization import pkce_params
+from auth_playground.authorization import requested_scope
 from auth_playground.client_auth import METHODS
 from auth_playground.client_auth import PUBLIC_METHOD
 from auth_playground.decorators import server_config_needed
 from auth_playground.forms import AuthorizationParamsForm
+from auth_playground.forms import ClientCredentialsForm
 from auth_playground.forms import DynamicRegistrationForm
 from auth_playground.forms import LogoutLocalForm
 from auth_playground.forms import LogoutParamsForm
 from auth_playground.forms import RefreshTokenForm
 from auth_playground.forms import UnregisterClientForm
-from auth_playground.pages import render_session_page
+from auth_playground.grants import client_tokens
+from auth_playground.pages import render_tokens_page
 from auth_playground.session import server_metadata
+from auth_playground.token_request import extra_token_params
 
 bp = Blueprint("oauth", __name__)
 
@@ -74,10 +79,16 @@ def get_response_error(exc: requests.RequestException) -> str | None:
     return error if isinstance(error, str) else None
 
 
-def clear_user_session():
-    """Clear user and token data from the session."""
-    for key in ("user", "token", "token_info", "authorization_requests"):
+def forget_tokens():
+    """Forget the user and the tokens."""
+    for key in ("user", "token", "token_info"):
         session.pop(key, None)
+
+
+def clear_user_session():
+    """Forget the user, the tokens and the pending authorization requests."""
+    forget_tokens()
+    session.pop("authorization_requests", None)
 
 
 @bp.route("/client/dynamic-registration", methods=["POST"])
@@ -198,7 +209,7 @@ def client_dynamic_registration():
         _("Client successfully registered!"),
         "success",
     )
-    return redirect(url_for("routes.session"))
+    return redirect(url_for("routes.tokens"))
 
 
 @bp.route("/unregister-client", methods=["POST"])
@@ -254,7 +265,9 @@ def authorize():
     if request.method == "POST" and not form.validate_on_submit():
         if "csrf_token" in form.errors:
             flash(_("Invalid request"), "error")
-        return render_session_page("authentication", auth_params_form=form)
+        return render_tokens_page(
+            "request", grant="authorization_code", grant_form=form
+        )
 
     params = authorization_params(form)
     if request.method == "GET" and "user" in session:
@@ -291,8 +304,12 @@ def pop_authorization_request(state):
 
 
 def store_token(token, grant_type, requested_scope=None, pkce=None):
-    """Store the token and how it was obtained in the session."""
+    """Store the token and how it was obtained in the session.
+
+    ``grant`` is the grant type that first obtained the tokens. A refresh keeps it.
+    """
     old_token = session.get("token", {})
+    old_info = session.get("token_info", {})
     session["token"] = {
         "access_token": token.get("access_token"),
         "refresh_token": token.get("refresh_token") or old_token.get("refresh_token"),
@@ -305,6 +322,7 @@ def store_token(token, grant_type, requested_scope=None, pkce=None):
     oauth_config = auth_playground.get_oauth_config(current_app)
     session["token_info"] = {
         "grant_type": grant_type,
+        "grant": old_info.get("grant") if grant_type == "refresh_token" else grant_type,
         "client_auth": oauth_config.get("token_endpoint_auth_method"),
         "pkce": pkce,
         "requested_scope": requested_scope,
@@ -312,6 +330,54 @@ def store_token(token, grant_type, requested_scope=None, pkce=None):
         "obtained_at": int(time.time()),
         "response": {key: value for key, value in token.items() if key != "userinfo"},
     }
+
+
+@bp.route("/token/client-credentials", methods=["POST"])
+@server_config_needed
+def client_credentials():
+    """Request tokens for the client itself, without any user."""
+    form = ClientCredentialsForm()
+    if not form.validate_on_submit():
+        if "csrf_token" in form.errors:
+            flash(_("Invalid request"), "error")
+        return render_tokens_page(
+            "request", grant="client_credentials", grant_form=form
+        )
+
+    if not server_metadata().get("token_endpoint"):
+        flash(_("The provider has no token endpoint."), "error")
+        return render_tokens_page(
+            "request", grant="client_credentials", grant_form=form
+        )
+
+    scope = requested_scope(form)
+    try:
+        # An empty scope keeps Authlib from sending the default scope.
+        token = auth_playground.oauth.default.fetch_access_token(
+            grant_type="client_credentials",
+            scope=scope,
+            body=urlencode(extra_token_params(form)),
+            timeout=10,
+        )
+    except AuthlibBaseError as exc:
+        error = exc.description or exc.error
+    except requests.HTTPError as exc:
+        error = get_response_error(exc) or str(exc)
+    except (requests.RequestException, ValueError) as exc:
+        error = str(exc)
+    else:
+        error = None
+
+    if error:
+        flash(_("The token request failed: {error}").format(error=error), "error")
+        return render_tokens_page(
+            "request", grant="client_credentials", grant_form=form
+        )
+
+    forget_tokens()
+    store_token(token, "client_credentials", requested_scope=scope or None)
+    flash(_("The client obtained tokens."), "success")
+    return redirect(url_for("routes.tokens", tab="current"))
 
 
 @bp.route("/authorize_callback")
@@ -331,7 +397,7 @@ def authorize_callback():
             ),
             "error",
         )
-        return redirect(url_for("routes.session"))
+        return redirect(url_for("routes.tokens"))
 
     session.pop("token", None)
     session["user"] = token.get("userinfo")
@@ -342,7 +408,7 @@ def authorize_callback():
         pkce=pending.get("pkce"),
     )
     flash(_("You have been successfully logged in."), "success")
-    return redirect(url_for("routes.session"))
+    return redirect(url_for("routes.tokens"))
 
 
 @bp.route("/logout/local", methods=["POST"])
@@ -351,11 +417,16 @@ def logout_local():
     form = LogoutLocalForm()
     if not form.validate_on_submit():
         flash(_("Invalid request"), "error")
-        return redirect(url_for("routes.session"))
+        return redirect(url_for("routes.tokens"))
 
+    message = (
+        _("The tokens were forgotten")
+        if client_tokens()
+        else _("You have been logged out")
+    )
     clear_user_session()
-    flash(_("You have been logged out"), "success")
-    return redirect(url_for("routes.session"))
+    flash(message, "success")
+    return redirect(url_for("routes.tokens"))
 
 
 @bp.route("/logout", methods=["GET", "POST"])
@@ -402,7 +473,7 @@ def logout_callback():
 
     clear_user_session()
     flash(_("You have been logged out from the server"), "success")
-    return redirect(url_for("routes.session"))
+    return redirect(url_for("routes.tokens"))
 
 
 @bp.route("/refresh", methods=["POST"])
@@ -411,12 +482,12 @@ def refresh():
     form = RefreshTokenForm()
     if not form.validate_on_submit():
         flash(_("Invalid request"), "error")
-        return redirect(url_for("routes.session"))
+        return redirect(url_for("routes.tokens"))
 
     refresh_token = session.get("token", {}).get("refresh_token")
     if not refresh_token:
         flash(_("No refresh token available"), "error")
-        return redirect(url_for("routes.session"))
+        return redirect(url_for("routes.tokens"))
 
     try:
         original_scope = session.get("token", {}).get("scope", "")
@@ -436,4 +507,4 @@ def refresh():
             "error",
         )
 
-    return redirect(url_for("routes.session"))
+    return redirect(url_for("routes.tokens"))

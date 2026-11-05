@@ -11,38 +11,10 @@ from auth_playground.authorization import DEFAULT_SCOPE
 from auth_playground.authorization import parse_extra_params
 from auth_playground.forms import DynamicRegistrationForm
 from auth_playground.forms import disable_for_public_client
+from tests.fake_provider import METADATA
+from tests.fake_provider import server_session
 
-METADATA = {
-    "issuer": "https://test.example.com",
-    "authorization_endpoint": "https://test.example.com/oauth/authorize",
-    "token_endpoint": "https://test.example.com/oauth/token",
-    "registration_endpoint": "https://test.example.com/oauth/register",
-    "scopes_supported": ["openid", "profile"],
-    "code_challenge_methods_supported": ["S256", "plain"],
-    "token_endpoint_auth_methods_supported": ["client_secret_basic", "none"],
-}
-
-
-@pytest.fixture(autouse=True)
-def provider_metadata():
-    """Serve the provider metadata without network."""
-    with patch(
-        "authlib.integrations.base_client.sync_app.OAuth2Mixin.load_server_metadata",
-        return_value=METADATA,
-    ):
-        yield
-
-
-def server_session(client, oauth_config=None):
-    """Store a configured server, and optionally a client, in the session."""
-    with client.session_transaction() as sess:
-        sess["issuer_url"] = "https://test.example.com"
-        sess["server_metadata"] = METADATA
-        if oauth_config:
-            sess["oauth_config"] = {
-                "auth_server": "https://test.example.com",
-                **oauth_config,
-            }
+pytestmark = pytest.mark.usefixtures("provider_metadata")
 
 
 def authorization_query(res):
@@ -184,9 +156,7 @@ def test_authorize_uses_s256_by_default(unconfigured_test_client):
 def test_authorize_with_chosen_pkce(unconfigured_testapp, method):
     """Test the PKCE method chosen in the form."""
     server_session(unconfigured_testapp, {"client_id": "c", "client_secret": "s"})
-    form = unconfigured_testapp.get("/en/session/authentication").forms[
-        "auth-params-form"
-    ]
+    form = unconfigured_testapp.get("/en/tokens/request").forms["auth-params-form"]
     form["pkce"] = method
     res = form.submit("sign_in")
 
@@ -205,9 +175,7 @@ def test_authorize_with_chosen_pkce(unconfigured_testapp, method):
 def test_authorize_with_other_scopes_and_extra_params(unconfigured_testapp):
     """Test the other scopes and the extra parameters are sent."""
     server_session(unconfigured_testapp, {"client_id": "c", "client_secret": "s"})
-    form = unconfigured_testapp.get("/en/session/authentication").forms[
-        "auth-params-form"
-    ]
+    form = unconfigured_testapp.get("/en/tokens/request").forms["auth-params-form"]
     form["other_scopes"] = "offline_access openid"
     form["extra_params"] = "resource=https://api.example.com\n\naudience = api"
     res = form.submit("sign_in")
@@ -232,9 +200,7 @@ def test_authorize_refuses_invalid_parameters(
 ):
     """Test the authorization request is not sent with invalid parameters."""
     server_session(unconfigured_testapp, {"client_id": "c", "client_secret": "s"})
-    form = unconfigured_testapp.get("/en/session/authentication").forms[
-        "auth-params-form"
-    ]
+    form = unconfigured_testapp.get("/en/tokens/request").forms["auth-params-form"]
     form[field] = value
     res = form.submit("sign_in")
 
@@ -253,7 +219,7 @@ def test_parse_extra_params():
 def test_preview_shows_the_authorization_request(unconfigured_test_client):
     """Test the preview of the authorization request on the page."""
     server_session(unconfigured_test_client, {"client_id": "c", "client_secret": "s"})
-    res = unconfigured_test_client.get("/en/session/authentication")
+    res = unconfigured_test_client.get("/en/tokens/request")
 
     assert "GET https://test.example.com/oauth/authorize" in res.text
     assert "code_challenge_method=S256" in res.text
@@ -343,9 +309,7 @@ def test_callback_sends_the_verifier_of_its_state(unconfigured_test_client):
 def test_repeated_extra_params_are_all_sent(unconfigured_testapp):
     """Test an extra parameter given on several lines is sent several times."""
     server_session(unconfigured_testapp, {"client_id": "c", "client_secret": "s"})
-    form = unconfigured_testapp.get("/en/session/authentication").forms[
-        "auth-params-form"
-    ]
+    form = unconfigured_testapp.get("/en/tokens/request").forms["auth-params-form"]
     form["extra_params"] = "resource=https://a.example\nresource=https://b.example"
     res = form.submit("sign_in")
 
@@ -378,7 +342,7 @@ def test_preview_lists_repeated_extra_params(unconfigured_test_client, csrf_toke
 def test_authorize_without_scope_sends_the_default_scope(unconfigured_testapp):
     """Test the default scope is sent and shown when no scope is chosen."""
     server_session(unconfigured_testapp, {"client_id": "c", "client_secret": "s"})
-    page = unconfigured_testapp.get("/en/session/authentication")
+    page = unconfigured_testapp.get("/en/tokens/request")
     form = page.forms["auth-params-form"]
     for checkbox in form.fields["scopes"]:
         checkbox.checked = False
@@ -391,9 +355,7 @@ def test_authorize_without_scope_sends_the_default_scope(unconfigured_testapp):
 def test_authorize_refuses_authlib_argument_names(unconfigured_testapp, name):
     """Test the extra parameters cannot use the names of Authlib arguments."""
     server_session(unconfigured_testapp, {"client_id": "c", "client_secret": "s"})
-    form = unconfigured_testapp.get("/en/session/authentication").forms[
-        "auth-params-form"
-    ]
+    form = unconfigured_testapp.get("/en/tokens/request").forms["auth-params-form"]
     form["extra_params"] = f"{name}=x"
     res = form.submit("sign_in")
 
@@ -427,7 +389,11 @@ def test_invalid_manual_form_keeps_the_registration_form(unconfigured_testapp):
     res = form.submit("save")
 
     registration = res.forms["dynamic-registration-form"]
-    assert [box.checked for box in registration.fields["grant_types"]] == [True, True]
+    assert [box.checked for box in registration.fields["grant_types"]] == [
+        True,
+        True,
+        False,
+    ]
 
 
 @pytest.mark.parametrize(
@@ -457,9 +423,7 @@ def test_pkce_default_without_advertised_methods(
 def test_invalid_field_is_marked_for_blades(unconfigured_testapp):
     """Test an invalid field gets aria-invalid and its message right after it."""
     server_session(unconfigured_testapp, {"client_id": "c", "client_secret": "s"})
-    form = unconfigured_testapp.get("/en/session/authentication").forms[
-        "auth-params-form"
-    ]
+    form = unconfigured_testapp.get("/en/tokens/request").forms["auth-params-form"]
     form["claims"] = "[1]"
     res = form.submit("sign_in")
 
@@ -483,7 +447,7 @@ def test_invalid_checkbox_list_is_marked_for_blades(unconfigured_app):
 def test_htmx_partial_uses_the_browsing_language(unconfigured_test_client, csrf_token):
     """Test a route without language prefix answers in the session language."""
     server_session(unconfigured_test_client, {"client_id": "c", "client_secret": "s"})
-    unconfigured_test_client.get("/fr/session/authentication")
+    unconfigured_test_client.get("/fr/tokens/request")
     res = unconfigured_test_client.post(
         "/authorize",
         data={"csrf_token": csrf_token(unconfigured_test_client), "max_age": "-1"},
@@ -503,7 +467,7 @@ def test_redirect_flash_uses_the_browsing_language(
 ):
     """Test a flash message from a route without prefix is translated."""
     server_session(unconfigured_test_client, {"client_id": "c", "client_secret": "s"})
-    unconfigured_test_client.get("/fr/session/authentication")
+    unconfigured_test_client.get("/fr/tokens/request")
     res = unconfigured_test_client.post(
         "/refresh",
         data={"csrf_token": csrf_token(unconfigured_test_client)},
