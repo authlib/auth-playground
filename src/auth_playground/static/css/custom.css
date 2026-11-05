@@ -1,6 +1,15 @@
 /* Auth Playground Custom Styles */
 
 /* Orange color theme */
+:root {
+    --pico-color-orange-200: #f8b79f;
+    --pico-color-orange-300: #f68e68;
+    --pico-color-orange-400: #f45d2c;
+    --pico-color-orange-500: #d24317;
+    --pico-color-orange-600: #a83410;
+    --pico-color-orange-800: #561e0a;
+}
+
 [data-theme="light"],
 :root:not([data-theme="dark"]) {
     --pico-primary: var(--pico-color-orange-500);

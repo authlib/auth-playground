@@ -2,9 +2,9 @@
   "name": "auth-playground",
   "private": true,
   "scripts": {
-    "vendor": "rm -rf src/auth_playground/static/vendor && mkdir -p src/auth_playground/static/vendor/pico && cp node_modules/@picocss/pico/css/pico.min.css node_modules/@picocss/pico/css/pico.colors.min.css src/auth_playground/static/vendor/pico/"
+    "vendor": "rm -rf src/auth_playground/static/vendor && mkdir -p src/auth_playground/static/vendor/blades && cp node_modules/@anyblades/blades/css/pico.min.css src/auth_playground/static/vendor/blades/"
   },
   "dependencies": {
-    "@picocss/pico": "2.1.1"
+    "@anyblades/blades": "3.1.1"
   }
 }

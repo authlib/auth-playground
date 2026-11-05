@@ -171,7 +171,7 @@ jobs:
 
           curl -fsSL --retry 30 --retry-delay 1 --retry-connrefused -o /dev/null http://localhost:4000/en/
           curl -fsSL -o /dev/null http://localhost:4000/fr/
-          curl -fsSL -o /dev/null http://localhost:4000/static/vendor/pico/pico.min.css
+          curl -fsSL -o /dev/null http://localhost:4000/static/vendor/blades/pico.min.css
 
   docker:
     name: docker build
@@ -204,7 +204,7 @@ jobs:
             exit 1
           }
 
-          for path in / /fr/ /static/vendor/pico/pico.min.css; do
+          for path in / /fr/ /static/vendor/blades/pico.min.css; do
             curl -fsSL -o /dev/null "http://localhost:4000$path" || {
               echo "App failed to respond on $path"
               docker logs test-app

@@ -140,7 +140,7 @@ Their files are copied in `src/auth_playground/static/vendor` and committed, so 
 To update a dependency, install the new version and copy its files:
 
 ```bash
-npm install @picocss/pico@2.1.1
+npm install @anyblades/blades@3.1.1
 npm run vendor
 ```
 
