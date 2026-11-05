@@ -3,6 +3,7 @@ import os
 import pytest
 from babel.messages.frontend import CompileCatalog
 from flask import session
+from flask_webtest import TestApp
 from flask_wtf.csrf import generate_csrf
 
 from auth_playground import create_app
@@ -86,6 +87,18 @@ def test_client(app):
 def unconfigured_test_client(unconfigured_app):
     """Create a test client for the unconfigured Flask application."""
     return unconfigured_app.test_client()
+
+
+@pytest.fixture
+def testapp(app):
+    """Create a WebTest client for the configured Flask application."""
+    return TestApp(app)
+
+
+@pytest.fixture
+def unconfigured_testapp(unconfigured_app):
+    """Create a WebTest client for the unconfigured Flask application."""
+    return TestApp(unconfigured_app)
 
 
 @pytest.fixture

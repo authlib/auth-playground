@@ -43,116 +43,34 @@ def test_fetch_server_metadata_raises_non_404_errors():
             fetch_server_metadata("https://test.example.com")
 
 
-def test_handle_fetch_metadata_errors_connection_error(
-    unconfigured_test_client, csrf_token
-):
-    """Test handle_fetch_metadata_errors with connection error."""
-    with patch("auth_playground.endpoints.fetch_server_metadata") as mock_fetch:
-        mock_fetch.side_effect = requests.exceptions.ConnectionError()
-
-        res = unconfigured_test_client.post(
-            "/en/server",
-            data={
-                "issuer_url": "https://test.example.com",
-                "csrf_token": csrf_token(unconfigured_test_client),
-            },
-            follow_redirects=False,
-        )
-
-        assert b"Cannot connect" in res.data
+def http_error(status_code):
+    """Build an HTTP error with the given status code."""
+    response = Mock()
+    response.status_code = status_code
+    return requests.exceptions.HTTPError(response=response)
 
 
-def test_handle_fetch_metadata_errors_timeout(unconfigured_test_client, csrf_token):
-    """Test handle_fetch_metadata_errors with timeout error."""
-    with patch("auth_playground.endpoints.fetch_server_metadata") as mock_fetch:
-        mock_fetch.side_effect = requests.exceptions.Timeout()
+@pytest.mark.parametrize(
+    "exception,message",
+    [
+        (requests.exceptions.ConnectionError(), "Cannot connect"),
+        (requests.exceptions.Timeout(), "timeout"),
+        (http_error(404), "not support"),
+        (http_error(500), "HTTP 500"),
+        (requests.RequestException(), "Failed to connect"),
+        (requests.JSONDecodeError("Expecting value", "", 0), "Invalid response"),
+    ],
+)
+def test_handle_fetch_metadata_errors(unconfigured_testapp, exception, message):
+    """Test the error messages when the server metadata cannot be loaded."""
+    form = unconfigured_testapp.get("/en/server").forms["server-form"]
+    form["issuer_url"] = "https://test.example.com"
+    with patch(
+        "auth_playground.endpoints.fetch_server_metadata", side_effect=exception
+    ):
+        res = form.submit()
 
-        res = unconfigured_test_client.post(
-            "/en/server",
-            data={
-                "issuer_url": "https://test.example.com",
-                "csrf_token": csrf_token(unconfigured_test_client),
-            },
-            follow_redirects=False,
-        )
-
-        assert b"timeout" in res.data
-
-
-def test_handle_fetch_metadata_errors_404(unconfigured_test_client, csrf_token):
-    """Test handle_fetch_metadata_errors with 404 error."""
-    with patch("auth_playground.endpoints.fetch_server_metadata") as mock_fetch:
-        response = Mock()
-        response.status_code = 404
-        mock_fetch.side_effect = requests.exceptions.HTTPError(response=response)
-
-        res = unconfigured_test_client.post(
-            "/en/server",
-            data={
-                "issuer_url": "https://test.example.com",
-                "csrf_token": csrf_token(unconfigured_test_client),
-            },
-            follow_redirects=False,
-        )
-
-        assert b"not support" in res.data
-
-
-def test_handle_fetch_metadata_errors_non_404_http_error(
-    unconfigured_test_client, csrf_token
-):
-    """Test handle_fetch_metadata_errors with non-404 HTTP error."""
-    with patch("auth_playground.endpoints.fetch_server_metadata") as mock_fetch:
-        response = Mock()
-        response.status_code = 500
-        mock_fetch.side_effect = requests.exceptions.HTTPError(response=response)
-
-        res = unconfigured_test_client.post(
-            "/en/server",
-            data={
-                "issuer_url": "https://test.example.com",
-                "csrf_token": csrf_token(unconfigured_test_client),
-            },
-            follow_redirects=False,
-        )
-
-        assert b"HTTP 500" in res.data
-
-
-def test_handle_fetch_metadata_errors_request_exception(
-    unconfigured_test_client, csrf_token
-):
-    """Test handle_fetch_metadata_errors with generic request exception."""
-    with patch("auth_playground.endpoints.fetch_server_metadata") as mock_fetch:
-        mock_fetch.side_effect = requests.RequestException()
-
-        res = unconfigured_test_client.post(
-            "/en/server",
-            data={
-                "issuer_url": "https://test.example.com",
-                "csrf_token": csrf_token(unconfigured_test_client),
-            },
-            follow_redirects=False,
-        )
-
-        assert b"Failed to connect" in res.data
-
-
-def test_handle_fetch_metadata_errors_value_error(unconfigured_test_client, csrf_token):
-    """Test handle_fetch_metadata_errors with invalid JSON response."""
-    with patch("auth_playground.endpoints.fetch_server_metadata") as mock_fetch:
-        mock_fetch.side_effect = requests.JSONDecodeError("Expecting value", "", 0)
-
-        res = unconfigured_test_client.post(
-            "/en/server",
-            data={
-                "issuer_url": "https://test.example.com",
-                "csrf_token": csrf_token(unconfigured_test_client),
-            },
-            follow_redirects=False,
-        )
-
-        assert b"Invalid response" in res.data
+    assert message in res.text
 
 
 def test_specs_endpoint_without_server_config(unconfigured_test_client):

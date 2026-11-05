@@ -39,6 +39,8 @@ dev = [
     "pytest-iam>=0.2.6",
     "tox-uv>=1.29.0",
     "beautifulsoup4>=4.14.2",
+    "webtest>=3.0.7",
+    "flask-webtest>=0.1.6",
 ]
 
 release = [
