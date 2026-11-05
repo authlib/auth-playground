@@ -6,7 +6,7 @@ from babel import UnknownLocaleError
 from flask import current_app
 from flask import g
 from flask_babel import lazy_gettext as _
-from flask_wtf import FlaskForm
+from flask_wtforms_htmx import HtmxFlaskForm
 from markupsafe import Markup
 from wtforms import ButtonField
 from wtforms import HiddenField
@@ -19,7 +19,6 @@ from wtforms import SubmitField
 from wtforms import TextAreaField
 from wtforms import ValidationError
 from wtforms.csrf.core import CSRFTokenField
-from wtforms.fields.choices import SelectFieldBase
 from wtforms.meta import clean_key
 from wtforms.validators import DataRequired
 from wtforms.validators import Length
@@ -33,21 +32,21 @@ BARE_FIELDS = (
     CSRFTokenField,
     SubmitField,
     ButtonField,
-    SelectFieldBase._Option,
 )
 
 
-class BaseForm(FlaskForm):
+class BaseForm(HtmxFlaskForm):
     """Form whose fields are rendered through the _field.html template.
 
-    Hidden fields, buttons and choice options are rendered bare. A field can declare
+    Hidden fields and buttons are rendered bare. A field can declare
     ``render_kw={"group_with": "<button name>"}`` to render that button
     next to its input.
     """
 
     class Meta:
-        def render_field(self, field, render_kw):
-            render_kw = {**(field.render_kw or {}), **render_kw}
+        htmx_inline_validation = False
+
+        def field_wrapper(self, field, render_kw):
             group_with = render_kw.pop("group_with", None)
             render_kw = {clean_key(key): value for key, value in render_kw.items()}
             if isinstance(field, BARE_FIELDS):

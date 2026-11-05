@@ -21,6 +21,7 @@ dependencies = [
     "flask-babel>=4.0.0",
     "flask-session>=0.8.0",
     "flask-wtf>=1.2.1",
+    "flask-wtforms-htmx>=0.1.0",
     "python-dotenv>=1.0.0",
     "requests>=2.32.5",
     "wtforms>=3.3",
