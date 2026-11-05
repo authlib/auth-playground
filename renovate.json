@@ -2,5 +2,13 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "local>authlib/renovate-config"
+  ],
+  "packageRules": [
+    {
+      "description": "The vendored files must be copied by hand on the update branch, so these updates cannot be merged automatically.",
+      "matchManagers": ["npm"],
+      "groupName": "front-end dependencies",
+      "automerge": false
+    }
   ]
 }
