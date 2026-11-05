@@ -1,4 +1,5 @@
 import importlib.metadata
+import time
 import uuid
 
 import requests
@@ -29,6 +30,7 @@ from auth_playground.forms import LogoutParamsForm
 from auth_playground.forms import RefreshTokenForm
 from auth_playground.forms import UnregisterClientForm
 from auth_playground.pages import render_session_page
+from auth_playground.session import server_metadata
 
 bp = Blueprint("oauth", __name__)
 
@@ -74,7 +76,7 @@ def get_response_error(exc: requests.RequestException) -> str | None:
 
 def clear_user_session():
     """Clear user and token data from the session."""
-    for key in ("user", "token", "authorization_requests"):
+    for key in ("user", "token", "token_info", "authorization_requests"):
         session.pop(key, None)
 
 
@@ -258,11 +260,11 @@ def authorize():
     if request.method == "GET" and "user" in session:
         params["prompt"] = "login"
 
-    pending = {}
+    pending = {"scope": params["scope"]}
     if method := form.pkce.data:
         code_verifier = new_code_verifier()
         params.update(pkce_params(method, code_verifier))
-        pending["code_verifier"] = code_verifier
+        pending.update(code_verifier=code_verifier, pkce=method)
 
     state = generate_token(30)
     save_authorization_request(state, pending)
@@ -288,8 +290,8 @@ def pop_authorization_request(state):
     return pending
 
 
-def store_token(token):
-    """Store the token in the session."""
+def store_token(token, grant_type, requested_scope=None, pkce=None):
+    """Store the token and how it was obtained in the session."""
     old_token = session.get("token", {})
     session["token"] = {
         "access_token": token.get("access_token"),
@@ -299,6 +301,16 @@ def store_token(token):
         "expires_in": token.get("expires_in"),
         "expires_at": token.get("expires_at"),
         "scope": token.get("scope"),
+    }
+    oauth_config = auth_playground.get_oauth_config(current_app)
+    session["token_info"] = {
+        "grant_type": grant_type,
+        "client_auth": oauth_config.get("token_endpoint_auth_method"),
+        "pkce": pkce,
+        "requested_scope": requested_scope,
+        "token_endpoint": server_metadata().get("token_endpoint"),
+        "obtained_at": int(time.time()),
+        "response": {key: value for key, value in token.items() if key != "userinfo"},
     }
 
 
@@ -323,7 +335,12 @@ def authorize_callback():
 
     session.pop("token", None)
     session["user"] = token.get("userinfo")
-    store_token(token)
+    store_token(
+        token,
+        "authorization_code",
+        requested_scope=pending.get("scope"),
+        pkce=pending.get("pkce"),
+    )
     flash(_("You have been successfully logged in."), "success")
     return redirect(url_for("routes.session"))
 
@@ -409,7 +426,7 @@ def refresh():
             scope=original_scope,
         )
 
-        store_token(new_token)
+        store_token(new_token, "refresh_token", requested_scope=original_scope)
         flash(_("Token successfully refreshed"), "success")
     except AuthlibBaseError as exc:
         flash(

@@ -1,4 +1,26 @@
 <section>
+    {% if session.token_info %}
+        <article>
+            <h3>{% trans %}How these tokens were obtained{% endtrans %}</h3>
+            <ul>
+                <li><strong>{% trans %}Grant type:{% endtrans %}</strong> <code>{{ session.token_info.grant_type }}</code></li>
+                {% if session.token_info.client_auth %}
+                    <li><strong>{% trans %}Client authentication:{% endtrans %}</strong> <code>{{ session.token_info.client_auth }}</code></li>
+                {% endif %}
+                {% if session.token_info.pkce %}
+                    <li><strong>{% trans %}PKCE:{% endtrans %}</strong> <code>{{ session.token_info.pkce }}</code></li>
+                {% endif %}
+                {% if session.token_info.requested_scope %}
+                    <li><strong>{% trans %}Requested scope:{% endtrans %}</strong> {{ session.token_info.requested_scope }}</li>
+                {% endif %}
+                {% if session.token_info.token_endpoint %}
+                    <li><strong>{% trans %}Token endpoint:{% endtrans %}</strong> {{ session.token_info.token_endpoint }}</li>
+                {% endif %}
+                <li><strong>{% trans %}Obtained at:{% endtrans %}</strong> {{ session.token_info.obtained_at|datetimeformat }}</li>
+            </ul>
+        </article>
+    {% endif %}
+
     {% if session.token and session.token.id_token and session.user %}
         <article>
             <h3>{% trans %}ID token & user information{% endtrans %}</h3>
@@ -210,4 +232,11 @@
             </article>
         {% endif %}
     </div>
+
+    {% if session.token_info and session.token_info.response %}
+        <article>
+            <h3>{% trans %}Token response{% endtrans %}</h3>
+            <pre class="token-response"><code>{{ session.token_info.response|tojson(indent=2) }}</code></pre>
+        </article>
+    {% endif %}
 </section>

@@ -291,6 +291,7 @@ def test_new_client_forgets_the_previous_tokens(unconfigured_testapp):
     with unconfigured_testapp.session_transaction() as sess:
         sess["user"] = {"sub": "jane"}
         sess["token"] = {"access_token": "a", "refresh_token": "r"}
+        sess["token_info"] = {"grant_type": "authorization_code"}
 
     form = unconfigured_testapp.get("/en/client").forms["client-form"]
     form["client_id"] = "new"
@@ -299,7 +300,7 @@ def test_new_client_forgets_the_previous_tokens(unconfigured_testapp):
 
     with unconfigured_testapp.session_transaction() as sess:
         assert sess["oauth_config"]["client_id"] == "new"
-        assert not {"user", "token"} & set(sess)
+        assert not {"user", "token", "token_info"} & set(sess)
 
 
 def test_authorization_requests_are_kept_by_state(unconfigured_test_client):
@@ -336,6 +337,7 @@ def test_callback_sends_the_verifier_of_its_state(unconfigured_test_client):
     assert mock_token.call_args.kwargs == {"code_verifier": verifier}
     with unconfigured_test_client.session_transaction() as sess:
         assert first["state"][0] not in sess["authorization_requests"]
+        assert sess["token_info"]["pkce"] == "S256"
 
 
 def test_repeated_extra_params_are_all_sent(unconfigured_testapp):

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-05 19:47+0100\n"
+"POT-Creation-Date: 2026-11-05 19:48+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -214,6 +214,7 @@ msgid "Disabled"
 msgstr ""
 
 #: src/auth_playground/forms.py:399
+#: src/auth_playground/templates/_tokens.html:11
 msgid "PKCE:"
 msgstr ""
 
@@ -352,34 +353,34 @@ msgstr ""
 msgid "Server log out"
 msgstr ""
 
-#: src/auth_playground/oauth.py:89 src/auth_playground/oauth.py:209
-#: src/auth_playground/oauth.py:254 src/auth_playground/oauth.py:336
-#: src/auth_playground/oauth.py:396
+#: src/auth_playground/oauth.py:91 src/auth_playground/oauth.py:211
+#: src/auth_playground/oauth.py:256 src/auth_playground/oauth.py:353
+#: src/auth_playground/oauth.py:413
 msgid "Invalid request"
 msgstr ""
 
-#: src/auth_playground/oauth.py:94
+#: src/auth_playground/oauth.py:96
 msgid "Dynamic client registration not supported"
 msgstr ""
 
-#: src/auth_playground/oauth.py:139
+#: src/auth_playground/oauth.py:141
 msgid "Invalid JSON response from registration endpoint"
 msgstr ""
 
-#: src/auth_playground/oauth.py:145
+#: src/auth_playground/oauth.py:147
 #, python-brace-format
 msgid "Dynamic client registration failed: {error}"
 msgstr ""
 
-#: src/auth_playground/oauth.py:149
+#: src/auth_playground/oauth.py:151
 msgid "Dynamic client registration failed"
 msgstr ""
 
-#: src/auth_playground/oauth.py:153
+#: src/auth_playground/oauth.py:155
 msgid "Invalid response from registration endpoint"
 msgstr ""
 
-#: src/auth_playground/oauth.py:160
+#: src/auth_playground/oauth.py:162
 #, python-brace-format
 msgid ""
 "The server registered the client with the {auth_method} authentication "
@@ -387,7 +388,7 @@ msgid ""
 "registered on the server."
 msgstr ""
 
-#: src/auth_playground/oauth.py:172
+#: src/auth_playground/oauth.py:174
 #, python-brace-format
 msgid ""
 "The server registered the client without a client secret, but its "
@@ -395,53 +396,53 @@ msgid ""
 "registered on the server."
 msgstr ""
 
-#: src/auth_playground/oauth.py:196
+#: src/auth_playground/oauth.py:198
 msgid "Client successfully registered!"
 msgstr ""
 
-#: src/auth_playground/oauth.py:216
+#: src/auth_playground/oauth.py:218
 msgid "Client registration management credentials not found"
 msgstr ""
 
-#: src/auth_playground/oauth.py:230
+#: src/auth_playground/oauth.py:232
 #, python-brace-format
 msgid "Client unregistration failed: {error}"
 msgstr ""
 
-#: src/auth_playground/oauth.py:234
+#: src/auth_playground/oauth.py:236
 msgid "Client unregistration failed"
 msgstr ""
 
-#: src/auth_playground/oauth.py:243
+#: src/auth_playground/oauth.py:245
 msgid "Client successfully unregistered"
 msgstr ""
 
-#: src/auth_playground/oauth.py:317
+#: src/auth_playground/oauth.py:329
 #, python-brace-format
 msgid "An error happened during login: {error}"
 msgstr ""
 
-#: src/auth_playground/oauth.py:327
+#: src/auth_playground/oauth.py:344
 msgid "You have been successfully logged in."
 msgstr ""
 
-#: src/auth_playground/oauth.py:340
+#: src/auth_playground/oauth.py:357
 msgid "You have been logged out"
 msgstr ""
 
-#: src/auth_playground/oauth.py:387
+#: src/auth_playground/oauth.py:404
 msgid "You have been logged out from the server"
 msgstr ""
 
-#: src/auth_playground/oauth.py:401
+#: src/auth_playground/oauth.py:418
 msgid "No refresh token available"
 msgstr ""
 
-#: src/auth_playground/oauth.py:413
+#: src/auth_playground/oauth.py:430
 msgid "Token successfully refreshed"
 msgstr ""
 
-#: src/auth_playground/oauth.py:416
+#: src/auth_playground/oauth.py:433
 #, python-brace-format
 msgid "An error happened during token refresh: {error}"
 msgstr ""
@@ -473,164 +474,192 @@ msgid "Specifications"
 msgstr ""
 
 #: src/auth_playground/templates/_tokens.html:4
-msgid "ID token & user information"
+msgid "How these tokens were obtained"
 msgstr ""
 
-#: src/auth_playground/templates/_tokens.html:5
-msgid "Contains user identity information in JWT format."
+#: src/auth_playground/templates/_tokens.html:6
+msgid "Grant type:"
 msgstr ""
 
 #: src/auth_playground/templates/_tokens.html:8
-#: src/auth_playground/templates/_tokens.html:183
-#: src/auth_playground/templates/_tokens.html:208
+msgid "Client authentication:"
+msgstr ""
+
+#: src/auth_playground/templates/_tokens.html:14
+msgid "Requested scope:"
+msgstr ""
+
+#: src/auth_playground/templates/_tokens.html:17
+msgid "Token endpoint:"
+msgstr ""
+
+#: src/auth_playground/templates/_tokens.html:19
+msgid "Obtained at:"
+msgstr ""
+
+#: src/auth_playground/templates/_tokens.html:26
+msgid "ID token & user information"
+msgstr ""
+
+#: src/auth_playground/templates/_tokens.html:27
+msgid "Contains user identity information in JWT format."
+msgstr ""
+
+#: src/auth_playground/templates/_tokens.html:30
+#: src/auth_playground/templates/_tokens.html:205
+#: src/auth_playground/templates/_tokens.html:230
 msgid "Copy"
 msgstr ""
 
-#: src/auth_playground/templates/_tokens.html:13
+#: src/auth_playground/templates/_tokens.html:35
 msgid "User claims"
 msgstr ""
 
-#: src/auth_playground/templates/_tokens.html:21
+#: src/auth_playground/templates/_tokens.html:43
 msgid "User name:"
 msgstr ""
 
-#: src/auth_playground/templates/_tokens.html:25
+#: src/auth_playground/templates/_tokens.html:47
 msgid "Display name:"
 msgstr ""
 
-#: src/auth_playground/templates/_tokens.html:29
+#: src/auth_playground/templates/_tokens.html:51
 msgid "Full name:"
 msgstr ""
 
-#: src/auth_playground/templates/_tokens.html:33
+#: src/auth_playground/templates/_tokens.html:55
 msgid "Given name:"
 msgstr ""
 
-#: src/auth_playground/templates/_tokens.html:37
+#: src/auth_playground/templates/_tokens.html:59
 msgid "Family name:"
 msgstr ""
 
-#: src/auth_playground/templates/_tokens.html:41
+#: src/auth_playground/templates/_tokens.html:63
 msgid "Email:"
 msgstr ""
 
-#: src/auth_playground/templates/_tokens.html:45
+#: src/auth_playground/templates/_tokens.html:67
 msgid "Email verified:"
 msgstr ""
 
-#: src/auth_playground/templates/_tokens.html:49
+#: src/auth_playground/templates/_tokens.html:71
 msgid "Phone:"
 msgstr ""
 
-#: src/auth_playground/templates/_tokens.html:54
+#: src/auth_playground/templates/_tokens.html:76
 msgid "Address:"
 msgstr ""
 
-#: src/auth_playground/templates/_tokens.html:77
+#: src/auth_playground/templates/_tokens.html:99
 msgid "Locale:"
 msgstr ""
 
-#: src/auth_playground/templates/_tokens.html:81
+#: src/auth_playground/templates/_tokens.html:103
 msgid "Timezone:"
 msgstr ""
 
-#: src/auth_playground/templates/_tokens.html:85
+#: src/auth_playground/templates/_tokens.html:107
 msgid "Birthdate:"
 msgstr ""
 
-#: src/auth_playground/templates/_tokens.html:89
+#: src/auth_playground/templates/_tokens.html:111
 msgid "Gender:"
 msgstr ""
 
-#: src/auth_playground/templates/_tokens.html:93
+#: src/auth_playground/templates/_tokens.html:115
 msgid "Website:"
 msgstr ""
 
-#: src/auth_playground/templates/_tokens.html:98
+#: src/auth_playground/templates/_tokens.html:120
 msgid "Groups:"
 msgstr ""
 
-#: src/auth_playground/templates/_tokens.html:108
+#: src/auth_playground/templates/_tokens.html:130
 msgid "Token metadata"
 msgstr ""
 
-#: src/auth_playground/templates/_tokens.html:112
+#: src/auth_playground/templates/_tokens.html:134
 #: src/auth_playground/templates/configure_server.html:16
 msgid "Issuer:"
 msgstr ""
 
-#: src/auth_playground/templates/_tokens.html:117
+#: src/auth_playground/templates/_tokens.html:139
 msgid "Audience:"
 msgstr ""
 
-#: src/auth_playground/templates/_tokens.html:129
+#: src/auth_playground/templates/_tokens.html:151
 msgid "Auth time:"
 msgstr ""
 
-#: src/auth_playground/templates/_tokens.html:133
+#: src/auth_playground/templates/_tokens.html:155
 msgid "Issued at:"
 msgstr ""
 
-#: src/auth_playground/templates/_tokens.html:137
-#: src/auth_playground/templates/_tokens.html:193
+#: src/auth_playground/templates/_tokens.html:159
+#: src/auth_playground/templates/_tokens.html:215
 msgid "Expires at:"
 msgstr ""
 
-#: src/auth_playground/templates/_tokens.html:141
+#: src/auth_playground/templates/_tokens.html:163
 msgid "Nonce:"
 msgstr ""
 
-#: src/auth_playground/templates/_tokens.html:145
+#: src/auth_playground/templates/_tokens.html:167
 msgid "Access token hash:"
 msgstr ""
 
-#: src/auth_playground/templates/_tokens.html:149
+#: src/auth_playground/templates/_tokens.html:171
 msgid "Code hash:"
 msgstr ""
 
-#: src/auth_playground/templates/_tokens.html:153
+#: src/auth_playground/templates/_tokens.html:175
 msgid "Auth context class:"
 msgstr ""
 
-#: src/auth_playground/templates/_tokens.html:158
+#: src/auth_playground/templates/_tokens.html:180
 msgid "Auth methods:"
 msgstr ""
 
-#: src/auth_playground/templates/_tokens.html:168
+#: src/auth_playground/templates/_tokens.html:190
 msgid "Authorized party:"
 msgstr ""
 
-#: src/auth_playground/templates/_tokens.html:179
+#: src/auth_playground/templates/_tokens.html:201
 msgid "Access token"
 msgstr ""
 
-#: src/auth_playground/templates/_tokens.html:180
+#: src/auth_playground/templates/_tokens.html:202
 msgid "Used to access protected resources on behalf of the user."
 msgstr ""
 
-#: src/auth_playground/templates/_tokens.html:187
+#: src/auth_playground/templates/_tokens.html:209
 msgid "Token type:"
 msgstr ""
 
-#: src/auth_playground/templates/_tokens.html:190
+#: src/auth_playground/templates/_tokens.html:212
 msgid "Expires in:"
 msgstr ""
 
-#: src/auth_playground/templates/_tokens.html:190
+#: src/auth_playground/templates/_tokens.html:212
 #, python-format
 msgid "%(seconds)s seconds"
 msgstr ""
 
-#: src/auth_playground/templates/_tokens.html:196
+#: src/auth_playground/templates/_tokens.html:218
 msgid "Scope:"
 msgstr ""
 
-#: src/auth_playground/templates/_tokens.html:204
+#: src/auth_playground/templates/_tokens.html:226
 msgid "Refresh token"
 msgstr ""
 
-#: src/auth_playground/templates/_tokens.html:205
+#: src/auth_playground/templates/_tokens.html:227
 msgid "Used to obtain new access tokens without re-authentication."
+msgstr ""
+
+#: src/auth_playground/templates/_tokens.html:238
+msgid "Token response"
 msgstr ""
 
 #: src/auth_playground/templates/configure_client.html:4

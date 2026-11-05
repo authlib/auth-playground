@@ -140,7 +140,8 @@ nav.subtabs a[aria-current="page"] {
     grid-column: 1 / -1;
 }
 
-.request-preview pre {
+.request-preview pre,
+.token-response {
     margin: 0;
     white-space: pre-wrap;
     word-break: break-all;
