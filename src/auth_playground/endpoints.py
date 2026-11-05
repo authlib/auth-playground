@@ -84,14 +84,12 @@ def load_server_metadata(
     issuer_url: str | None = None,
     *,
     update_config: bool = True,
-    flash_errors: bool = False,
 ) -> tuple[dict, str] | None:
     """Load server metadata.
 
     If issuer_url is None, tries to get it from environment.
     If update_config is True, updates g.server_config with metadata.
-    If flash_errors is True, displays user-friendly error messages and returns None on error.
-    If flash_errors is False, raises the exception.
+    On error, displays a user-friendly message and returns None.
     """
     if update_config and g.server_config and g.server_config.metadata:
         return g.server_config.metadata, g.server_config.server_type
@@ -105,10 +103,8 @@ def load_server_metadata(
     try:
         metadata, server_type = fetch_server_metadata(issuer_url)
     except Exception as e:
-        if flash_errors:
-            _flash_metadata_error(e)
-            return None
-        raise
+        _flash_metadata_error(e)
+        return None
 
     if update_config and g.server_config:
         g.server_config.metadata = metadata
@@ -157,7 +153,7 @@ def configure_server(domain=None):
     else:
         issuer_url = form.issuer_url.data.rstrip("/")
 
-    result = load_server_metadata(issuer_url, update_config=False, flash_errors=True)
+    result = load_server_metadata(issuer_url, update_config=False)
     if not result:
         return render_template("configure_server.html", form=form)
     metadata, server_type = result

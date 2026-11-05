@@ -20,7 +20,7 @@ def server_config_needed(f=None, *, client_needed=True):
             if not auth_playground.is_server_configured():
                 return redirect(url_for("routes.configure_server"))
 
-            load_server_metadata(flash_errors=True)
+            load_server_metadata()
 
             if client_needed and not auth_playground.is_client_configured():
                 return redirect(url_for("routes.configure_client"))
