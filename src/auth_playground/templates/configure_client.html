@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% from "_form.html" import render_form %}
 
 {% block title %}{% trans %}Configure OAuth Client{% endtrans %}{% endblock %}
 
@@ -21,10 +22,9 @@
                     <h3>{% trans %}Registered client{% endtrans %}</h3>
                 </header>
                 <p>{% trans %}This client was dynamically registered (RFC 7591). You can remove it from the server (RFC 7592).{% endtrans %}</p>
-                <form method="POST" action="{{ url_for('oauth.unregister_client') }}">
-                    {{ unregister_form.hidden_tag() }}
-                    {{ unregister_form.submit(class="secondary") }}
-                </form>
+                {% call render_form(unregister_form, url_for('oauth.unregister_client'), id="unregister-form") %}
+                    {{ unregister_form.unregister() }}
+                {% endcall %}
             </article>
         {% endif %}
 
@@ -44,27 +44,9 @@
 
                 <p>{% trans %}This server supports{% endtrans %} <a href="https://datatracker.ietf.org/doc/html/rfc7591">{% trans %}dynamic client registration{% endtrans %}</a>. {% trans %}Provide an Initial Access Token if required, then click the button to automatically register this application.{% endtrans %}</p>
 
-                <form method="POST" action="{{ url_for('oauth.client_dynamic_registration') }}">
-                    {{ dynamic_registration_form.hidden_tag() }}
-
-                    <label for="{{ dynamic_registration_form.initial_access_token.id }}">
-                        {{ dynamic_registration_form.initial_access_token.label }}
-                        {% if dynamic_registration_form.initial_access_token.description %}
-                            <small>{{ dynamic_registration_form.initial_access_token.description }}</small>
-                        {% endif %}
-                    </label>
-
-                    {% if dynamic_registration_form.initial_access_token.errors %}
-                        {% for error in dynamic_registration_form.initial_access_token.errors %}
-                            <small class="error">{{ error }}</small>
-                        {% endfor %}
-                    {% endif %}
-
-                    <div role="group">
-                        {{ dynamic_registration_form.initial_access_token(class="form-control") }}
-                        {{ dynamic_registration_form.submit(class="primary") }}
-                    </div>
-                </form>
+                {% call render_form(dynamic_registration_form, url_for('oauth.client_dynamic_registration'), id="dynamic-registration-form") %}
+                    {{ dynamic_registration_form.initial_access_token() }}
+                {% endcall %}
 
                 <details>
                     <summary role="button" class="outline">{% trans %}What happens next?{% endtrans %}</summary>
@@ -101,39 +83,11 @@
                 </ul>
             </details>
 
-            <form method="POST" action="{{ url_for('routes.configure_client') }}">
-                {{ client_form.hidden_tag() }}
-
-                <label for="{{ client_form.client_id.id }}">
-                    {{ client_form.client_id.label }}
-                    {{ client_form.client_id(class="form-control") }}
-                    {% if client_form.client_id.description %}
-                        <small>{{ client_form.client_id.description }}</small>
-                    {% endif %}
-                </label>
-
-                {% if client_form.client_id.errors %}
-                    {% for error in client_form.client_id.errors %}
-                        <small class="error">{{ error }}</small>
-                    {% endfor %}
-                {% endif %}
-
-                <label for="{{ client_form.client_secret.id }}">
-                    {{ client_form.client_secret.label }}
-                    {{ client_form.client_secret(class="form-control") }}
-                    {% if client_form.client_secret.description %}
-                        <small>{{ client_form.client_secret.description }}</small>
-                    {% endif %}
-                </label>
-
-                {% if client_form.client_secret.errors %}
-                    {% for error in client_form.client_secret.errors %}
-                        <small class="error">{{ error }}</small>
-                    {% endfor %}
-                {% endif %}
-
-                {{ client_form.submit() }}
-            </form>
+            {% call render_form(client_form, url_for('routes.configure_client'), id="client-form") %}
+                {{ client_form.client_id() }}
+                {{ client_form.client_secret() }}
+                {{ client_form.save() }}
+            {% endcall %}
         </article>
     {% endif %}
 {% endblock %}

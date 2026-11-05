@@ -6,6 +6,9 @@ from flask import current_app
 from flask import g
 from flask_babel import lazy_gettext as _
 from flask_wtf import FlaskForm
+from markupsafe import Markup
+from wtforms import ButtonField
+from wtforms import HiddenField
 from wtforms import IntegerField
 from wtforms import PasswordField
 from wtforms import SelectField
@@ -14,12 +17,51 @@ from wtforms import StringField
 from wtforms import SubmitField
 from wtforms import TextAreaField
 from wtforms import ValidationError
+from wtforms.csrf.core import CSRFTokenField
+from wtforms.fields.choices import SelectFieldBase
+from wtforms.meta import clean_key
 from wtforms.validators import DataRequired
 from wtforms.validators import Length
 from wtforms.validators import NumberRange
 from wtforms.validators import Optional
 from wtforms.widgets import CheckboxInput
 from wtforms.widgets import ListWidget
+
+BARE_FIELDS = (
+    HiddenField,
+    CSRFTokenField,
+    SubmitField,
+    ButtonField,
+    SelectFieldBase._Option,
+)
+
+
+class BaseForm(FlaskForm):
+    """Form whose fields are rendered through the _field.html template.
+
+    Hidden fields, buttons and choice options are rendered bare. A field can declare
+    ``render_kw={"group_with": "<button name>"}`` to render that button
+    next to its input.
+    """
+
+    class Meta:
+        def render_field(self, field, render_kw):
+            render_kw = {**(field.render_kw or {}), **render_kw}
+            group_with = render_kw.pop("group_with", None)
+            render_kw = {clean_key(key): value for key, value in render_kw.items()}
+            if isinstance(field, BARE_FIELDS):
+                return field.widget(field, **render_kw)
+
+            template = current_app.jinja_env.get_template("_field.html")
+            return Markup(
+                template.render(
+                    field=field,
+                    render_kw=render_kw,
+                    field_id=render_kw.get("id", field.id),
+                    fieldset=isinstance(field.widget, ListWidget),
+                    button=field._form[group_with] if group_with else None,
+                )
+            )
 
 
 def get_scopes_choices():
@@ -76,10 +118,10 @@ def get_ui_locales_choices():
     return choices
 
 
-class RefreshTokenForm(FlaskForm):
+class RefreshTokenForm(BaseForm):
     """Form to refresh access token using refresh token."""
 
-    submit = SubmitField(_("Renew tokens"))
+    refresh = SubmitField(_("Renew tokens"))
 
 
 def validate_issuer_url(form, field):
@@ -105,7 +147,7 @@ def validate_issuer_url(form, field):
         )
 
 
-class ServerConfigForm(FlaskForm):
+class ServerConfigForm(BaseForm):
     """Form to configure the provider server URL."""
 
     issuer_url = StringField(
@@ -114,15 +156,16 @@ class ServerConfigForm(FlaskForm):
             DataRequired(message=_("Provider URL is required")),
             validate_issuer_url,
         ],
-        description=_(
-            "Enter the base URL of your OIDC/OAuth2 provider (e.g., https://auth.example.com)"
-        ),
-        render_kw={"placeholder": "https://auth.example.com", "type": "url"},
+        render_kw={
+            "placeholder": "https://auth.example.com",
+            "type": "url",
+            "group_with": "discover",
+        },
     )
-    submit = SubmitField(_("Continue"))
+    discover = SubmitField(_("Continue"), render_kw={"class": "primary"})
 
 
-class ClientConfigForm(FlaskForm):
+class ClientConfigForm(BaseForm):
     """Form to configure OAuth client credentials manually."""
 
     client_id = StringField(
@@ -145,33 +188,36 @@ class ClientConfigForm(FlaskForm):
         ],
         render_kw={"placeholder": "******************"},
     )
-    submit = SubmitField(_("Complete configuration"))
+    save = SubmitField(_("Complete configuration"))
 
 
-class DynamicRegistrationForm(FlaskForm):
+class DynamicRegistrationForm(BaseForm):
     """Form to trigger dynamic client registration with CSRF protection."""
 
     initial_access_token = StringField(
         _("Initial access token:"),
         validators=[],
-        render_kw={"placeholder": _("Leave empty if not required")},
+        render_kw={
+            "placeholder": _("Leave empty if not required"),
+            "group_with": "register",
+        },
     )
-    submit = SubmitField(_("Register client"))
+    register = SubmitField(_("Register client"), render_kw={"class": "primary"})
 
 
-class UnregisterClientForm(FlaskForm):
+class UnregisterClientForm(BaseForm):
     """Form to trigger client unregistration with CSRF protection."""
 
-    submit = SubmitField(_("Unregister client"))
+    unregister = SubmitField(_("Unregister client"), render_kw={"class": "secondary"})
 
 
-class LogoutLocalForm(FlaskForm):
+class LogoutLocalForm(BaseForm):
     """Form to trigger local logout with CSRF protection."""
 
-    submit = SubmitField(_("Log out"))
+    logout = SubmitField(_("Log out"), render_kw={"class": "secondary"})
 
 
-class AuthorizationParamsForm(FlaskForm):
+class AuthorizationParamsForm(BaseForm):
     """Form to customize OAuth authorization parameters."""
 
     scopes = SelectMultipleField(
@@ -216,9 +262,10 @@ class AuthorizationParamsForm(FlaskForm):
             "Specific claims to request, as an OIDC claims JSON object (advanced)."
         ),
     )
+    sign_in = ButtonField(_("Sign in"), render_kw={"class": "primary"})
 
 
-class LogoutParamsForm(FlaskForm):
+class LogoutParamsForm(BaseForm):
     """Form to customize RP-Initiated Logout parameters."""
 
     id_token_hint = StringField(
@@ -242,3 +289,4 @@ class LogoutParamsForm(FlaskForm):
         choices=get_ui_locales_choices,
         description=_("Preferred language for the logout UI"),
     )
+    server_logout = ButtonField(_("Server log out"), render_kw={"class": "contrast"})

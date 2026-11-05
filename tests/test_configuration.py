@@ -1,5 +1,7 @@
 from unittest.mock import patch
 
+from flask_webtest import TestApp
+
 
 def test_root_redirects_to_default_language(unconfigured_app):
     """Test that root URL redirects to default language when no Accept-Language header."""
@@ -42,16 +44,14 @@ def test_configure_server_displays_form(unconfigured_app):
     assert b"Continue" in res.data
 
 
-def test_configure_server_validates_url(unconfigured_app, csrf_token):
+def test_configure_server_validates_url(unconfigured_testapp):
     """Test that server configuration validates URL format."""
-    test_client = unconfigured_app.test_client()
-    res = test_client.post(
-        "/en/server",
-        data={"issuer_url": "not-a-url", "csrf_token": csrf_token(test_client)},
-        follow_redirects=False,
-    )
-    assert res.status_code == 200
-    assert b"Please enter a valid URL" in res.data or b"URL must start" in res.data
+    form = unconfigured_testapp.get("/en/server").forms["server-form"]
+    form["issuer_url"] = "not-a-url"
+    res = form.submit("discover")
+
+    assert res.status_int == 200
+    assert "URL must start with http:// or https://" in res.text
 
 
 def test_configure_server_blocks_when_env_configured(app, test_client):
@@ -143,10 +143,9 @@ def test_configure_client_hides_dynamic_registration_when_not_supported(
     assert b"Register client" not in res.data
 
 
-def test_configure_client_manual_setup_stores_in_session(unconfigured_app, csrf_token):
+def test_configure_client_manual_setup_stores_in_session(unconfigured_testapp):
     """Test that manual client configuration stores credentials in session."""
-    test_client = unconfigured_app.test_client()
-    with test_client.session_transaction() as sess:
+    with unconfigured_testapp.session_transaction() as sess:
         sess["server_metadata"] = {
             "issuer": "https://test.example.com",
             "authorization_endpoint": "https://test.example.com/oauth/authorize",
@@ -154,22 +153,14 @@ def test_configure_client_manual_setup_stores_in_session(unconfigured_app, csrf_
         }
         sess["issuer_url"] = "https://test.example.com"
 
-    res = test_client.get("/en/client")
-    assert res.status_code == 200
+    form = unconfigured_testapp.get("/en/client").forms["client-form"]
+    form["client_id"] = "test-client-id"
+    form["client_secret"] = "test-client-secret"
+    res = form.submit("save").maybe_follow()
 
-    res = test_client.post(
-        "/en/client",
-        data={
-            "client_id": "test-client-id",
-            "client_secret": "test-client-secret",
-            "csrf_token": csrf_token(test_client),
-        },
-        follow_redirects=True,
-    )
+    assert "OAuth configuration completed successfully" in res.text
 
-    assert res.status_code == 200
-
-    with test_client.session_transaction() as sess:
+    with unconfigured_testapp.session_transaction() as sess:
         assert "oauth_config" in sess
         assert sess["oauth_config"]["client_id"] == "test-client-id"
         assert sess["oauth_config"]["client_secret"] == "test-client-secret"
@@ -251,83 +242,64 @@ def test_server_link_visible_when_session_configured(unconfigured_app):
     assert b"/en/server" in res.data
 
 
-def test_validate_issuer_url_accepts_http_in_debug(unconfigured_app, csrf_token):
+def submit_server_form(testapp, issuer_url):
+    """Submit the provider URL form with a mocked metadata endpoint."""
+    form = testapp.get("/en/server").forms["server-form"]
+    form["issuer_url"] = issuer_url
+    with patch("auth_playground.endpoints.fetch_server_metadata") as mock_fetch:
+        mock_fetch.return_value = ({"issuer": issuer_url.rstrip("/")}, "oidc")
+        return form.submit("discover"), mock_fetch
+
+
+def test_validate_issuer_url_accepts_http_in_debug(unconfigured_app):
     """Test that HTTP URLs are accepted when app is in debug mode."""
     unconfigured_app.testing = False
     unconfigured_app.debug = True
-    test_client = unconfigured_app.test_client()
 
-    with patch("auth_playground.endpoints.fetch_server_metadata") as mock_fetch:
-        mock_fetch.return_value = ({"issuer": "http://auth.example.com"}, "oidc")
-        res = test_client.post(
-            "/en/server",
-            data={
-                "issuer_url": "http://auth.example.com",
-                "csrf_token": csrf_token(test_client),
-            },
-        )
+    res, _ = submit_server_form(TestApp(unconfigured_app), "http://auth.example.com")
 
-    assert res.status_code == 302
+    assert res.status_int == 302
     assert "/en/client" in res.location
 
 
-def test_validate_issuer_url_accepts_http_for_localhost(unconfigured_app, csrf_token):
+def test_validate_issuer_url_accepts_http_for_localhost(unconfigured_app):
     """Test that HTTP URLs are accepted for localhost even without debug mode."""
     unconfigured_app.testing = False
     unconfigured_app.debug = False
-    test_client = unconfigured_app.test_client()
+    testapp = TestApp(unconfigured_app)
 
     for url in ["http://localhost:5000", "http://127.0.0.1:8000", "http://[::1]:8000"]:
-        with patch("auth_playground.endpoints.fetch_server_metadata") as mock_fetch:
-            mock_fetch.return_value = ({"issuer": url}, "oidc")
-            res = test_client.post(
-                "/en/server",
-                data={"issuer_url": url, "csrf_token": csrf_token(test_client)},
-            )
+        res, _ = submit_server_form(testapp, url)
 
-        assert res.status_code == 302
+        assert res.status_int == 302
         assert "/en/client" in res.location
 
 
-def test_validate_issuer_url_rejects_http_in_production(unconfigured_app, csrf_token):
+def test_validate_issuer_url_rejects_http_in_production(unconfigured_app):
     """Test that HTTP URLs are rejected outside debug mode and localhost."""
     unconfigured_app.testing = False
     unconfigured_app.debug = False
-    test_client = unconfigured_app.test_client()
 
-    with patch("auth_playground.endpoints.fetch_server_metadata") as mock_fetch:
-        res = test_client.post(
-            "/en/server",
-            data={
-                "issuer_url": "http://auth.example.com",
-                "csrf_token": csrf_token(test_client),
-            },
-        )
+    res, mock_fetch = submit_server_form(
+        TestApp(unconfigured_app), "http://auth.example.com"
+    )
 
-    assert res.status_code == 200
-    assert b"HTTP is only allowed" in res.data
+    assert res.status_int == 200
+    assert "HTTP is only allowed" in res.text
     mock_fetch.assert_not_called()
 
 
-def test_configure_server_stores_metadata(unconfigured_test_client, csrf_token):
+def test_configure_server_stores_metadata(unconfigured_testapp):
     """Test that a valid provider URL stores the server metadata in session."""
-    metadata = {"issuer": "https://auth.example.com"}
-    with patch("auth_playground.endpoints.fetch_server_metadata") as mock_fetch:
-        mock_fetch.return_value = (metadata, "oidc")
-        res = unconfigured_test_client.post(
-            "/en/server",
-            data={
-                "issuer_url": "https://auth.example.com/",
-                "csrf_token": csrf_token(unconfigured_test_client),
-            },
-            follow_redirects=True,
-        )
+    res, mock_fetch = submit_server_form(
+        unconfigured_testapp, "https://auth.example.com/"
+    )
 
     mock_fetch.assert_called_once_with("https://auth.example.com")
-    assert b"Server metadata successfully loaded" in res.data
-    with unconfigured_test_client.session_transaction() as sess:
+    assert "Server metadata successfully loaded" in res.maybe_follow().text
+    with unconfigured_testapp.session_transaction() as sess:
         assert sess["issuer_url"] == "https://auth.example.com"
-        assert sess["server_metadata"] == metadata
+        assert sess["server_metadata"] == {"issuer": "https://auth.example.com"}
         assert sess["server_type"] == "oidc"
 
 

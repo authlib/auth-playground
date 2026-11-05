@@ -99,22 +99,18 @@ def test_logout_callback_clears_session(test_client):
         assert "token" not in sess
 
 
-def test_logout_local_clears_session_without_contacting_provider(
-    test_client, csrf_token
-):
+def test_logout_local_clears_session_without_contacting_provider(testapp):
     """Test that local logout clears session without redirecting to provider."""
-    with test_client.session_transaction() as sess:
+    with testapp.session_transaction() as sess:
         sess["user"] = {"sub": "testuser"}
         sess["token"] = {"id_token": "test_token", "access_token": "test_access"}
 
-    res = test_client.post(
-        "/logout/local", data={"csrf_token": csrf_token(test_client)}
-    )
-    assert res.status_code == 302
+    res = testapp.get("/en/session/logout")
+    res = res.forms["logout-local-form"].submit("logout")
+    assert res.status_int == 302
     assert res.location.endswith("/session")
-    assert "end" not in res.location.lower()
 
-    with test_client.session_transaction() as sess:
+    with testapp.session_transaction() as sess:
         assert "user" not in sess
         assert "token" not in sess
 
@@ -201,32 +197,27 @@ def test_refresh_token_without_token_in_session(test_client, csrf_token):
     assert b"No refresh token available" in res.data
 
 
-def test_refresh_token_success(iam_server, iam_client, user, test_client, csrf_token):
+def test_refresh_token_success(iam_server, iam_client, user, testapp):
     """Test successful token refresh."""
     iam_server.login(user)
     iam_server.consent(user, iam_client)
 
-    res = test_client.get("/authorize")
+    res = testapp.get("/authorize")
     res = iam_server.test_client.get(res.location)
-    res = test_client.get(res.location)
+    res = testapp.get(res.location)
 
-    with test_client.session_transaction() as sess:
+    with testapp.session_transaction() as sess:
         old_access_token = sess["token"]["access_token"]
         old_id_token = sess["token"].get("id_token")
         old_refresh_token = sess["token"].get("refresh_token")
         assert old_refresh_token is not None, "Refresh token should exist after login"
 
-    res = test_client.post(
-        "/refresh",
-        data={"csrf_token": csrf_token(test_client)},
-        follow_redirects=True,
-    )
+    res = testapp.get("/en/session/tokens")
+    res = res.forms["refresh-form"].submit("refresh").maybe_follow()
 
-    assert res.status_code == 200
-    assert b"Token successfully refreshed" in res.data
-    assert b"error" not in res.data.lower() or b"successfully" in res.data.lower()
+    assert "Token successfully refreshed" in res.text
 
-    with test_client.session_transaction() as sess:
+    with testapp.session_transaction() as sess:
         new_access_token = sess["token"]["access_token"]
         new_id_token = sess["token"].get("id_token")
 
