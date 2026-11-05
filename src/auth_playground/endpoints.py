@@ -25,21 +25,29 @@ from auth_playground.session import ServerConfig
 bp = Blueprint("routes", __name__)
 
 
+def _get_metadata_document(url: str, timeout: int) -> dict:
+    """Fetch a metadata document and check that it is a JSON object."""
+    response = requests.get(url, timeout=timeout)
+    response.raise_for_status()
+    metadata = response.json()
+    if not isinstance(metadata, dict):
+        raise requests.exceptions.InvalidJSONError(
+            "The server metadata is not a JSON object", response=response
+        )
+    return metadata
+
+
 def fetch_server_metadata(issuer_url: str, timeout: int = 10) -> tuple[dict, str]:
     """Fetch server metadata from well-known OIDC or OAuth2 endpoints."""
     oidc_url = f"{issuer_url}/.well-known/openid-configuration"
     try:
-        response = requests.get(oidc_url, timeout=timeout)
-        response.raise_for_status()
-        return response.json(), "oidc"
+        return _get_metadata_document(oidc_url, timeout), "oidc"
     except requests.exceptions.HTTPError as e:
         if e.response.status_code != 404:
             raise
 
     oauth2_url = f"{issuer_url}/.well-known/oauth-authorization-server"
-    response = requests.get(oauth2_url, timeout=timeout)
-    response.raise_for_status()
-    return response.json(), "oauth2"
+    return _get_metadata_document(oauth2_url, timeout), "oauth2"
 
 
 def _flash_metadata_error(exception: Exception) -> None:
@@ -63,7 +71,7 @@ def _flash_metadata_error(exception: Exception) -> None:
                 ),
                 "error",
             )
-    elif isinstance(exception, requests.JSONDecodeError):
+    elif isinstance(exception, requests.exceptions.InvalidJSONError):
         flash(_("Invalid response from server"), "error")
     elif isinstance(exception, requests.RequestException):
         flash(_("Failed to connect to the server. Please check the URL."), "error")

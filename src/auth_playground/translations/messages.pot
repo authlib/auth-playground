@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-05 15:58+0100\n"
+"POT-Creation-Date: 2026-11-05 16:27+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -22,50 +22,50 @@ msgstr ""
 msgid "This request should be sent to %(server_name)s"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:48
+#: src/auth_playground/endpoints.py:56
 msgid "Cannot connect to the server. Please check the URL."
 msgstr ""
 
-#: src/auth_playground/endpoints.py:50
+#: src/auth_playground/endpoints.py:58
 msgid "Connection timeout. The server is not responding."
 msgstr ""
 
-#: src/auth_playground/endpoints.py:55
+#: src/auth_playground/endpoints.py:63
 msgid ""
 "This server does not support OIDC Discovery or OAuth 2.0 Authorization "
 "Server Metadata"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:61
+#: src/auth_playground/endpoints.py:69
 #, python-brace-format
 msgid "Server returned an error: HTTP {status_code}"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:67
+#: src/auth_playground/endpoints.py:75
 msgid "Invalid response from server"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:69
+#: src/auth_playground/endpoints.py:77
 msgid "Failed to connect to the server. Please check the URL."
 msgstr ""
 
-#: src/auth_playground/endpoints.py:72
+#: src/auth_playground/endpoints.py:80
 msgid "Cannot load the server metadata."
 msgstr ""
 
-#: src/auth_playground/endpoints.py:151
+#: src/auth_playground/endpoints.py:159
 msgid "You can now configure a different identity provider"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:170
+#: src/auth_playground/endpoints.py:178
 msgid "Server metadata successfully loaded"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:203
+#: src/auth_playground/endpoints.py:211
 msgid "OAuth configuration completed successfully"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:256
+#: src/auth_playground/endpoints.py:264
 msgid "No server configured"
 msgstr ""
 

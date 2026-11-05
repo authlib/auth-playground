@@ -28,6 +28,16 @@ def test_fetch_server_metadata_oauth2_fallback():
         assert metadata["issuer"] == "https://test.example.com"
 
 
+@pytest.mark.parametrize("document", [[], "metadata", None])
+def test_fetch_server_metadata_rejects_non_object_documents(document):
+    """Test fetch_server_metadata rejects metadata that is not a JSON object."""
+    with patch("requests.get") as mock_get:
+        mock_get.return_value.json.return_value = document
+
+        with pytest.raises(requests.exceptions.InvalidJSONError):
+            fetch_server_metadata("https://test.example.com")
+
+
 def test_fetch_server_metadata_raises_non_404_errors():
     """Test fetch_server_metadata raises non-404 HTTP errors."""
     with patch("requests.get") as mock_get:
@@ -60,6 +70,7 @@ def http_error(status_code):
         (requests.RequestException(), "Failed to connect"),
         (requests.exceptions.InvalidURL(), "Failed to connect"),
         (requests.JSONDecodeError("Expecting value", "", 0), "Invalid response"),
+        (requests.exceptions.InvalidJSONError(), "Invalid response"),
         (KeyError("issuer"), "Cannot load the server metadata"),
     ],
 )
