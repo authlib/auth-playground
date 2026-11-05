@@ -328,6 +328,12 @@ class DynamicRegistrationForm(BaseForm):
         super().__init__(*args, meta={**meta, **kwargs.pop("meta", {})}, **kwargs)
 
 
+class ChangeServerForm(BaseForm):
+    """Form to forget the provider, and configure another one."""
+
+    change = SubmitField(_("Change provider"), render_kw={"class": "secondary"})
+
+
 class UnregisterClientForm(BaseForm):
     """Form to trigger client unregistration with CSRF protection."""
 

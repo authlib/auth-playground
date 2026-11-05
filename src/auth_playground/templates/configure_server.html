@@ -7,16 +7,26 @@
 {% block content %}
     {% include "_server_tabs.html" %}
 
-    {% if locked %}
+    {% if locked or g.server_config.issuer_url %}
         <article>
             <header>
                 <h2>{% trans %}Provider{% endtrans %}</h2>
             </header>
-            <p>{% trans %}This provider is set via environment variables and cannot be changed.{% endtrans %}</p>
             <p>
                 <strong>{% trans %}Issuer:{% endtrans %}</strong>
-                <a href="{{ g.server_config.issuer_url }}" target="_blank"><code>{{ g.server_config.issuer_url }}</code></a>
+                <a href="{{ g.server_config.issuer_url }}" target="_blank" rel="noopener noreferrer"><code>{{ g.server_config.issuer_url }}</code></a>
             </p>
+            {% if g.server_config.server_type %}
+                <p><strong>{% trans %}Type:{% endtrans %}</strong> {{ g.server_config.display_name }}</p>
+            {% endif %}
+            {% if locked %}
+                <p>{% trans %}This provider is set via environment variables and cannot be changed.{% endtrans %}</p>
+            {% else %}
+                <p>{% trans %}Changing the provider forgets its client and the tokens.{% endtrans %}</p>
+                {% call render_form(change_form, url_for('routes.change_server'), id="change-server-form") %}
+                    {{ change_form.change() }}
+                {% endcall %}
+            {% endif %}
         </article>
     {% else %}
         <article>
