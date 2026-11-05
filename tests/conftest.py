@@ -47,8 +47,15 @@ def user(iam_server):
 
 
 @pytest.fixture
-def unconfigured_app():
+def proxy_fix():
+    """Return whether the application runs behind a reverse proxy."""
+    return False
+
+
+@pytest.fixture
+def unconfigured_app(monkeypatch, proxy_fix):
     """Create an unconfigured Flask application for testing config errors."""
+    monkeypatch.setenv("PROXY_FIX", str(proxy_fix).lower())
     app = create_app()
     app.config["TESTING"] = True
     app.config["SERVER_NAME"] = "client.test"

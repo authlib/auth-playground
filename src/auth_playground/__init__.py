@@ -17,6 +17,7 @@ from flask import session as flask_session
 from flask import url_for
 from flask_babel import gettext as _
 from flask_session import Session
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from auth_playground.endpoints import bp
 from auth_playground.i18n import babel
@@ -101,6 +102,16 @@ def setup_oauth_runtime(app, client_id, client_secret, auth_server):
     return setup_oauth(app)
 
 
+def is_proxy_fix_enabled():
+    """Read from the environment whether the application runs behind a proxy."""
+    value = os.environ.get("PROXY_FIX", "").strip().lower()
+    if value in ("", "0", "false"):
+        return False
+    if value in ("1", "true"):
+        return True
+    raise ValueError(f"PROXY_FIX must be true or false, got {value!r}")
+
+
 def create_app():
     """Create and configure the Flask application."""
     app = Flask(__name__)
@@ -128,6 +139,8 @@ def create_app():
         oauth_auth_server_env.rstrip("/") if oauth_auth_server_env else None
     )
     app.config["SERVER_NAME"] = os.environ.get("SERVER_NAME")
+    if is_proxy_fix_enabled():
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1)
 
     sess.init_app(app)
     setup_i18n(app)
