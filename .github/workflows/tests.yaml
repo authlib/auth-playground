@@ -9,6 +9,7 @@ on:
     branches:
       - main
       - '*.*.*'
+
 jobs:
   tests:
     name: py${{ matrix.python }} unit tests
@@ -52,6 +53,7 @@ jobs:
           uv run --no-sync pytest
 
   style:
+    name: style
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -59,7 +61,7 @@ jobs:
         uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
           enable-cache: true
-      - name: Run tests
+      - name: Run prek
         run: |
           export TZ=UTC
           uv sync --all-extras
@@ -89,6 +91,7 @@ jobs:
           }
 
   bundle:
+    name: binary bundle
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -96,7 +99,8 @@ jobs:
         uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
           enable-cache: true
-      - run: |
+      - name: Build binary
+        run: |
           export TZ=UTC
           uv sync --group release --all-extras --no-dev
           uv run pyinstaller auth-playground.spec
@@ -149,3 +153,19 @@ jobs:
 
           docker stop test-app
           docker rm test-app
+
+  check:
+    name: check
+    if: always()
+    needs:
+      - tests
+      - minversions
+      - style
+      - translations
+      - bundle
+      - docker
+    runs-on: ubuntu-latest
+    steps:
+      - uses: re-actors/alls-green@b5b5b37504aa4183270bd3d855c52a67f212be35 # v1.3.0
+        with:
+          jobs: ${{ toJSON(needs) }}
