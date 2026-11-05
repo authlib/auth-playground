@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-05 15:13+0100\n"
+"POT-Creation-Date: 2026-11-05 15:58+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -65,198 +65,198 @@ msgstr ""
 msgid "No server configured"
 msgstr ""
 
-#: src/auth_playground/forms.py:85 src/auth_playground/forms.py:96
+#: src/auth_playground/forms.py:86 src/auth_playground/forms.py:97
 msgid "Default"
 msgstr ""
 
-#: src/auth_playground/forms.py:86
+#: src/auth_playground/forms.py:87
 msgid "None - No UI"
 msgstr ""
 
-#: src/auth_playground/forms.py:87
+#: src/auth_playground/forms.py:88
 msgid "Login - Authentication page"
 msgstr ""
 
-#: src/auth_playground/forms.py:88
+#: src/auth_playground/forms.py:89
 msgid "Consent - Consent page"
 msgstr ""
 
-#: src/auth_playground/forms.py:89
+#: src/auth_playground/forms.py:90
 msgid "Select account - Account selection page"
 msgstr ""
 
-#: src/auth_playground/forms.py:90
+#: src/auth_playground/forms.py:91
 msgid "Create - Registration page"
 msgstr ""
 
-#: src/auth_playground/forms.py:124
+#: src/auth_playground/forms.py:125
 msgid "Renew tokens"
 msgstr ""
 
-#: src/auth_playground/forms.py:132
+#: src/auth_playground/forms.py:141
 msgid "URL must start with http:// or https://"
 msgstr ""
 
-#: src/auth_playground/forms.py:145
+#: src/auth_playground/forms.py:154
 msgid ""
 "HTTP is only allowed for localhost or in debug/testing mode. Use HTTPS in"
 " production."
 msgstr ""
 
-#: src/auth_playground/forms.py:154
+#: src/auth_playground/forms.py:163
 msgid "Provider URL:"
 msgstr ""
 
-#: src/auth_playground/forms.py:156
+#: src/auth_playground/forms.py:165
 msgid "Provider URL is required"
 msgstr ""
 
-#: src/auth_playground/forms.py:165
+#: src/auth_playground/forms.py:174
 msgid "Continue"
 msgstr ""
 
-#: src/auth_playground/forms.py:172 src/auth_playground/forms.py:276
+#: src/auth_playground/forms.py:181 src/auth_playground/forms.py:285
 #: src/auth_playground/templates/configure_client.html:14
 msgid "Client ID:"
 msgstr ""
 
-#: src/auth_playground/forms.py:174
+#: src/auth_playground/forms.py:183
 msgid "Client ID is required"
 msgstr ""
 
-#: src/auth_playground/forms.py:178
+#: src/auth_playground/forms.py:187
 msgid "Client ID must be between 1 and 255 characters"
 msgstr ""
 
-#: src/auth_playground/forms.py:184
+#: src/auth_playground/forms.py:193
 msgid "Client secret:"
 msgstr ""
 
-#: src/auth_playground/forms.py:186 src/auth_playground/forms.py:187
+#: src/auth_playground/forms.py:195 src/auth_playground/forms.py:196
 msgid "Client Secret is required"
 msgstr ""
 
-#: src/auth_playground/forms.py:191
+#: src/auth_playground/forms.py:200
 msgid "Complete configuration"
 msgstr ""
 
-#: src/auth_playground/forms.py:198
+#: src/auth_playground/forms.py:207
 msgid "Initial access token:"
 msgstr ""
 
-#: src/auth_playground/forms.py:201
+#: src/auth_playground/forms.py:210
 msgid "Leave empty if not required"
 msgstr ""
 
-#: src/auth_playground/forms.py:205
+#: src/auth_playground/forms.py:214
 msgid "Register client"
 msgstr ""
 
-#: src/auth_playground/forms.py:211
+#: src/auth_playground/forms.py:220
 msgid "Unregister client"
 msgstr ""
 
-#: src/auth_playground/forms.py:217
+#: src/auth_playground/forms.py:226
 msgid "Log out"
 msgstr ""
 
-#: src/auth_playground/forms.py:224
+#: src/auth_playground/forms.py:233
 msgid "Scopes:"
 msgstr ""
 
-#: src/auth_playground/forms.py:227
+#: src/auth_playground/forms.py:236
 msgid "Select the scopes to request from the authorization server"
 msgstr ""
 
-#: src/auth_playground/forms.py:232
+#: src/auth_playground/forms.py:241
 msgid "Prompt:"
 msgstr ""
 
-#: src/auth_playground/forms.py:234
+#: src/auth_playground/forms.py:243
 msgid "Control the authentication UI behavior"
 msgstr ""
 
-#: src/auth_playground/forms.py:237 src/auth_playground/forms.py:288
+#: src/auth_playground/forms.py:246 src/auth_playground/forms.py:297
 msgid "UI Locale:"
 msgstr ""
 
-#: src/auth_playground/forms.py:239
+#: src/auth_playground/forms.py:248
 msgid "Preferred language for the authentication UI"
 msgstr ""
 
-#: src/auth_playground/forms.py:242
+#: src/auth_playground/forms.py:251
 msgid "Max age (seconds):"
 msgstr ""
 
-#: src/auth_playground/forms.py:245
+#: src/auth_playground/forms.py:254
 msgid ""
 "Maximum authentication age. 0 forces re-authentication and refreshes "
 "auth_time."
 msgstr ""
 
-#: src/auth_playground/forms.py:250
+#: src/auth_playground/forms.py:259
 msgid "ACR values:"
 msgstr ""
 
-#: src/auth_playground/forms.py:252
+#: src/auth_playground/forms.py:261
 msgid ""
 "Requested authentication context classes, space-separated (step-up "
 "authentication)."
 msgstr ""
 
-#: src/auth_playground/forms.py:256
+#: src/auth_playground/forms.py:265
 msgid "Login hint:"
 msgstr ""
 
-#: src/auth_playground/forms.py:257
+#: src/auth_playground/forms.py:266
 msgid "Identifier to pre-fill on the provider's login screen."
 msgstr ""
 
-#: src/auth_playground/forms.py:260
+#: src/auth_playground/forms.py:269
 msgid "Claims (JSON):"
 msgstr ""
 
-#: src/auth_playground/forms.py:262
+#: src/auth_playground/forms.py:271
 msgid "Specific claims to request, as an OIDC claims JSON object (advanced)."
 msgstr ""
 
-#: src/auth_playground/forms.py:265
+#: src/auth_playground/forms.py:274
 msgid "Sign in"
 msgstr ""
 
-#: src/auth_playground/forms.py:272
+#: src/auth_playground/forms.py:281
 msgid "ID Token Hint:"
 msgstr ""
 
-#: src/auth_playground/forms.py:273
+#: src/auth_playground/forms.py:282
 msgid "ID Token previously issued, used to identify the user session"
 msgstr ""
 
-#: src/auth_playground/forms.py:277
+#: src/auth_playground/forms.py:286
 msgid "OAuth client identifier"
 msgstr ""
 
-#: src/auth_playground/forms.py:280
+#: src/auth_playground/forms.py:289
 msgid "Post-Logout Redirect URI:"
 msgstr ""
 
-#: src/auth_playground/forms.py:281
+#: src/auth_playground/forms.py:290
 msgid "URI to redirect to after logout"
 msgstr ""
 
-#: src/auth_playground/forms.py:284
+#: src/auth_playground/forms.py:293
 msgid "Logout Hint:"
 msgstr ""
 
-#: src/auth_playground/forms.py:285
+#: src/auth_playground/forms.py:294
 msgid "Hint about the user to log out"
 msgstr ""
 
-#: src/auth_playground/forms.py:290
+#: src/auth_playground/forms.py:299
 msgid "Preferred language for the logout UI"
 msgstr ""
 
-#: src/auth_playground/forms.py:292
+#: src/auth_playground/forms.py:301
 msgid "Server log out"
 msgstr ""
 

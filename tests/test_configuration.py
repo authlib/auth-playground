@@ -268,7 +268,12 @@ def test_validate_issuer_url_accepts_http_for_localhost(unconfigured_app):
     unconfigured_app.debug = False
     testapp = TestApp(unconfigured_app)
 
-    for url in ["http://localhost:5000", "http://127.0.0.1:8000", "http://[::1]:8000"]:
+    for url in [
+        "http://localhost:5000",
+        "http://127.0.0.1:8000",
+        "http://127.0.0.2:8000",
+        "http://[::1]:8000",
+    ]:
         res, _ = submit_server_form(testapp, url)
 
         assert res.status_int == 302

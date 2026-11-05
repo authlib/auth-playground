@@ -1,3 +1,4 @@
+import ipaddress
 from urllib.parse import urlparse
 
 from babel import Locale
@@ -124,6 +125,14 @@ class RefreshTokenForm(BaseForm):
     refresh = SubmitField(_("Renew tokens"))
 
 
+def is_loopback_address(hostname):
+    """Tell whether the hostname is a loopback IP address."""
+    try:
+        return ipaddress.ip_address(hostname).is_loopback
+    except ValueError:
+        return False
+
+
 def validate_issuer_url(form, field):
     """Validate issuer URL with relaxed rules in debug/testing mode or for localhost."""
     url = field.data
@@ -137,7 +146,7 @@ def validate_issuer_url(form, field):
     hostname = parsed.hostname or ""
     # RFC 8252 Section 8.3: HTTP is allowed for loopback interface redirect URIs
     # https://datatracker.ietf.org/doc/html/rfc8252#section-8.3
-    is_localhost = hostname in ("localhost", "127.0.0.1", "::1")
+    is_localhost = hostname == "localhost" or is_loopback_address(hostname)
 
     if url.startswith("http://") and not (is_debug or is_testing or is_localhost):
         raise ValidationError(
