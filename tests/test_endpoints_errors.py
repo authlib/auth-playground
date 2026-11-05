@@ -141,7 +141,7 @@ def test_handle_fetch_metadata_errors_request_exception(
 def test_handle_fetch_metadata_errors_value_error(unconfigured_test_client, csrf_token):
     """Test handle_fetch_metadata_errors with invalid JSON response."""
     with patch("auth_playground.endpoints.fetch_server_metadata") as mock_fetch:
-        mock_fetch.side_effect = ValueError()
+        mock_fetch.side_effect = requests.JSONDecodeError("Expecting value", "", 0)
 
         res = unconfigured_test_client.post(
             "/en/server",

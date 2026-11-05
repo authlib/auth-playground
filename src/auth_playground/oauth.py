@@ -45,6 +45,23 @@ def get_software_version() -> str:
     return importlib.metadata.version("auth-playground")
 
 
+def get_response_error(exc: requests.RequestException) -> str | None:
+    """Get the error description, or else the error code, from an OAuth error response."""
+    if exc.response is None:
+        return None
+
+    try:
+        error_data = exc.response.json()
+    except requests.JSONDecodeError:
+        return None
+
+    if not isinstance(error_data, dict):
+        return None
+
+    error = error_data.get("error_description") or error_data.get("error")
+    return error if isinstance(error, str) else None
+
+
 def clear_user_session():
     """Clear user and token data from the session."""
     try:
@@ -108,25 +125,18 @@ def client_dynamic_registration():
         )
         response.raise_for_status()
         client_data = response.json()
-    except requests.RequestException as e:
-        error_message = _("Dynamic client registration failed")
-        if hasattr(e, "response") and e.response is not None:
-            try:
-                error_data = e.response.json()
-                if "error_description" in error_data:
-                    error_message = _(
-                        "Dynamic client registration failed: {error}"
-                    ).format(error=error_data["error_description"])
-                elif "error" in error_data:
-                    error_message = _(
-                        "Dynamic client registration failed: {error}"
-                    ).format(error=error_data["error"])
-            except ValueError:
-                pass  # Response is not JSON, use default message
-        flash(error_message, "error")
-        return redirect(url_for("routes.configure_client"))
-    except ValueError:
+    except requests.JSONDecodeError:
         flash(_("Invalid JSON response from registration endpoint"), "error")
+        return redirect(url_for("routes.configure_client"))
+    except requests.RequestException as exc:
+        error = get_response_error(exc)
+        if error:
+            flash(
+                _("Dynamic client registration failed: {error}").format(error=error),
+                "error",
+            )
+        else:
+            flash(_("Dynamic client registration failed"), "error")
         return redirect(url_for("routes.configure_client"))
 
     auth_playground.setup_oauth_runtime(
@@ -174,22 +184,15 @@ def unregister_client():
             g.server_config.registration_client_uri, headers=headers, timeout=10
         )
         response.raise_for_status()
-    except requests.RequestException as e:
-        error_message = _("Client unregistration failed")
-        if hasattr(e, "response") and e.response is not None:
-            try:
-                error_data = e.response.json()
-                if "error_description" in error_data:
-                    error_message = _("Client unregistration failed: {error}").format(
-                        error=error_data["error_description"]
-                    )
-                elif "error" in error_data:
-                    error_message = _("Client unregistration failed: {error}").format(
-                        error=error_data["error"]
-                    )
-            except ValueError:
-                pass  # Response is not JSON, use default message
-        flash(error_message, "error")
+    except requests.RequestException as exc:
+        error = get_response_error(exc)
+        if error:
+            flash(
+                _("Client unregistration failed: {error}").format(error=error),
+                "error",
+            )
+        else:
+            flash(_("Client unregistration failed"), "error")
         return redirect(url_for("routes.configure_client"))
 
     session.pop("oauth_config", None)

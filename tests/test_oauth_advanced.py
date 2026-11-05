@@ -1,5 +1,10 @@
+from unittest.mock import Mock
 from unittest.mock import patch
 
+import pytest
+import requests
+
+from auth_playground.oauth import get_response_error
 from auth_playground.oauth import get_software_id
 from auth_playground.oauth import get_software_version
 
@@ -243,3 +248,108 @@ def test_logout_local_rejects_missing_csrf_token(test_client):
     assert b"Invalid request" in res.data
     with test_client.session_transaction() as sess:
         assert sess["user"] == {"sub": "testuser"}
+
+
+def response_error(json=None, json_error=False):
+    """Build an HTTP error carrying a mocked response."""
+    response = Mock()
+    if json_error:
+        response.json.side_effect = requests.JSONDecodeError("Expecting value", "", 0)
+    else:
+        response.json.return_value = json
+    return requests.HTTPError(response=response)
+
+
+@pytest.mark.parametrize(
+    "exc,expected",
+    [
+        (requests.ConnectionError(), None),
+        (response_error(json_error=True), None),
+        (response_error(json=["unexpected"]), None),
+        (response_error(json={}), None),
+        (response_error(json={"error_description": {"en": "Bad"}}), None),
+        (response_error(json={"error": "invalid_request"}), "invalid_request"),
+        (
+            response_error(
+                json={"error": "invalid_request", "error_description": "Bad request"}
+            ),
+            "Bad request",
+        ),
+    ],
+)
+def test_get_response_error(exc, expected):
+    """Test the error extraction from OAuth error responses."""
+    assert get_response_error(exc) == expected
+
+
+def registration_session(client, **metadata):
+    """Store a provider supporting dynamic registration in the session."""
+    with client.session_transaction() as sess:
+        sess["issuer_url"] = "https://test.example.com"
+        sess["server_metadata"] = {
+            "issuer": "https://test.example.com",
+            "registration_endpoint": "https://test.example.com/oauth/register",
+            **metadata,
+        }
+
+
+def test_dynamic_registration_shows_provider_error(
+    unconfigured_test_client, csrf_token
+):
+    """Test dynamic registration displays the provider error."""
+    registration_session(unconfigured_test_client)
+
+    with patch("requests.post") as mock_post:
+        mock_post.return_value.raise_for_status.side_effect = response_error(
+            json={"error_description": "Invalid redirect URI"}
+        )
+        res = unconfigured_test_client.post(
+            "/client/dynamic-registration",
+            data={"csrf_token": csrf_token(unconfigured_test_client)},
+            follow_redirects=True,
+        )
+
+    assert b"Dynamic client registration failed: Invalid redirect URI" in res.data
+
+
+def test_dynamic_registration_invalid_json(unconfigured_test_client, csrf_token):
+    """Test dynamic registration handles a response that is not JSON."""
+    registration_session(unconfigured_test_client)
+
+    with patch("requests.post") as mock_post:
+        mock_post.return_value.json.side_effect = requests.JSONDecodeError(
+            "Expecting value", "", 0
+        )
+        res = unconfigured_test_client.post(
+            "/client/dynamic-registration",
+            data={"csrf_token": csrf_token(unconfigured_test_client)},
+            follow_redirects=True,
+        )
+
+    assert b"Invalid JSON response from registration endpoint" in res.data
+
+
+def test_unregister_client_shows_provider_error(unconfigured_test_client, csrf_token):
+    """Test unregister client displays the provider error."""
+    with unconfigured_test_client.session_transaction() as sess:
+        sess["issuer_url"] = "https://test.example.com"
+        sess["server_metadata"] = {"issuer": "https://test.example.com"}
+        sess["oauth_config"] = {
+            "client_id": "test-client",
+            "client_secret": "test-secret",
+            "auth_server": "https://test.example.com",
+        }
+        sess["registration_access_token"] = "test-token"
+        sess["registration_client_uri"] = "https://test.example.com/oauth/register/123"
+
+    with patch("requests.delete") as mock_delete:
+        mock_delete.return_value.raise_for_status.side_effect = response_error(
+            json={"error": "invalid_token"}
+        )
+        res = unconfigured_test_client.post(
+            "/unregister-client",
+            data={"csrf_token": csrf_token(unconfigured_test_client)},
+            follow_redirects=True,
+        )
+
+    assert b"Client unregistration failed: invalid_token" in res.data

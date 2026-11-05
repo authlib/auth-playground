@@ -63,10 +63,10 @@ def _flash_metadata_error(exception: Exception) -> None:
                 ),
                 "error",
             )
-    elif isinstance(exception, requests.RequestException):
-        flash(_("Failed to connect to the server. Please check the URL."), "error")
     elif isinstance(exception, ValueError):
         flash(_("Invalid response from server"), "error")
+    elif isinstance(exception, requests.RequestException):
+        flash(_("Failed to connect to the server. Please check the URL."), "error")
 
 
 def clear_server_session():
