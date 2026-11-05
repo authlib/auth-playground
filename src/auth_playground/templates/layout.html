@@ -5,8 +5,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="color-scheme" content="light dark">
         <title>{% block title %}{{ config.NAME }}{% endblock %} - Auth Playground</title>
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/pico.min.css') }}">
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/pico.colors.min.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='vendor/pico/pico.min.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='vendor/pico/pico.colors.min.css') }}">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
         {% block extra_css %}{% endblock %}
     </head>

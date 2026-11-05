@@ -129,6 +129,24 @@ jobs:
             exit 1
           }
 
+  vendor:
+    name: check vendored front-end files
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Check the vendored files match package-lock.json
+        run: |
+          npm ci
+          npm run vendor
+          if [ -n "$(git status --porcelain -- src/auth_playground/static/vendor)" ]; then
+            git status --short -- src/auth_playground/static/vendor
+            echo "The vendored files do not match package-lock.json."
+            echo "Run 'npm ci && npm run vendor' and commit the result."
+            exit 1
+          fi
+
   bundle:
     name: binary bundle
     runs-on: ubuntu-latest
@@ -153,6 +171,7 @@ jobs:
 
           curl -fsSL --retry 30 --retry-delay 1 --retry-connrefused -o /dev/null http://localhost:4000/en/
           curl -fsSL -o /dev/null http://localhost:4000/fr/
+          curl -fsSL -o /dev/null http://localhost:4000/static/vendor/pico/pico.min.css
 
   docker:
     name: docker build
@@ -185,7 +204,7 @@ jobs:
             exit 1
           }
 
-          for path in / /fr/; do
+          for path in / /fr/ /static/vendor/pico/pico.min.css; do
             curl -fsSL -o /dev/null "http://localhost:4000$path" || {
               echo "App failed to respond on $path"
               docker logs test-app
@@ -205,6 +224,7 @@ jobs:
       - style
       - commits
       - translations
+      - vendor
       - bundle
       - docker
     runs-on: ubuntu-latest

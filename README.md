@@ -133,6 +133,20 @@ uv run prek install
 They check the code style before each commit.
 They also check that commit messages follow [Conventional Commits](https://www.conventionalcommits.org).
 
+### Front-end dependencies
+
+The front-end dependencies are listed in `package.json` and pinned in `package-lock.json`.
+Their files are copied in `src/auth_playground/static/vendor` and committed, so Node is not needed to run or build the application.
+To update a dependency, install the new version and copy its files:
+
+```bash
+npm install @picocss/pico@2.1.1
+npm run vendor
+```
+
+Renovate only updates `package.json` and `package-lock.json`.
+On its pull requests, run `npm ci && npm run vendor` and commit the result.
+
 ### Translations
 
 After you add or change a translatable string, update the catalog:
