@@ -93,3 +93,11 @@ uv run pytest
 ```bash
 uv run prek run --all-files
 ```
+
+### Translations
+
+After you add or change a translatable string, update the catalog:
+
+```bash
+uv run prek run pybabel-extract --all-files
+```
