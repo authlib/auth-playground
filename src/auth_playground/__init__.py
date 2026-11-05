@@ -1,6 +1,7 @@
 import importlib.metadata
 import os
 import tempfile
+import time
 
 from authlib.integrations.flask_client import OAuth
 from authlib.oidc.discovery import get_well_known_url
@@ -17,6 +18,7 @@ from flask import session as flask_session
 from flask import url_for
 from flask_babel import gettext as _
 from flask_session import Session
+from werkzeug.local import LocalProxy
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from auth_playground.endpoints import bp
@@ -24,9 +26,19 @@ from auth_playground.i18n import babel
 from auth_playground.i18n import setup_i18n
 from auth_playground.oauth import bp as oauth_bp
 from auth_playground.session import ServerConfig
+from auth_playground.session import server_metadata
 
-oauth = OAuth()
 sess = Session()
+
+
+def get_oauth_registry():
+    """Return the OAuth registry of the current request."""
+    if "oauth" not in g:
+        g.oauth = OAuth(current_app)
+    return g.oauth
+
+
+oauth = LocalProxy(get_oauth_registry)
 
 
 def is_client_configured():
@@ -71,23 +83,28 @@ def get_oauth_config(app):
 
 
 def setup_oauth(app):
-    """Initialize OAuth client with configuration from environment or session."""
-    if "default" in oauth._registry:
-        del oauth._registry["default"]
+    """Initialize OAuth client with configuration from environment or session.
+
+    Each request gets its own registry, so it uses the client of its own session.
+    """
+    registry = OAuth(app)
+    g.oauth = registry
 
     config = get_oauth_config(app)
     if not config.get("client_id"):
         return False
 
-    oauth.init_app(app)
-
-    oauth.register(
+    registry.register(
         name="default",
         client_id=config["client_id"],
         client_secret=config["client_secret"],
         server_metadata_url=get_well_known_url(config["auth_server"], external=True),
         client_kwargs={"scope": "openid profile email phone address groups"},
     )
+    if metadata := server_metadata():
+        # Reuse the metadata already loaded, instead of fetching it again.
+        client = registry.create_client("default")
+        client.server_metadata.update(metadata, _loaded_at=time.time())
     return True
 
 
@@ -179,14 +196,14 @@ def create_app():
     @app.before_request
     def load_server_config():
         """Load server configuration into flask.g."""
-        setup_oauth(app)
-
         if not g.get("server_config"):
             g.server_config = ServerConfig.deserialize(flask_session)
             if not g.server_config:
                 g.server_config = ServerConfig()
             if issuer_url := app.config.get("OAUTH_AUTH_SERVER"):
                 g.server_config.issuer_url = issuer_url
+
+        setup_oauth(app)
 
     @app.after_request
     def save_server_config(response):

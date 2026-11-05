@@ -2,7 +2,15 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from flask import g
+
 from auth_playground.specs import ServerSpecs
+
+
+def server_metadata() -> dict:
+    """Return the metadata of the configured server, or an empty dict."""
+    server_config = g.get("server_config")
+    return (server_config.metadata if server_config else None) or {}
 
 
 @dataclass

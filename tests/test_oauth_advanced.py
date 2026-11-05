@@ -365,6 +365,24 @@ def check_scopes(form, scopes):
         checkbox.checked = checkbox.value in scopes
 
 
+def test_each_session_uses_its_own_client(iam_server, unconfigured_app):
+    """Test that two sessions configured with different clients use their own."""
+    locations = {}
+    for client_id in ("first-client", "second-client"):
+        test_client = unconfigured_app.test_client()
+        with test_client.session_transaction() as sess:
+            sess["issuer_url"] = iam_server.url
+            sess["oauth_config"] = {
+                "client_id": client_id,
+                "client_secret": "secret",
+                "auth_server": iam_server.url,
+            }
+        locations[client_id] = test_client.get("/authorize").location
+
+    for client_id, location in locations.items():
+        assert parse_qs(urlsplit(location).query)["client_id"] == [client_id]
+
+
 def test_authorize_with_custom_parameters(testapp):
     """Test authorization request with the parameters from the form."""
     form = testapp.get("/en/session/authentication").forms["auth-params-form"]
@@ -492,3 +510,23 @@ def test_logout_with_empty_parameters(testapp):
     params = parse_qs(urlsplit(res.location).query)
     for field in fields:
         assert field not in params
+
+
+def test_authorize_reuses_the_loaded_metadata(unconfigured_test_client):
+    """Test the authorization request does not fetch the metadata again."""
+    with unconfigured_test_client.session_transaction() as sess:
+        sess["issuer_url"] = "https://test.invalid"
+        sess["server_metadata"] = {
+            "issuer": "https://test.invalid",
+            "authorization_endpoint": "https://test.invalid/oauth/authorize",
+        }
+        sess["oauth_config"] = {
+            "client_id": "c",
+            "client_secret": "s",
+            "auth_server": "https://test.invalid",
+        }
+
+    with patch("requests.Session.request", side_effect=AssertionError("fetched")):
+        res = unconfigured_test_client.get("/authorize")
+
+    assert res.location.startswith("https://test.invalid/oauth/authorize?")
