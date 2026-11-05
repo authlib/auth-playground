@@ -145,6 +145,9 @@ def create_app():
         else FileSystemCache(os.path.join(tempfile.gettempdir(), "flask_sessions"))
     )
     app.config["SESSION_PERMANENT"] = False
+    # Only store the session when a request changes it. Otherwise concurrent
+    # requests, such as htmx ones, overwrite each other's changes.
+    app.config["SESSION_REFRESH_EACH_REQUEST"] = False
 
     app.config["BABEL_DEFAULT_LOCALE"] = "en"
     app.config["BABEL_DEFAULT_TIMEZONE"] = "UTC"

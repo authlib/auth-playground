@@ -55,7 +55,8 @@ def setup_i18n(app):
         """Extract language code from URL and store in g.lang_code for i18n routes."""
         if values is not None and "lang_code" in values:
             g.lang_code = values.pop("lang_code")
-            session["lang_code"] = g.lang_code
+            if session.get("lang_code") != g.lang_code:
+                session["lang_code"] = g.lang_code
 
     @app.before_request
     def before_request():

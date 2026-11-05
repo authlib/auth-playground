@@ -17,7 +17,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: src/auth_playground/__init__.py:186
+#: src/auth_playground/__init__.py:189
 #, python-format
 msgid "This request should be sent to %(server_name)s"
 msgstr ""
