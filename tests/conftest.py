@@ -32,7 +32,12 @@ def iam_client(iam_server):
             "http://client.test/authorize_callback",
             "http://client.test/logout_callback",
         ],
-        grant_types=["authorization_code", "refresh_token", "client_credentials"],
+        grant_types=[
+            "authorization_code",
+            "refresh_token",
+            "client_credentials",
+            "password",
+        ],
         response_types=["code"],
         token_endpoint_auth_method="client_secret_basic",
         scope=["openid", "profile", "email", "groups"],

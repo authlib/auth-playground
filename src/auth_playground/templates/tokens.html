@@ -7,7 +7,7 @@
         <nav class="subtabs">
             <a href="{{ url_for('routes.tokens', tab='request') }}"{% if tab == 'request' %} aria-current="page"{% endif %}>{% trans %}Request{% endtrans %}</a>
             <a href="{{ url_for('routes.tokens', tab='current') }}"{% if tab == 'current' %} aria-current="page"{% endif %}>{% trans %}Current tokens{% endtrans %}</a>
-            {% if not client_tokens %}
+            {% if tokens_grant.provider_session %}
                 <a href="{{ url_for('routes.tokens', tab='logout') }}"{% if tab == 'logout' %} aria-current="page"{% endif %}>{% trans %}Logout{% endtrans %}</a>
             {% endif %}
         </nav>
@@ -20,12 +20,12 @@
                 {% call render_form(refresh_form, url_for('oauth.refresh'), id="refresh-form") %}
                     {{ refresh_form.refresh() }}
                 {% endcall %}
-                {% if not client_tokens %}
+                {% if tokens_grant.provider_session %}
                     <p><small>{% trans %}Silent refresh — auth_time and acr stay unchanged.{% endtrans %}</small></p>
                 {% endif %}
             {% endif %}
             {% include "_tokens.html" %}
-            {% if client_tokens %}
+            {% if not tokens_grant.provider_session %}
                 {% call render_form(logout_local_form, url_for('oauth.logout_local'), id="forget-tokens-form") %}
                     {{ logout_local_form.logout(value=_("Forget tokens")) }}
                 {% endcall %}
@@ -37,7 +37,7 @@
             {% endcall %}
             <p><small>{% trans %}Local — this app only; you stay signed in at the provider, so the next sign-in may be silent (SSO).{% endtrans %}</small></p>
 
-            {% if not client_tokens and g.server_config and g.server_config.specs and g.server_config.specs.oidc_rpinitiated_logout %}
+            {% if g.server_config and g.server_config.specs and g.server_config.specs.oidc_rpinitiated_logout %}
                 {% call render_form(logout_params_form, url_for('oauth.logout'), id="logout-params-form") %}
                     {{ logout_params_form.id_token_hint() }}
                     {{ logout_params_form.client_id() }}

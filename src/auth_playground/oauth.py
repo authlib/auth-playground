@@ -31,9 +31,10 @@ from auth_playground.forms import ClientCredentialsForm
 from auth_playground.forms import DynamicRegistrationForm
 from auth_playground.forms import LogoutLocalForm
 from auth_playground.forms import LogoutParamsForm
+from auth_playground.forms import PasswordForm
 from auth_playground.forms import RefreshTokenForm
 from auth_playground.forms import UnregisterClientForm
-from auth_playground.grants import client_tokens
+from auth_playground.grants import tokens_grant
 from auth_playground.pages import render_tokens_page
 from auth_playground.session import server_metadata
 from auth_playground.token_request import extra_token_params
@@ -333,32 +334,18 @@ def store_token(token, grant_type, requested_scope=None, pkce=None):
     }
 
 
-@bp.route("/token/client-credentials", methods=["POST"])
-@server_config_needed
-def client_credentials():
-    """Request tokens for the client itself, without any user."""
-    form = ClientCredentialsForm()
-    if not form.validate_on_submit():
-        if "csrf_token" in form.errors:
-            flash(_("Invalid request"), "error")
-        return render_tokens_page(
-            "request", grant="client_credentials", grant_form=form
-        )
-
+def fetch_tokens(grant_type, form, **params):
+    """Request tokens at the token endpoint, or flash why it failed."""
     if not server_metadata().get("token_endpoint"):
         flash(_("The provider has no token endpoint."), "error")
-        return render_tokens_page(
-            "request", grant="client_credentials", grant_form=form
-        )
+        return None
 
-    scope = requested_scope(form)
     try:
-        # An empty scope keeps Authlib from sending the default scope.
-        token = auth_playground.oauth.default.fetch_access_token(
-            grant_type="client_credentials",
-            scope=scope,
+        return auth_playground.oauth.default.fetch_access_token(
+            grant_type=grant_type,
             body=urlencode(extra_token_params(form)),
             timeout=10,
+            **params,
         )
     except AuthlibBaseError as exc:
         error = exc.description or exc.error
@@ -366,19 +353,87 @@ def client_credentials():
         error = get_response_error(exc) or str(exc)
     except (requests.RequestException, ValueError) as exc:
         error = str(exc)
-    else:
-        error = None
 
-    if error:
-        flash(_("The token request failed: {error}").format(error=error), "error")
-        return render_tokens_page(
-            "request", grant="client_credentials", grant_form=form
-        )
+    flash(_("The token request failed: {error}").format(error=error), "error")
+    return None
+
+
+def render_grant_form(grant_type, form):
+    """Render the request tab again, with the form of ``grant_type``."""
+    if "csrf_token" in form.errors:
+        flash(_("Invalid request"), "error")
+    return render_tokens_page("request", grant=grant_type, grant_form=form)
+
+
+@bp.route("/token/client-credentials", methods=["POST"])
+@server_config_needed
+def client_credentials():
+    """Request tokens for the client itself, without any user."""
+    form = ClientCredentialsForm()
+    if not form.validate_on_submit():
+        return render_grant_form("client_credentials", form)
+
+    scope = requested_scope(form)
+    # An empty scope keeps Authlib from sending the default scope.
+    token = fetch_tokens("client_credentials", form, scope=scope)
+    if token is None:
+        return render_grant_form("client_credentials", form)
 
     forget_tokens()
     store_token(token, "client_credentials", requested_scope=scope or None)
     flash(_("The client obtained tokens."), "success")
     return redirect(url_for("routes.tokens", tab="current"))
+
+
+@bp.route("/token/password", methods=["POST"])
+@server_config_needed
+def password():
+    """Request tokens with the username and password of the user."""
+    form = PasswordForm()
+    if not form.validate_on_submit():
+        return render_grant_form("password", form)
+
+    scope = requested_scope(form)
+    token = fetch_tokens(
+        "password",
+        form,
+        username=form.username.data,
+        password=form.password.data,
+        scope=scope,
+    )
+    if token is None:
+        return render_grant_form("password", form)
+
+    forget_tokens()
+    store_token(token, "password", requested_scope=scope or None)
+    session["user"] = read_id_token(token)
+    if session["user"]:
+        flash(_("You have been successfully logged in."), "success")
+    else:
+        flash(
+            _("Tokens obtained for {username}.").format(username=form.username.data),
+            "success",
+        )
+    return redirect(url_for("routes.tokens", tab="current"))
+
+
+def read_id_token(token):
+    """Return the claims of the ID token, or flash why it cannot be read.
+
+    The password grant sends no nonce, so the ID token has none to check.
+    """
+    try:
+        return auth_playground.oauth.default.parse_id_token(token, nonce=None)
+    except requests.RequestException as exc:
+        flash(
+            _("The signing keys of the provider could not be fetched: {error}").format(
+                error=exc
+            ),
+            "warning",
+        )
+    except (JoseError, RuntimeError, ValueError, KeyError) as exc:
+        flash(_("The ID token is not valid: {error}").format(error=exc), "warning")
+    return None
 
 
 @bp.route("/authorize_callback")
@@ -425,7 +480,7 @@ def logout_local():
 
     message = (
         _("The tokens were forgotten")
-        if client_tokens()
+        if not tokens_grant().provider_session
         else _("You have been logged out")
     )
     clear_user_session()

@@ -26,6 +26,11 @@ class Grant:
     description: str
     references: tuple[tuple[str, str], ...]
     confidential_client: bool = False
+    deprecated: bool = False
+    # The tokens are for a user, and not for the client itself.
+    user: bool = True
+    # The user signs in at the provider, which keeps a session for them.
+    provider_session: bool = False
 
     @property
     def advertised(self):
@@ -50,6 +55,7 @@ GRANTS = (
                 "https://openid.net/specs/openid-connect-core-1_0.html#CodeFlowAuth",
             ),
         ),
+        provider_session=True,
     ),
     Grant(
         "client_credentials",
@@ -61,21 +67,33 @@ GRANTS = (
         ),
         (("RFC 6749 §4.4", "https://www.rfc-editor.org/rfc/rfc6749#section-4.4"),),
         confidential_client=True,
+        user=False,
+    ),
+    Grant(
+        "password",
+        _("Password (ROPC)"),
+        _("Direct"),
+        _(
+            "The client asks the user for their username and password, and sends "
+            "them to the token endpoint. The provider never sees the user sign in."
+        ),
+        (
+            ("RFC 6749 §4.3", "https://www.rfc-editor.org/rfc/rfc6749#section-4.3"),
+            ("RFC 9700 §2.4", "https://www.rfc-editor.org/rfc/rfc9700#section-2.4"),
+        ),
+        deprecated=True,
     ),
 )
 
 GRANTS_BY_VALUE = {grant.value: grant for grant in GRANTS}
 
 
-def client_tokens():
-    """Tell whether the client obtained the tokens for itself."""
-    return session.get("token_info", {}).get("grant") == "client_credentials"
+def tokens_grant():
+    """Return the grant type that obtained the tokens, or else the default one."""
+    grant = session.get("token_info", {}).get("grant")
+    return GRANTS_BY_VALUE.get(grant, GRANTS[0])
 
 
 def get_grant(value):
     """Return the grant type ``value``, or else the one that obtained the tokens."""
-    if value in GRANTS_BY_VALUE:
-        return GRANTS_BY_VALUE[value]
-
-    last = session.get("token_info", {}).get("grant")
-    return GRANTS_BY_VALUE.get(last, GRANTS[0])
+    return GRANTS_BY_VALUE.get(value) or tokens_grant()
