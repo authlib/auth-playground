@@ -457,6 +457,14 @@ def authorize_callback():
     except JoseError as exc:
         flash(_("The ID token is not valid: {error}").format(error=exc), "error")
         return redirect(url_for("routes.tokens"))
+    except requests.RequestException as exc:
+        flash(
+            _("An error happened during login: {error}").format(
+                error=get_response_error(exc) or exc
+            ),
+            "error",
+        )
+        return redirect(url_for("routes.tokens"))
 
     session.pop("token", None)
     session["user"] = token.get("userinfo")

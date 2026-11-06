@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-06 10:46+0100\n"
+"POT-Creation-Date: 2026-11-06 14:57+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -59,8 +59,8 @@ msgstr ""
 
 #: src/auth_playground/endpoints.py:195 src/auth_playground/oauth.py:104
 #: src/auth_playground/oauth.py:224 src/auth_playground/oauth.py:269
-#: src/auth_playground/oauth.py:364 src/auth_playground/oauth.py:478
-#: src/auth_playground/oauth.py:543
+#: src/auth_playground/oauth.py:364 src/auth_playground/oauth.py:486
+#: src/auth_playground/oauth.py:551
 msgid "Invalid request"
 msgstr ""
 
@@ -512,7 +512,7 @@ msgstr ""
 msgid "The client obtained tokens."
 msgstr ""
 
-#: src/auth_playground/oauth.py:411 src/auth_playground/oauth.py:469
+#: src/auth_playground/oauth.py:411 src/auth_playground/oauth.py:477
 msgid "You have been successfully logged in."
 msgstr ""
 
@@ -531,32 +531,32 @@ msgstr ""
 msgid "The ID token is not valid: {error}"
 msgstr ""
 
-#: src/auth_playground/oauth.py:451
+#: src/auth_playground/oauth.py:451 src/auth_playground/oauth.py:462
 #, python-brace-format
 msgid "An error happened during login: {error}"
 msgstr ""
 
-#: src/auth_playground/oauth.py:482
+#: src/auth_playground/oauth.py:490
 msgid "The tokens were forgotten"
 msgstr ""
 
-#: src/auth_playground/oauth.py:484
+#: src/auth_playground/oauth.py:492
 msgid "You have been logged out"
 msgstr ""
 
-#: src/auth_playground/oauth.py:534
+#: src/auth_playground/oauth.py:542
 msgid "You have been logged out from the server"
 msgstr ""
 
-#: src/auth_playground/oauth.py:548
+#: src/auth_playground/oauth.py:556
 msgid "No refresh token available"
 msgstr ""
 
-#: src/auth_playground/oauth.py:560
+#: src/auth_playground/oauth.py:568
 msgid "Token successfully refreshed"
 msgstr ""
 
-#: src/auth_playground/oauth.py:563
+#: src/auth_playground/oauth.py:571
 #, python-brace-format
 msgid "An error happened during token refresh: {error}"
 msgstr ""
