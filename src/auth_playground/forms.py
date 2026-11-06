@@ -27,7 +27,6 @@ from wtforms.csrf.core import CSRFTokenField
 from wtforms.fields import SelectChoice
 from wtforms.meta import clean_key
 from wtforms.validators import DataRequired
-from wtforms.validators import InputRequired
 from wtforms.validators import Length
 from wtforms.validators import NumberRange
 from wtforms.validators import Optional
@@ -310,7 +309,6 @@ class DynamicRegistrationForm(BaseForm):
         _("Grant types to register:"),
         choices=get_grant_type_choices,
         default=DEFAULT_REGISTERED_GRANT_TYPES,
-        validators=[InputRequired(message=_("Choose at least one grant type."))],
         widget=ListWidget(prefix_label=False),
         option_widget=CheckboxInput(),
     )
@@ -327,6 +325,12 @@ class DynamicRegistrationForm(BaseForm):
     def __init__(self, *args, **kwargs):
         meta = {"htmx_endpoint": url_for("oauth.client_dynamic_registration")}
         super().__init__(*args, meta={**meta, **kwargs.pop("meta", {})}, **kwargs)
+
+    def validate_grant_types(self, field):
+        # InputRequired would put "required" on every checkbox,
+        # so the browser would refuse any unchecked one.
+        if not field.data:
+            raise ValidationError(_("Choose at least one grant type."))
 
 
 class ChangeServerForm(BaseForm):

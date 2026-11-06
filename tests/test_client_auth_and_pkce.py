@@ -114,6 +114,14 @@ def test_dynamic_registration_without_grant_types(unconfigured_testapp):
     mock_post.assert_not_called()
 
 
+def test_dynamic_registration_grant_types_are_not_required(unconfigured_testapp):
+    """Test the browser lets a grant type checkbox stay unchecked."""
+    server_session(unconfigured_testapp)
+    form = unconfigured_testapp.get("/en/client").forms["dynamic-registration-form"]
+
+    assert all("required" not in box.attrs for box in form.fields["grant_types"])
+
+
 def test_dynamic_registration_only_refresh_token(unconfigured_testapp):
     """Test no response type is registered without authorization_code."""
     server_session(unconfigured_testapp)
