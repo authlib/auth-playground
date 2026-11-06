@@ -2,6 +2,34 @@
 {% set current_step = 2 %}
 {% from "_form.html" import render_form %}
 
+{% macro client_key_card(key, from_env) %}
+    <article>
+        <header>
+            <h3>{% trans %}Client key{% endtrans %}</h3>
+        </header>
+        <p>{% trans %}The client signs its token requests with this key (private_key_jwt).{% endtrans %}</p>
+        <p>
+            <strong>{% trans %}Key:{% endtrans %}</strong> {{ key.description }}<br>
+            <strong>kid:</strong> <code>{{ key.kid }}</code><br>
+            <strong>{% trans %}Algorithm:{% endtrans %}</strong> <code>{{ key.alg }}</code><br>
+            <strong>jwks_uri:</strong> <a href="{{ key.jwks_uri }}"><code>{{ key.jwks_uri }}</code></a>
+        </p>
+        <label>
+            {% trans %}Public key{% endtrans %} (<code>jwks</code>)
+            <textarea rows="8" readonly>{{ key.jwks }}</textarea>
+            <button type="button" class="copy-token-btn secondary">{% trans %}Copy{% endtrans %}</button>
+        </label>
+        {% if not from_env %}
+            <p>
+                <a href="{{ url_for('oauth.client_private_key') }}" role="button" class="secondary" download>{% trans %}Download the private key{% endtrans %}</a>
+                <br>
+                <small>{% trans %}To replay requests with curl or another client. Anyone with this file can act as the client.{% endtrans %}</small>
+            </p>
+            <p><small>{% trans %}The key lives in your session. Forgetting the client, or the end of the session, deletes it. The jwks_uri then answers 404, and the provider can no longer check the client.{% endtrans %}</small></p>
+        {% endif %}
+    </article>
+{% endmacro %}
+
 {% block title %}{% trans %}Configure OAuth Client{% endtrans %}{% endblock %}
 
 {% block content %}
@@ -16,6 +44,9 @@
                 <code>{{ oauth_config.client_id }}</code>
             </p>
         </article>
+        {% if client_key %}
+            {{ client_key_card(client_key, from_env=true) }}
+        {% endif %}
     {% else %}
         {% if g.server_config and g.server_config.registration_access_token %}
             <article>
@@ -27,6 +58,9 @@
                     {{ unregister_form.unregister() }}
                 {% endcall %}
             </article>
+        {% endif %}
+        {% if client_key %}
+            {{ client_key_card(client_key, from_env=false) }}
         {% endif %}
 
         <h2>{% trans %}Choose a configuration method{% endtrans %}</h2>
@@ -53,6 +87,13 @@
                         </div>
                         {{ dynamic_registration_form.grant_types() }}
                     </div>
+                    {{ dynamic_registration_form.key_source() }}
+                    {{ dynamic_registration_form.private_key() }}
+                    {{ dynamic_registration_form.key_id() }}
+                    {{ dynamic_registration_form.signing_alg() }}
+                    {{ dynamic_registration_form.regenerate_key() }}
+                    {{ dynamic_registration_form.jwks_delivery() }}
+                    {{ dynamic_registration_form.key_preview() }}
                     {{ dynamic_registration_form.initial_access_token() }}
                 {% endcall %}
 
@@ -95,8 +136,18 @@
                 {{ client_form.client_id() }}
                 {{ client_form.token_endpoint_auth_method() }}
                 {{ client_form.client_secret() }}
+                {{ client_form.key_source() }}
+                {{ client_form.private_key() }}
+                {{ client_form.key_id() }}
+                {{ client_form.signing_alg() }}
+                {{ client_form.regenerate_key() }}
+                {{ client_form.key_preview() }}
                 {{ client_form.save() }}
             {% endcall %}
         </article>
     {% endif %}
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('static', filename='js/copy-token.js') }}"></script>
 {% endblock %}

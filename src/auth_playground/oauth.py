@@ -8,9 +8,12 @@ from authlib.common.errors import AuthlibBaseError
 from authlib.common.security import generate_token
 from authlib.integrations.base_client import OAuthError
 from flask import Blueprint
+from flask import Response
+from flask import abort
 from flask import current_app
 from flask import flash
 from flask import g
+from flask import jsonify
 from flask import redirect
 from flask import request
 from flask import session
@@ -23,8 +26,17 @@ from auth_playground.authorization import authorization_params
 from auth_playground.authorization import new_code_verifier
 from auth_playground.authorization import pkce_params
 from auth_playground.authorization import requested_scope
+from auth_playground.client_auth import KEY_METHOD
 from auth_playground.client_auth import METHODS
 from auth_playground.client_auth import PUBLIC_METHOD
+from auth_playground.client_auth import SECRET_METHODS
+from auth_playground.client_key import jwks_uri
+from auth_playground.client_key import key_algorithms
+from auth_playground.client_key import key_id as client_key_id
+from auth_playground.client_key import private_pem
+from auth_playground.client_key import public_jwks
+from auth_playground.client_key import publish_key
+from auth_playground.client_key import published_jwks
 from auth_playground.decorators import server_config_needed
 from auth_playground.forms import AuthorizationParamsForm
 from auth_playground.forms import ClientCredentialsForm
@@ -100,7 +112,15 @@ def client_dynamic_registration():
     form = DynamicRegistrationForm()
 
     if not form.validate_on_submit():
-        errors = [] if "csrf_token" in form.errors else form.grant_types.errors
+        errors = (
+            []
+            if "csrf_token" in form.errors
+            else [
+                *form.grant_types.errors,
+                *form.private_key.errors,
+                *form.signing_alg.errors,
+            ]
+        )
         for error in errors or [_("Invalid request")]:
             flash(error, "error")
         return redirect(url_for("routes.configure_client"))
@@ -118,6 +138,8 @@ def client_dynamic_registration():
     requested_auth_method = (
         PUBLIC_METHOD if form.client_type.data == "public" else form.auth_method.data
     )
+    client_key = form.client_key() if form.uses_key() else None
+    signing_alg = form.signing_alg.data if client_key else None
     registration_data = {
         "client_name": "Auth Playground",
         "client_uri": url_for("routes.index", _external=True),
@@ -133,6 +155,15 @@ def client_dynamic_registration():
         "software_id": get_software_id(),
         "software_version": get_software_version(),
     }
+
+    if client_key:
+        registration_data["token_endpoint_auth_signing_alg"] = signing_alg
+        if form.jwks_delivery.data == "jwks_uri":
+            registration_data["jwks_uri"] = jwks_uri(client_key)
+            # The provider may download the key during the registration.
+            publish_key(client_key)
+        else:
+            registration_data["jwks"] = public_jwks(client_key)
 
     if g.server_config.specs.oidc_rpinitiated_logout:
         registration_data["post_logout_redirect_uris"] = [
@@ -181,7 +212,7 @@ def client_dynamic_registration():
         return redirect(url_for("routes.configure_client"))
 
     client_secret = client_data.get("client_secret")
-    if auth_method != PUBLIC_METHOD and not client_secret:
+    if auth_method in SECRET_METHODS and not client_secret:
         flash(
             _(
                 "The server registered the client without a client secret, "
@@ -192,12 +223,40 @@ def client_dynamic_registration():
         )
         return redirect(url_for("routes.configure_client"))
 
+    if auth_method == KEY_METHOD and not client_key:
+        flash(
+            _(
+                "The server registered the client with the private_key_jwt "
+                "authentication method, but the playground has no key for it. "
+                "The client is still registered on the server."
+            ),
+            "error",
+        )
+        return redirect(url_for("routes.configure_client"))
+
+    uses_key = auth_method == KEY_METHOD
+    if uses_key:
+        # Per RFC 7591 §3.2.1, the server may choose another algorithm.
+        signing_alg = client_data.get("token_endpoint_auth_signing_alg") or signing_alg
+        if signing_alg not in key_algorithms(client_key):
+            flash(
+                _(
+                    "The server registered the client with the {alg} signing "
+                    "algorithm, which its key cannot use. "
+                    "The client is still registered on the server."
+                ).format(alg=signing_alg),
+                "error",
+            )
+            return redirect(url_for("routes.configure_client"))
+
     auth_playground.setup_oauth_runtime(
         current_app,
         client_data["client_id"],
-        client_secret if auth_method != PUBLIC_METHOD else None,
+        client_secret if auth_method in SECRET_METHODS else None,
         g.server_config.issuer_url,
         auth_method,
+        client_key=client_key if uses_key else None,
+        signing_alg=signing_alg if uses_key else None,
     )
 
     if "registration_access_token" in client_data:
@@ -249,14 +308,43 @@ def unregister_client():
             flash(_("Client unregistration failed"), "error")
         return redirect(url_for("routes.configure_client"))
 
-    session.pop("oauth_config", None)
-    clear_user_session()
+    auth_playground.forget_client()
 
     g.server_config.registration_access_token = None
     g.server_config.registration_client_uri = None
 
     flash(_("Client successfully unregistered"), "success")
     return redirect(url_for("routes.configure_client"))
+
+
+@bp.route("/jwks/<key_id>.json")
+def client_jwks(key_id):
+    """Serve the public key of a private_key_jwt client, for its provider."""
+    if (env_key := current_app.config.get("OAUTH_CLIENT_KEY")) and key_id == (
+        client_key_id(env_key)
+    ):
+        return jsonify(public_jwks(env_key))
+
+    if not (jwks := published_jwks(key_id)):
+        abort(404)
+    return jsonify(jwks)
+
+
+@bp.route("/client/key.pem")
+def client_private_key():
+    """Download the private key of the client of the session."""
+    oauth_config = session.get("oauth_config") or {}
+    if not (client_key := oauth_config.get("client_key")):
+        abort(404)
+
+    return Response(
+        private_pem(client_key),
+        mimetype="application/x-pem-file",
+        headers={
+            "Content-Disposition": "attachment; filename=client-key.pem",
+            "Cache-Control": "no-store",
+        },
+    )
 
 
 @bp.route("/authorize", methods=["GET", "POST"])
@@ -456,6 +544,14 @@ def authorize_callback():
         return redirect(url_for("routes.tokens"))
     except JoseError as exc:
         flash(_("The ID token is not valid: {error}").format(error=exc), "error")
+        return redirect(url_for("routes.tokens"))
+    except requests.RequestException as exc:
+        flash(
+            _("An error happened during login: {error}").format(
+                error=get_response_error(exc) or exc
+            ),
+            "error",
+        )
         return redirect(url_for("routes.tokens"))
 
     session.pop("token", None)

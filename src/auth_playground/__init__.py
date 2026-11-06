@@ -4,6 +4,7 @@ import tempfile
 import time
 
 from authlib.oauth2.rfc7523 import ClientSecretJWT
+from authlib.oauth2.rfc7523 import PrivateKeyJWT
 from authlib.oidc.discovery import get_well_known_url
 from cachelib.file import FileSystemCache
 from cachelib.simple import SimpleCache
@@ -22,7 +23,16 @@ from werkzeug.local import LocalProxy
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from auth_playground.authorization import DEFAULT_SCOPE
+from auth_playground.client_auth import KEY_METHOD
+from auth_playground.client_auth import advertised_signing_algs
 from auth_playground.client_auth import default_method
+from auth_playground.client_key import PENDING_KEY
+from auth_playground.client_key import check_private_key
+from auth_playground.client_key import key_algorithms
+from auth_playground.client_key import load_key
+from auth_playground.client_key import preferred_algorithm
+from auth_playground.client_key import publish_key
+from auth_playground.client_key import unpublish_key
 from auth_playground.endpoints import bp
 from auth_playground.i18n import babel
 from auth_playground.i18n import setup_i18n
@@ -85,14 +95,28 @@ def get_oauth_config(app):
     }
     if is_oauth_client_from_env(app):
         config["token_endpoint_auth_method"] = default_method(
-            config.get("client_secret")
+            config.get("client_secret"), app.config.get("OAUTH_CLIENT_KEY")
         )
+        if client_key := app.config.get("OAUTH_CLIENT_KEY"):
+            config["client_key"] = client_key
+            config["token_endpoint_auth_signing_alg"] = env_signing_alg(client_key)
     elif config.get("client_id"):
         config.setdefault(
             "token_endpoint_auth_method", default_method(config.get("client_secret"))
         )
 
     return config
+
+
+def env_signing_alg(client_key):
+    """Return the algorithm of the key set by the environment.
+
+    It is the first one the key can use that the server advertises, else the
+    first one the key can use.
+    """
+    return preferred_algorithm(
+        key_algorithms(client_key), advertised_signing_algs(server_metadata())
+    )
 
 
 def setup_oauth(app):
@@ -107,16 +131,32 @@ def setup_oauth(app):
     if not config.get("client_id"):
         return False
 
+    client_secret = config.get("client_secret")
+    client_auth_methods = [ClientSecretJWT()]
+    if config["token_endpoint_auth_method"] == KEY_METHOD:
+        client_key = config["client_key"]
+        # Authlib 1.9.4 reads a key given as text as an RSA key only.
+        # TODO: with Authlib 1.10, pass client_key itself.
+        client_secret = load_key(client_key)
+        client_auth_methods.append(
+            PrivateKeyJWT(
+                alg=config["token_endpoint_auth_signing_alg"],
+                # Authlib 1.9.4 does not put the kid of the key in the header.
+                # TODO: remove with Authlib 1.10, which does.
+                headers={"kid": client_key["kid"]},
+            )
+        )
+
     registry.register(
         name="default",
         client_id=config["client_id"],
-        client_secret=config.get("client_secret"),
+        client_secret=client_secret,
         server_metadata_url=get_well_known_url(config["auth_server"], external=True),
         client_kwargs={
             "scope": DEFAULT_SCOPE,
             "token_endpoint_auth_method": config["token_endpoint_auth_method"],
         },
-        client_auth_methods=[ClientSecretJWT()],
+        client_auth_methods=client_auth_methods,
     )
     if metadata := server_metadata():
         # Reuse the metadata already loaded, instead of fetching it again.
@@ -126,21 +166,43 @@ def setup_oauth(app):
 
 
 def setup_oauth_runtime(
-    app, client_id, client_secret, auth_server, token_endpoint_auth_method
+    app,
+    client_id,
+    client_secret,
+    auth_server,
+    token_endpoint_auth_method,
+    client_key=None,
+    signing_alg=None,
 ):
     """Set up OAuth with runtime configuration stored in session.
 
-    The tokens of the previous client are forgotten.
+    The tokens and the key of the previous client are forgotten. The public
+    key of the new client is served at its jwks_uri.
     """
-    clear_user_session()
+    forget_client()
     flask_session["oauth_config"] = {
         "client_id": client_id,
         "client_secret": client_secret,
         "auth_server": auth_server,
         "token_endpoint_auth_method": token_endpoint_auth_method,
     }
+    if client_key:
+        flask_session["oauth_config"].update(
+            client_key=client_key, token_endpoint_auth_signing_alg=signing_alg
+        )
+        publish_key(client_key)
 
     return setup_oauth(app)
+
+
+def forget_client():
+    """Forget the client of the session, its tokens and its key."""
+    clear_user_session()
+    for pending in (flask_session.pop(PENDING_KEY, None) or {}).values():
+        unpublish_key(pending)
+    oauth_config = flask_session.pop("oauth_config", None) or {}
+    if client_key := oauth_config.get("client_key"):
+        unpublish_key(client_key)
 
 
 def is_proxy_fix_enabled():
@@ -179,6 +241,7 @@ def create_app():
     oauth_auth_server_env = os.environ.get("OAUTH_AUTH_SERVER")
     app.config["OAUTH_CLIENT_ID"] = os.environ.get("OAUTH_CLIENT_ID")
     app.config["OAUTH_CLIENT_SECRET"] = os.environ.get("OAUTH_CLIENT_SECRET")
+    app.config["OAUTH_CLIENT_KEY"] = None
     app.config["OAUTH_AUTH_SERVER"] = (
         oauth_auth_server_env.rstrip("/") if oauth_auth_server_env else None
     )
@@ -188,6 +251,9 @@ def create_app():
 
     sess.init_app(app)
     setup_i18n(app)
+    if private_key := os.environ.get("OAUTH_CLIENT_PRIVATE_KEY"):
+        with app.app_context():
+            app.config["OAUTH_CLIENT_KEY"] = check_private_key(private_key)
 
     app.register_blueprint(oauth_bp)
     app.register_blueprint(bp, url_prefix="/<lang:lang_code>")
@@ -231,6 +297,18 @@ def create_app():
                 g.server_config.issuer_url = issuer_url
 
         setup_oauth(app)
+
+    @app.after_request
+    def keep_client_key_published(response):
+        """Serve the public key of the client as long as its session lasts.
+
+        Flask runs the after_request functions in reverse order: this one
+        runs after save_server_config, which can change the session.
+        """
+        oauth_config = flask_session.get("oauth_config") or {}
+        if flask_session.modified and (client_key := oauth_config.get("client_key")):
+            publish_key(client_key)
+        return response
 
     @app.after_request
     def save_server_config(response):

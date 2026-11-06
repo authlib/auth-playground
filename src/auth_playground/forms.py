@@ -1,5 +1,6 @@
 import ipaddress
 import json
+from functools import cached_property
 from urllib.parse import urlparse
 
 from babel import Locale
@@ -40,10 +41,22 @@ from auth_playground.authorization import PKCE_METHODS
 from auth_playground.authorization import RESERVED_PARAMS
 from auth_playground.authorization import authorization_preview
 from auth_playground.authorization import parse_extra_params
+from auth_playground.client_auth import CONFIDENTIAL_METHODS
+from auth_playground.client_auth import KEY_METHOD
 from auth_playground.client_auth import METHODS
 from auth_playground.client_auth import PUBLIC_METHOD
 from auth_playground.client_auth import SECRET_METHODS
 from auth_playground.client_auth import advertised_methods
+from auth_playground.client_auth import advertised_signing_algs
+from auth_playground.client_key import ALGORITHMS
+from auth_playground.client_key import DEFAULT_ALGORITHMS
+from auth_playground.client_key import InvalidKeyError
+from auth_playground.client_key import check_private_key
+from auth_playground.client_key import key_algorithms
+from auth_playground.client_key import key_summary
+from auth_playground.client_key import pending_key
+from auth_playground.client_key import preferred_algorithm
+from auth_playground.client_key import publish_key
 from auth_playground.grants import GRANTS
 from auth_playground.grants import advertised_grant_types
 from auth_playground.session import server_metadata
@@ -81,9 +94,10 @@ class BaseForm(HtmxFlaskForm):
 
         def field_wrapper(self, field, render_kw):
             group_with = render_kw.pop("group_with", None)
+            hidden = render_kw.pop("hidden", False)
             render_kw = {clean_key(key): value for key, value in render_kw.items()}
             if isinstance(field, BARE_FIELDS):
-                return field.widget(field, **render_kw)
+                return field.widget(field, hidden=hidden, **render_kw)
 
             field_id = render_kw.get("id", field.id)
             fieldset = isinstance(field.widget, ListWidget)
@@ -103,6 +117,7 @@ class BaseForm(HtmxFlaskForm):
                     field_id=field_id,
                     fieldset=fieldset,
                     error_id=error_id,
+                    hidden=hidden,
                     button=field._form[group_with] if group_with else None,
                 )
             )
@@ -253,7 +268,206 @@ def disable_for_public_client(form, source, target):
     target.render_kw = {**(target.render_kw or {}), "disabled": source.data == "public"}
 
 
-class ClientConfigForm(BaseForm):
+def show_field(field, shown):
+    """Show or hide the field, with its label."""
+    field.render_kw = {**(field.render_kw or {}), "hidden": not shown}
+
+
+def signing_alg_choices(algs):
+    """Label the signing algorithms the server does not advertise."""
+    advertised = advertised_signing_algs(server_metadata())
+    if advertised is None:
+        return [SelectChoice(alg, alg) for alg in algs]
+    return advertised_choices(algs, advertised)
+
+
+def default_signing_alg(algs):
+    """Return the first advertised algorithm, or the first algorithm."""
+    return preferred_algorithm(algs, advertised_signing_algs(server_metadata()))
+
+
+def generated_key_algorithms():
+    """Return the algorithms a generated key can use."""
+    if advertised_signing_algs(server_metadata()) is None:
+        return list(DEFAULT_ALGORITHMS)
+    return list(ALGORITHMS)
+
+
+def regenerate_key(form, source, target):
+    """Replace the generated key with a new one."""
+    pending_key(form.key_form_name, form.signing_alg.data, regenerate=True)
+
+
+class ClientKeyPreviewWidget:
+    """Render the public key of the client, as the provider needs it."""
+
+    def __call__(self, field, **kwargs):
+        kwargs.setdefault("id", field.id)
+        form = field._form
+        return Markup(
+            render_template(
+                "_client_key_preview.html",
+                attributes=Markup(html_params(**kwargs)),
+                key=form.key_details(),
+                registration=field.registration,
+                jwks_delivery=form.jwks_delivery.data if field.registration else None,
+            )
+        )
+
+
+class ClientKeyPreviewField(Field):
+    """A read-only preview of the key of a private_key_jwt client."""
+
+    widget = ClientKeyPreviewWidget()
+
+    def __init__(self, label=None, registration=False, **kwargs):
+        super().__init__(label, **kwargs)
+        self.registration = registration
+
+    def process_formdata(self, valuelist):
+        pass
+
+
+def client_key_fields(method_sources, id_prefix="", registration=False):
+    """Return the fields that choose the key of a private_key_jwt client."""
+    source_sources = [*method_sources, "key_source"]
+    preview_sources = [*source_sources, "private_key", "key_id", "signing_alg"]
+    if registration:
+        preview_sources.append("jwks_delivery")
+    return (
+        RadioField(
+            _("Client key:"),
+            choices=[
+                SelectChoice("generate", _("Generate a key")),
+                SelectChoice("import", _("Import a key")),
+            ],
+            default="generate",
+            id=f"{id_prefix}key_source",
+            description=_("The client signs its token requests with this key."),
+        ).triggered_by(method_sources, on="change"),
+        TextAreaField(
+            _("Private key:"),
+            id=f"{id_prefix}private_key",
+            description=_(
+                "PEM or JWK: RSA, EC or Ed25519. Kept in your session, never shown again."
+            ),
+            render_kw={
+                "rows": 6,
+                "placeholder": "-----BEGIN PRIVATE KEY-----",
+                "autocomplete": "off",
+                "spellcheck": "false",
+            },
+        ).triggered_by(source_sources, on="change"),
+        StringField(
+            _("Key ID (kid):"),
+            id=f"{id_prefix}key_id",
+            description=_(
+                "Sent in the assertion header. Leave empty to use the key "
+                "thumbprint (RFC 7638)."
+            ),
+        ).triggered_by(source_sources, on="change"),
+        SelectField(
+            _("Signing algorithm:"),
+            choices=[],
+            id=f"{id_prefix}signing_alg",
+            description=_("From token_endpoint_auth_signing_alg_values_supported."),
+        ).triggered_by([*source_sources, "private_key"], on="change"),
+        ButtonField(
+            _("Generate another key"),
+            id=f"{id_prefix}regenerate_key",
+            render_kw={"class": "secondary outline"},
+        )
+        .triggered_by(source_sources, on="change")
+        .triggers("key_preview", regenerate_key),
+        ClientKeyPreviewField(
+            id=f"{id_prefix}key_preview", registration=registration, wrapper=False
+        ).triggered_by(preview_sources, on="change"),
+    )
+
+
+class ClientKeyMixin:
+    """Choose the key of a private_key_jwt client.
+
+    The form declares the fields of ``client_key_fields``, and the
+    ``key_form_name`` its generated key is kept under.
+    """
+
+    key_form_name = None
+
+    def uses_key(self):
+        """Tell whether the client authenticates with a private key."""
+        raise NotImplementedError
+
+    def setup_client_key(self):
+        """Show the fields the chosen key needs, and offer the algorithms of the key."""
+        uses_key = self.uses_key()
+        importing = self.key_source.data == "import"
+        show_field(self.key_source, uses_key)
+        show_field(self.private_key, uses_key and importing)
+        show_field(self.key_id, uses_key and importing)
+        show_field(self.signing_alg, uses_key)
+        show_field(self.regenerate_key, uses_key and not importing)
+
+        algs = self.key_algorithms()
+        self.signing_alg.choices = signing_alg_choices(algs)
+        if self.signing_alg.data not in algs:
+            self.signing_alg.data = default_signing_alg(algs)
+
+        # The provider may download the key as soon as the user enters its
+        # jwks_uri, before the client is saved.
+        if uses_key and (data := self.client_key()):
+            publish_key(data)
+
+    @cached_property
+    def imported_key(self):
+        """The imported key as a JWK dict, or ``None`` when it is not valid."""
+        if not self.private_key.data:
+            return None
+        try:
+            return check_private_key(self.private_key.data, self.key_id.data or None)
+        except InvalidKeyError:
+            return None
+
+    def key_algorithms(self):
+        """Return the algorithms the chosen key can use."""
+        if self.key_source.data != "import":
+            return generated_key_algorithms()
+        if data := self.imported_key:
+            return key_algorithms(data)
+        return list(ALGORITHMS)
+
+    def client_key(self):
+        """Return the chosen key as a JWK dict, or ``None`` when there is none yet."""
+        if self.key_source.data == "import":
+            return self.imported_key
+        return pending_key(self.key_form_name, self.signing_alg.data)
+
+    def key_details(self):
+        """Return what the provider needs to know about the key, or ``None``."""
+        if not self.uses_key():
+            return None
+
+        data = self.client_key()
+        if data is None:
+            return {}
+
+        return {
+            **key_summary(data, self.signing_alg.data),
+            "generated": self.key_source.data != "import",
+        }
+
+    def validate_private_key(self, field):
+        if not self.uses_key() or self.key_source.data != "import":
+            return
+        if not field.data:
+            raise ValidationError(_("Paste the private key of the client."))
+        try:
+            check_private_key(field.data)
+        except InvalidKeyError as exc:
+            raise ValidationError(str(exc)) from exc
+
+
+class ClientConfigForm(ClientKeyMixin, BaseForm):
     """Form to configure OAuth client credentials manually."""
 
     client_id = StringField(
@@ -268,50 +482,95 @@ class ClientConfigForm(BaseForm):
         ],
         render_kw={"placeholder": "auth-playground-client"},
     )
-    client_secret = PasswordField(
-        _("Client secret:"),
-        description=_("Leave empty for a public client."),
-        render_kw={"placeholder": "******************"},
-    )
     token_endpoint_auth_method = SelectField(
         _("Token endpoint authentication:"),
         choices=lambda: auth_method_choices(METHODS),
         default=lambda: auth_method_default(METHODS),
         description=_("How the client proves its identity to the token endpoint."),
     )
+    client_secret = PasswordField(
+        _("Client secret:"),
+        description=_("Leave empty for a public client."),
+        render_kw={"placeholder": "******************"},
+    ).triggered_by("token_endpoint_auth_method", on="change")
+    (
+        key_source,
+        private_key,
+        key_id,
+        signing_alg,
+        regenerate_key,
+        key_preview,
+    ) = client_key_fields(["token_endpoint_auth_method"])
     save = SubmitField(_("Complete configuration"))
 
+    key_form_name = "manual"
+
+    def __init__(self, *args, **kwargs):
+        meta = {"htmx_endpoint": url_for("routes.configure_client")}
+        super().__init__(*args, meta={**meta, **kwargs.pop("meta", {})}, **kwargs)
+        show_field(self.client_secret, not self.uses_key())
+        self.setup_client_key()
+
+    def uses_key(self):
+        return self.token_endpoint_auth_method.data == KEY_METHOD
+
     def validate_client_secret(self, field):
-        if self.token_endpoint_auth_method.data != PUBLIC_METHOD:
+        method = self.token_endpoint_auth_method.data
+        if method in SECRET_METHODS:
             if not field.data:
                 raise ValidationError(
                     _("This authentication method needs a client secret.")
                 )
             return
 
-        if field.data:
+        if method == PUBLIC_METHOD and field.data:
             raise ValidationError(
                 _("A public client has no secret. Leave the secret empty.")
             )
 
 
-class DynamicRegistrationForm(BaseForm):
+class DynamicRegistrationForm(ClientKeyMixin, BaseForm):
     """Form to trigger dynamic client registration with CSRF protection."""
 
     client_type = RadioField(
         _("Client type:"),
         choices=[
-            SelectChoice("confidential", _("Confidential, with a client secret")),
+            SelectChoice("confidential", _("Confidential, with a secret or a key")),
             SelectChoice("public", _("Public, without a secret, with PKCE")),
         ],
         default="confidential",
     )
     auth_method = SelectField(
         _("Token endpoint authentication:"),
-        choices=lambda: auth_method_choices(SECRET_METHODS),
-        default=lambda: auth_method_default(SECRET_METHODS),
+        choices=lambda: auth_method_choices(CONFIDENTIAL_METHODS),
+        default=lambda: auth_method_default(CONFIDENTIAL_METHODS),
         description=_("A public client uses none."),
     ).triggered_by("client_type", disable_for_public_client, on="change")
+    (
+        key_source,
+        private_key,
+        key_id,
+        signing_alg,
+        regenerate_key,
+        key_preview,
+    ) = client_key_fields(
+        ["client_type", "auth_method"], id_prefix="registration-", registration=True
+    )
+    jwks_delivery = RadioField(
+        _("Public key sent to the provider:"),
+        choices=[
+            SelectChoice("jwks", _("jwks: the key goes in the registration request")),
+            SelectChoice(
+                "jwks_uri",
+                _(
+                    "jwks_uri: the provider downloads the key from the playground, "
+                    "which must be reachable from the provider"
+                ),
+            ),
+        ],
+        default="jwks",
+        id="registration-jwks_delivery",
+    ).triggered_by(["client_type", "auth_method"], on="change")
     grant_types = SelectMultipleField(
         _("Grant types to register:"),
         choices=get_grant_type_choices,
@@ -329,9 +588,16 @@ class DynamicRegistrationForm(BaseForm):
     )
     register = SubmitField(_("Register client"), render_kw={"class": "primary"})
 
+    key_form_name = "registration"
+
     def __init__(self, *args, **kwargs):
         meta = {"htmx_endpoint": url_for("oauth.client_dynamic_registration")}
         super().__init__(*args, meta={**meta, **kwargs.pop("meta", {})}, **kwargs)
+        show_field(self.jwks_delivery, self.uses_key())
+        self.setup_client_key()
+
+    def uses_key(self):
+        return self.client_type.data != "public" and self.auth_method.data == KEY_METHOD
 
     def validate_grant_types(self, field):
         # InputRequired would put "required" on every checkbox,

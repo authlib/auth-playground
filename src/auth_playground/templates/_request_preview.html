@@ -1,4 +1,12 @@
 <article class="request-preview" {{ attributes }}>
   <header><strong>{{ label }}</strong></header>
   <pre><code>{{ request.lines()|join("\n") }}</code></pre>
+  {% if request.assertion %}
+    <p><strong>{% trans %}Client assertion{% endtrans %}</strong> <small>{% trans %}Signed when the request is sent{% endtrans %}</small></p>
+    <pre><code>{% trans %}Header{% endtrans %}
+{{ request.assertion.header }}
+
+{% trans %}Claims{% endtrans %}
+{{ request.assertion.claims }}</code></pre>
+  {% endif %}
 </article>

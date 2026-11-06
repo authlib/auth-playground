@@ -1,28 +1,23 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const copyButtons = document.querySelectorAll('.copy-token-btn');
+// Listen on the document, so that the buttons htmx swaps in work too.
+document.addEventListener('click', event => {
+    const button = event.target.closest('.copy-token-btn');
+    if (!button) {
+        return;
+    }
 
-    copyButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const inputField = button.previousElementSibling;
-            const token = inputField.value;
+    const value = button.previousElementSibling.value;
+    // Read the label once: a second click would read "Copied!".
+    const originalText = button.dataset.label ??= button.textContent;
 
-            navigator.clipboard.writeText(token).then(() => {
-                const originalText = button.textContent;
-
-                button.textContent = 'Copied!';
-                button.setAttribute('aria-busy', 'false');
-
-                setTimeout(() => {
-                    button.textContent = originalText;
-                }, 2000);
-            }).catch(err => {
-                console.error('Failed to copy token:', err);
-                button.textContent = 'Failed';
-
-                setTimeout(() => {
-                    button.textContent = 'Copy';
-                }, 2000);
-            });
-        });
+    navigator.clipboard.writeText(value).then(() => {
+        button.textContent = 'Copied!';
+        button.setAttribute('aria-busy', 'false');
+    }).catch(err => {
+        console.error('Failed to copy:', err);
+        button.textContent = 'Failed';
+    }).finally(() => {
+        setTimeout(() => {
+            button.textContent = originalText;
+        }, 2000);
     });
 });
