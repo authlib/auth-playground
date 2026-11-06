@@ -45,8 +45,8 @@ def client_auth_preview(method, client_id):
     return [], [("client_id", client_id)]
 
 
-def client_credentials_preview(form):
-    """Return the client credentials token request built from the form.
+def token_preview(form, grant_type, params):
+    """Return the token request of ``grant_type`` built from the form.
 
     The parameters are in the order Authlib sends them.
     """
@@ -55,7 +55,7 @@ def client_credentials_preview(form):
         oauth_config.get("token_endpoint_auth_method"),
         oauth_config.get("client_id", ""),
     )
-    params = [*extra_token_params(form), ("grant_type", "client_credentials")]
+    params = [*extra_token_params(form), ("grant_type", grant_type), *params]
     if scope := requested_scope(form):
         params.append(("scope", scope))
 
@@ -65,3 +65,21 @@ def client_credentials_preview(form):
         params + auth_params,
         [*DEFAULT_HEADERS.items(), *headers],
     )
+
+
+def client_credentials_preview(form):
+    """Return the client credentials token request built from the form."""
+    return token_preview(form, "client_credentials", [])
+
+
+def password_preview(form):
+    """Return the password token request built from the form.
+
+    Like Authlib, it leaves out the empty credentials.
+    """
+    params = []
+    if form.username.data:
+        params.append(("username", form.username.data))
+    if form.password.data:
+        params.append(("password", HIDDEN))
+    return token_preview(form, "password", params)

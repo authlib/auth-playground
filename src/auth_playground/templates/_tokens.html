@@ -21,7 +21,7 @@
                 {% endif %}
                 <li><strong>{% trans %}Obtained at:{% endtrans %}</strong> {{ session.token_info.obtained_at|datetimeformat }}</li>
             </ul>
-            {% if client_tokens %}
+            {% if not tokens_grant.user %}
                 <p><small>{% trans %}These tokens are not tied to a user, so there are no user claims to show.{% endtrans %}</small></p>
             {% endif %}
         </article>
@@ -205,7 +205,7 @@
         {% if session.token and session.token.access_token %}
             <article>
                 <h3>{% trans %}Access token{% endtrans %}</h3>
-                {% if client_tokens %}
+                {% if not tokens_grant.user %}
                     <p><small>{% trans %}Used to access protected resources on behalf of the client.{% endtrans %}</small></p>
                 {% else %}
                     <p><small>{% trans %}Used to access protected resources on behalf of the user.{% endtrans %}</small></p>

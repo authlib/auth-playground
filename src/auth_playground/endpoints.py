@@ -17,7 +17,7 @@ from auth_playground.forms import ClientConfigForm
 from auth_playground.forms import DynamicRegistrationForm
 from auth_playground.forms import ServerConfigForm
 from auth_playground.forms import UnregisterClientForm
-from auth_playground.grants import client_tokens
+from auth_playground.grants import tokens_grant
 from auth_playground.oauth import clear_user_session
 from auth_playground.pages import render_tokens_page
 from auth_playground.session import ServerConfig
@@ -258,7 +258,7 @@ def tokens_page(tab=None):
         return redirect(url_for("routes.tokens", **args))
     if not logged_in and tab != "request":
         return redirect(url_for("routes.tokens", tab="request", **args))
-    if tab == "logout" and client_tokens():
+    if tab == "logout" and not tokens_grant().provider_session:
         return redirect(url_for("routes.tokens", tab="current"))
 
     return render_tokens_page(tab)

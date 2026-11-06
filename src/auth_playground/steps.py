@@ -10,7 +10,7 @@ from flask_babel import gettext as _
 
 import auth_playground
 from auth_playground.client_auth import PUBLIC_METHOD
-from auth_playground.grants import client_tokens
+from auth_playground.grants import tokens_grant
 
 
 @dataclass
@@ -85,7 +85,7 @@ def tokens_step(client):
     if not session.get("token"):
         return Step(3, _("Tokens"), _("No tokens yet"), url)
 
-    if client_tokens():
+    if not tokens_grant().user:
         return Step(3, _("Tokens"), _("Client tokens"), url, done=True)
 
     user = session.get("user") or {}

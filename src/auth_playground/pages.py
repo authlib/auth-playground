@@ -13,13 +13,15 @@ from auth_playground.forms import ClientCredentialsForm
 from auth_playground.forms import GrantForm
 from auth_playground.forms import LogoutLocalForm
 from auth_playground.forms import LogoutParamsForm
+from auth_playground.forms import PasswordForm
 from auth_playground.forms import RefreshTokenForm
-from auth_playground.grants import client_tokens
 from auth_playground.grants import get_grant
+from auth_playground.grants import tokens_grant
 
 GRANT_FORMS = {
     "authorization_code": AuthorizationParamsForm,
     "client_credentials": ClientCredentialsForm,
+    "password": PasswordForm,
 }
 
 
@@ -51,7 +53,7 @@ def render_tokens_page(tab, grant=None, grant_form=None):
         tab=tab,
         refresh_form=RefreshTokenForm(),
         grant=grant,
-        client_tokens=client_tokens(),
+        tokens_grant=tokens_grant(),
         public_client=oauth_config.get("token_endpoint_auth_method") == PUBLIC_METHOD,
         **grant_forms,
         logout_local_form=LogoutLocalForm(),

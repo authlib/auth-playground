@@ -28,7 +28,7 @@
 
     {{ grant_form.preview() }}
 
-    {% if session.token and not client_tokens %}
+    {% if session.token and tokens_grant.provider_session %}
         {{ grant_form.sign_in(label=_("Sign in again")) }}
     {% else %}
         {{ grant_form.sign_in() }}

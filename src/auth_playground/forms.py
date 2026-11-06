@@ -49,8 +49,14 @@ from auth_playground.grants import advertised_grant_types
 from auth_playground.session import server_metadata
 from auth_playground.token_request import TOKEN_RESERVED_PARAMS
 from auth_playground.token_request import client_credentials_preview
+from auth_playground.token_request import password_preview
 
-REGISTRABLE_GRANT_TYPES = ("authorization_code", "refresh_token", "client_credentials")
+REGISTRABLE_GRANT_TYPES = (
+    "authorization_code",
+    "refresh_token",
+    "client_credentials",
+    "password",
+)
 
 DEFAULT_REGISTERED_GRANT_TYPES = ["authorization_code", "refresh_token"]
 
@@ -310,7 +316,6 @@ class DynamicRegistrationForm(BaseForm):
         _("Grant types to register:"),
         choices=get_grant_type_choices,
         default=DEFAULT_REGISTERED_GRANT_TYPES,
-        validators=[InputRequired(message=_("Choose at least one grant type."))],
         widget=ListWidget(prefix_label=False),
         option_widget=CheckboxInput(),
     )
@@ -327,6 +332,12 @@ class DynamicRegistrationForm(BaseForm):
     def __init__(self, *args, **kwargs):
         meta = {"htmx_endpoint": url_for("oauth.client_dynamic_registration")}
         super().__init__(*args, meta={**meta, **kwargs.pop("meta", {})}, **kwargs)
+
+    def validate_grant_types(self, field):
+        # InputRequired would put "required" on every checkbox,
+        # so the browser would refuse any unchecked one.
+        if not field.data:
+            raise ValidationError(_("Choose at least one grant type."))
 
 
 class ChangeServerForm(BaseForm):
@@ -528,14 +539,48 @@ class ClientCredentialsForm(RequestParamsForm):
     request_tokens = ButtonField(_("Request tokens"), render_kw={"class": "primary"})
 
 
+class PasswordForm(RequestParamsForm):
+    """Form to request tokens with the user's password (RFC 6749 §4.3)."""
+
+    endpoint = "oauth.password"
+    reserved_params = TOKEN_RESERVED_PARAMS | {"username", "password"}
+
+    username = StringField(
+        _("Username:"),
+        validators=[InputRequired()],
+        render_kw={"autocomplete": "off"},
+    )
+    password = PasswordField(
+        _("Password:"),
+        validators=[InputRequired()],
+        # Browsers ignore "off" on password fields.
+        render_kw={"autocomplete": "new-password"},
+    )
+    scopes = scopes_field(default=get_scopes_default)
+    preview = RequestPreviewField(
+        _("Token request"), build=password_preview, wrapper=False
+    ).triggered_by("*")
+    request_tokens = ButtonField(_("Request tokens"), render_kw={"class": "primary"})
+
+
+def grant_label(grant):
+    """Mark the label of a deprecated grant type, or one the server does not advertise."""
+    marks = []
+    if grant.deprecated:
+        marks.append(_("deprecated"))
+    if not grant.advertised:
+        marks.append(_("not advertised"))
+    if not marks:
+        return grant.label
+    return _("{label} ({marks})").format(
+        label=grant.label, marks=", ".join(str(mark) for mark in marks)
+    )
+
+
 def get_grant_choices():
     """Group the grant types, and label the ones the server does not advertise."""
     return [
-        SelectChoice(
-            grant.value,
-            advertised_label(grant.label, grant.advertised),
-            optgroup=grant.group,
-        )
+        SelectChoice(grant.value, grant_label(grant), optgroup=grant.group)
         for grant in GRANTS
     ]
 
