@@ -16,6 +16,7 @@ from flask import request
 from flask import session
 from flask import url_for
 from flask_babel import gettext as _
+from joserfc.errors import JoseError
 
 import auth_playground
 from auth_playground.authorization import authorization_params
@@ -397,6 +398,9 @@ def authorize_callback():
             ),
             "error",
         )
+        return redirect(url_for("routes.tokens"))
+    except JoseError as exc:
+        flash(_("The ID token is not valid: {error}").format(error=exc), "error")
         return redirect(url_for("routes.tokens"))
 
     session.pop("token", None)

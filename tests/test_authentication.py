@@ -1,6 +1,7 @@
 from unittest.mock import patch
 
 from authlib.integrations.base_client import OAuthError
+from joserfc.errors import InvalidClaimError
 
 
 def test_index_shows_signin_when_unauthenticated(iam_server, test_client):
@@ -61,6 +62,26 @@ def test_authorize_callback_stores_user_in_session(
         assert "token" in sess
         assert "id_token" in sess["token"]
         assert sess["user"]["sub"] == user.user_name
+
+
+def test_authorize_callback_rejects_an_invalid_id_token(
+    iam_server, iam_client, user, test_client
+):
+    """Test an ID token that fails validation shows an error."""
+    iam_server.login(user)
+    iam_server.consent(user, iam_client)
+
+    res = test_client.get("/authorize")
+    res = iam_server.test_client.get(res.location)
+    with patch(
+        "auth_playground.oauth_client.PlaygroundOAuth2App.parse_id_token",
+        side_effect=InvalidClaimError("nonce"),
+    ):
+        res = test_client.get(res.location, follow_redirects=True)
+
+    assert "The ID token is not valid:" in res.text
+    with test_client.session_transaction() as sess:
+        assert "token" not in sess
 
 
 def test_consent_redirects_with_prompt(iam_server, test_client):
