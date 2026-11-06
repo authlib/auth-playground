@@ -63,6 +63,16 @@ export OAUTH_CLIENT_SECRET="your-client-secret"
 export OAUTH_AUTH_SERVER="https://your-identity-provider.example.com"
 ```
 
+A client that authenticates with `private_key_jwt` gets its private key, in PEM or JWK format, instead of a secret:
+
+```bash
+export OAUTH_CLIENT_PRIVATE_KEY="$(cat client-key.pem)"
+```
+
+A JWK key with an `alg` only signs with that algorithm. Otherwise, the playground picks an algorithm of the key that the provider advertises.
+
+The playground serves the public key at `/jwks/<thumbprint>.json`, so that the provider can download it.
+
 ### Running behind a reverse proxy
 
 If the application runs behind a reverse proxy or a load balancer, enable the proxy support:

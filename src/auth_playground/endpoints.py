@@ -11,6 +11,9 @@ from flask import url_for
 from flask_babel import gettext as _
 
 import auth_playground
+from auth_playground.client_auth import KEY_METHOD
+from auth_playground.client_auth import SECRET_METHODS
+from auth_playground.client_key import key_summary
 from auth_playground.decorators import server_config_needed
 from auth_playground.forms import ChangeServerForm
 from auth_playground.forms import ClientConfigForm
@@ -18,7 +21,6 @@ from auth_playground.forms import DynamicRegistrationForm
 from auth_playground.forms import ServerConfigForm
 from auth_playground.forms import UnregisterClientForm
 from auth_playground.grants import tokens_grant
-from auth_playground.oauth import clear_user_session
 from auth_playground.pages import render_tokens_page
 from auth_playground.session import ServerConfig
 
@@ -82,9 +84,8 @@ def _flash_metadata_error(exception: Exception) -> None:
 
 def clear_server_session():
     """Clear all server-related data from the session."""
-    clear_user_session()
+    auth_playground.forget_client()
     ServerConfig.clear(session)
-    session.pop("oauth_config", None)
 
 
 def load_server_metadata(
@@ -117,6 +118,9 @@ def load_server_metadata(
         g.server_config.metadata = metadata
         g.server_config.server_type = server_type
         g.server_config.issuer_url = issuer_url.rstrip("/")
+        # The client was set up before the metadata, which can change its
+        # signing algorithm.
+        auth_playground.setup_oauth(current_app)
 
     return metadata, server_type
 
@@ -203,6 +207,14 @@ def change_server():
     return redirect(url_for("routes.configure_server"))
 
 
+def current_client_key():
+    """Return what the provider needs to know about the key of the client, if any."""
+    config = auth_playground.get_oauth_config(current_app)
+    if config.get("token_endpoint_auth_method") != KEY_METHOD:
+        return None
+    return key_summary(config["client_key"], config["token_endpoint_auth_signing_alg"])
+
+
 @bp.route("/client", methods=["GET", "POST"])
 @server_config_needed(client_needed=False)
 def configure_client():
@@ -210,7 +222,10 @@ def configure_client():
     if auth_playground.is_oauth_client_from_env(current_app):
         oauth_config = auth_playground.get_oauth_config(current_app)
         return render_template(
-            "configure_client.html", locked=True, oauth_config=oauth_config
+            "configure_client.html",
+            locked=True,
+            oauth_config=oauth_config,
+            client_key=current_client_key(),
         )
 
     client_form = ClientConfigForm()
@@ -224,14 +239,19 @@ def configure_client():
             client_form=client_form,
             dynamic_registration_form=dynamic_registration_form,
             unregister_form=unregister_form,
+            client_key=current_client_key(),
         )
 
+    method = client_form.token_endpoint_auth_method.data
+    uses_key = client_form.uses_key()
     auth_playground.setup_oauth_runtime(
         current_app,
         client_form.client_id.data,
-        client_form.client_secret.data or None,
+        client_form.client_secret.data if method in SECRET_METHODS else None,
         g.server_config.issuer_url,
-        client_form.token_endpoint_auth_method.data,
+        method,
+        client_key=client_form.client_key() if uses_key else None,
+        signing_alg=client_form.signing_alg.data if uses_key else None,
     )
     flash(_("OAuth configuration completed successfully"), "success")
     return redirect(url_for("routes.tokens"))

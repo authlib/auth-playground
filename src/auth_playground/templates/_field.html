@@ -2,7 +2,7 @@
 {% macro errors() -%}
     {%- if error_id %}<small id="{{ error_id }}">{{ field.errors|join(" ") }}</small>{% endif -%}
 {%- endmacro %}
-<div id="wrap-{{ field_id }}">
+<div id="wrap-{{ field_id }}"{% if hidden %} hidden{% endif %}>
     {% if fieldset %}
         <fieldset{% if error_id %} aria-invalid="true" aria-describedby="{{ error_id }}"{% endif %}>
             <legend>{{ field.label.text }}</legend>

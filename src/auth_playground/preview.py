@@ -9,6 +9,10 @@ GENERATED = "[generated]"
 # Shown in place of the secrets.
 HIDDEN = "[hidden]"
 
+# Shown in place of the times set when the request is sent.
+NOW = "[now]"
+IN_AN_HOUR = "[now + 1 hour]"
+
 
 @dataclass
 class RequestPreview:
@@ -22,6 +26,8 @@ class RequestPreview:
     url: str
     params: list[tuple[str, str]]
     headers: list[tuple[str, str]] = field(default_factory=list)
+    assertion: dict | None = None
+    """The header and the claims of the client assertion, if the client sends one."""
 
     def lines(self):
         """Return the request as text lines, one per parameter."""

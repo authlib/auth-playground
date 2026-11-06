@@ -379,11 +379,11 @@ def test_dynamic_registration_with_unsupported_method(unconfigured_testapp):
         mock_post.return_value.json.return_value = {
             "client_id": "client",
             "client_secret": "secret",
-            "token_endpoint_auth_method": "private_key_jwt",
+            "token_endpoint_auth_method": "tls_client_auth",
         }
         res = form.submit("register").maybe_follow()
 
-    assert "private_key_jwt" in res.text
+    assert "tls_client_auth" in res.text
     assert "does not support" in res.text
     with unconfigured_testapp.session_transaction() as sess:
         assert "oauth_config" not in sess

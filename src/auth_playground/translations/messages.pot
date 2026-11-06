@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-06 14:58+0100\n"
+"POT-Creation-Date: 2026-11-06 23:01+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,388 +17,486 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: src/auth_playground/__init__.py:213
+#: src/auth_playground/__init__.py:279
 #, python-format
 msgid "This request should be sent to %(server_name)s"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:56
-msgid "Cannot connect to the server. Please check the URL."
+#: src/auth_playground/client_key.py:73
+msgid "This is a public key. Paste the private key."
+msgstr ""
+
+#: src/auth_playground/client_key.py:84
+msgid "This key is not meant for signing."
+msgstr ""
+
+#: src/auth_playground/client_key.py:89
+#, python-brace-format
+msgid "The playground cannot sign with this key for {alg}."
+msgstr ""
+
+#: src/auth_playground/client_key.py:93
+msgid "The playground cannot sign with this key."
+msgstr ""
+
+#: src/auth_playground/client_key.py:102
+msgid "This JWK is not valid JSON."
+msgstr ""
+
+#: src/auth_playground/client_key.py:105
+msgid "The JWK must be an RSA, EC or OKP key."
+msgstr ""
+
+#: src/auth_playground/client_key.py:111
+#, python-brace-format
+msgid "This JWK is not valid: {error}"
+msgstr ""
+
+#: src/auth_playground/client_key.py:120
+msgid "This is not an RSA, EC or Ed25519 key in PEM format."
 msgstr ""
 
 #: src/auth_playground/endpoints.py:58
+msgid "Cannot connect to the server. Please check the URL."
+msgstr ""
+
+#: src/auth_playground/endpoints.py:60
 msgid "Connection timeout. The server is not responding."
 msgstr ""
 
-#: src/auth_playground/endpoints.py:63
+#: src/auth_playground/endpoints.py:65
 msgid ""
 "This server does not support OIDC Discovery or OAuth 2.0 Authorization "
 "Server Metadata"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:69
+#: src/auth_playground/endpoints.py:71
 #, python-brace-format
 msgid "Server returned an error: HTTP {status_code}"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:75
+#: src/auth_playground/endpoints.py:77
 msgid "Invalid response from server"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:77
+#: src/auth_playground/endpoints.py:79
 msgid "Failed to connect to the server. Please check the URL."
 msgstr ""
 
-#: src/auth_playground/endpoints.py:80
+#: src/auth_playground/endpoints.py:82
 msgid "Cannot load the server metadata."
 msgstr ""
 
-#: src/auth_playground/endpoints.py:175
+#: src/auth_playground/endpoints.py:179
 msgid "Server metadata successfully loaded"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:195 src/auth_playground/oauth.py:104
-#: src/auth_playground/oauth.py:224 src/auth_playground/oauth.py:269
-#: src/auth_playground/oauth.py:364 src/auth_playground/oauth.py:486
-#: src/auth_playground/oauth.py:551
+#: src/auth_playground/endpoints.py:199 src/auth_playground/oauth.py:124
+#: src/auth_playground/oauth.py:283 src/auth_playground/oauth.py:357
+#: src/auth_playground/oauth.py:452 src/auth_playground/oauth.py:574
+#: src/auth_playground/oauth.py:639
 msgid "Invalid request"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:202
+#: src/auth_playground/endpoints.py:206
 msgid "You can now configure a different identity provider"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:236
+#: src/auth_playground/endpoints.py:256
 msgid "OAuth configuration completed successfully"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:272
+#: src/auth_playground/endpoints.py:292
 msgid "No server configured"
 msgstr ""
 
-#: src/auth_playground/forms.py:129 src/auth_playground/forms.py:140
+#: src/auth_playground/forms.py:144 src/auth_playground/forms.py:155
 msgid "Default"
 msgstr ""
 
-#: src/auth_playground/forms.py:130
+#: src/auth_playground/forms.py:145
 msgid "None - No UI"
 msgstr ""
 
-#: src/auth_playground/forms.py:131
+#: src/auth_playground/forms.py:146
 msgid "Login - Authentication page"
 msgstr ""
 
-#: src/auth_playground/forms.py:132
+#: src/auth_playground/forms.py:147
 msgid "Consent - Consent page"
 msgstr ""
 
-#: src/auth_playground/forms.py:133
+#: src/auth_playground/forms.py:148
 msgid "Select account - Account selection page"
 msgstr ""
 
-#: src/auth_playground/forms.py:134
+#: src/auth_playground/forms.py:149
 msgid "Create - Registration page"
 msgstr ""
 
-#: src/auth_playground/forms.py:168
+#: src/auth_playground/forms.py:183
 msgid "Renew tokens"
 msgstr ""
 
-#: src/auth_playground/forms.py:184
+#: src/auth_playground/forms.py:199
 msgid "URL must start with http:// or https://"
 msgstr ""
 
-#: src/auth_playground/forms.py:197
+#: src/auth_playground/forms.py:212
 msgid ""
 "HTTP is only allowed for localhost or in debug/testing mode. Use HTTPS in"
 " production."
 msgstr ""
 
-#: src/auth_playground/forms.py:206
+#: src/auth_playground/forms.py:221
 msgid "Provider URL:"
 msgstr ""
 
-#: src/auth_playground/forms.py:208
+#: src/auth_playground/forms.py:223
 msgid "Provider URL is required"
 msgstr ""
 
-#: src/auth_playground/forms.py:217
+#: src/auth_playground/forms.py:232
 msgid "Continue"
 msgstr ""
 
-#: src/auth_playground/forms.py:224
+#: src/auth_playground/forms.py:239
 #, python-brace-format
 msgid "{value} (not advertised)"
 msgstr ""
 
-#: src/auth_playground/forms.py:260 src/auth_playground/forms.py:606
-#: src/auth_playground/templates/configure_client.html:15
-msgid "Client ID:"
+#: src/auth_playground/forms.py:339
+msgid "Client key:"
 msgstr ""
 
-#: src/auth_playground/forms.py:262
-msgid "Client ID is required"
+#: src/auth_playground/forms.py:341
+msgid "Generate a key"
 msgstr ""
 
-#: src/auth_playground/forms.py:266
-msgid "Client ID must be between 1 and 255 characters"
-msgstr ""
-
-#: src/auth_playground/forms.py:272
-msgid "Client secret:"
-msgstr ""
-
-#: src/auth_playground/forms.py:273
-msgid "Leave empty for a public client."
-msgstr ""
-
-#: src/auth_playground/forms.py:277 src/auth_playground/forms.py:310
-msgid "Token endpoint authentication:"
-msgstr ""
-
-#: src/auth_playground/forms.py:280
-msgid "How the client proves its identity to the token endpoint."
-msgstr ""
-
-#: src/auth_playground/forms.py:282
-msgid "Complete configuration"
-msgstr ""
-
-#: src/auth_playground/forms.py:288
-msgid "This authentication method needs a client secret."
-msgstr ""
-
-#: src/auth_playground/forms.py:294
-msgid "A public client has no secret. Leave the secret empty."
-msgstr ""
-
-#: src/auth_playground/forms.py:302
-msgid "Client type:"
-msgstr ""
-
-#: src/auth_playground/forms.py:304
-msgid "Confidential, with a client secret"
-msgstr ""
-
-#: src/auth_playground/forms.py:305
-msgid "Public, without a secret, with PKCE"
-msgstr ""
-
-#: src/auth_playground/forms.py:313
-msgid "A public client uses none."
-msgstr ""
-
-#: src/auth_playground/forms.py:316
-msgid "Grant types to register:"
-msgstr ""
-
-#: src/auth_playground/forms.py:323
-msgid "Initial access token:"
-msgstr ""
-
-#: src/auth_playground/forms.py:326
-msgid "Leave empty if not required"
-msgstr ""
-
-#: src/auth_playground/forms.py:330
-msgid "Register client"
-msgstr ""
-
-#: src/auth_playground/forms.py:340
-msgid "Choose at least one grant type."
+#: src/auth_playground/forms.py:342
+msgid "Import a key"
 msgstr ""
 
 #: src/auth_playground/forms.py:346
-msgid "Change provider"
+msgid "The client signs its token requests with this key."
+msgstr ""
+
+#: src/auth_playground/forms.py:349
+msgid "Private key:"
 msgstr ""
 
 #: src/auth_playground/forms.py:352
-msgid "Unregister client"
+msgid "PEM or JWK: RSA, EC or Ed25519. Kept in your session, never shown again."
 msgstr ""
 
-#: src/auth_playground/forms.py:358
-msgid "Log out"
+#: src/auth_playground/forms.py:362
+msgid "Key ID (kid):"
 msgstr ""
 
 #: src/auth_playground/forms.py:365
+msgid ""
+"Sent in the assertion header. Leave empty to use the key thumbprint (RFC "
+"7638)."
+msgstr ""
+
+#: src/auth_playground/forms.py:370
+msgid "Signing algorithm:"
+msgstr ""
+
+#: src/auth_playground/forms.py:373
+msgid "From token_endpoint_auth_signing_alg_values_supported."
+msgstr ""
+
+#: src/auth_playground/forms.py:376
+msgid "Generate another key"
+msgstr ""
+
+#: src/auth_playground/forms.py:463
+msgid "Paste the private key of the client."
+msgstr ""
+
+#: src/auth_playground/forms.py:474 src/auth_playground/forms.py:872
+#: src/auth_playground/templates/configure_client.html:43
+msgid "Client ID:"
+msgstr ""
+
+#: src/auth_playground/forms.py:476
+msgid "Client ID is required"
+msgstr ""
+
+#: src/auth_playground/forms.py:480
+msgid "Client ID must be between 1 and 255 characters"
+msgstr ""
+
+#: src/auth_playground/forms.py:486 src/auth_playground/forms.py:544
+msgid "Token endpoint authentication:"
+msgstr ""
+
+#: src/auth_playground/forms.py:489
+msgid "How the client proves its identity to the token endpoint."
+msgstr ""
+
+#: src/auth_playground/forms.py:492
+msgid "Client secret:"
+msgstr ""
+
+#: src/auth_playground/forms.py:493
+msgid "Leave empty for a public client."
+msgstr ""
+
+#: src/auth_playground/forms.py:504
+msgid "Complete configuration"
+msgstr ""
+
+#: src/auth_playground/forms.py:522
+msgid "This authentication method needs a client secret."
+msgstr ""
+
+#: src/auth_playground/forms.py:528
+msgid "A public client has no secret. Leave the secret empty."
+msgstr ""
+
+#: src/auth_playground/forms.py:536
+msgid "Client type:"
+msgstr ""
+
+#: src/auth_playground/forms.py:538
+msgid "Confidential, with a secret or a key"
+msgstr ""
+
+#: src/auth_playground/forms.py:539
+msgid "Public, without a secret, with PKCE"
+msgstr ""
+
+#: src/auth_playground/forms.py:547
+msgid "A public client uses none."
+msgstr ""
+
+#: src/auth_playground/forms.py:560
+msgid "Public key sent to the provider:"
+msgstr ""
+
+#: src/auth_playground/forms.py:562
+msgid "jwks: the key goes in the registration request"
+msgstr ""
+
+#: src/auth_playground/forms.py:566
+msgid ""
+"jwks_uri: the provider downloads the key from the playground, which must "
+"be reachable from the provider"
+msgstr ""
+
+#: src/auth_playground/forms.py:575
+msgid "Grant types to register:"
+msgstr ""
+
+#: src/auth_playground/forms.py:582
+msgid "Initial access token:"
+msgstr ""
+
+#: src/auth_playground/forms.py:585
+msgid "Leave empty if not required"
+msgstr ""
+
+#: src/auth_playground/forms.py:589
+msgid "Register client"
+msgstr ""
+
+#: src/auth_playground/forms.py:606
+msgid "Choose at least one grant type."
+msgstr ""
+
+#: src/auth_playground/forms.py:612
+msgid "Change provider"
+msgstr ""
+
+#: src/auth_playground/forms.py:618
+msgid "Unregister client"
+msgstr ""
+
+#: src/auth_playground/forms.py:624
+msgid "Log out"
+msgstr ""
+
+#: src/auth_playground/forms.py:631
 msgid "Disabled"
 msgstr ""
 
-#: src/auth_playground/forms.py:416
+#: src/auth_playground/forms.py:682
 msgid "Scopes:"
 msgstr ""
 
-#: src/auth_playground/forms.py:419
+#: src/auth_playground/forms.py:685
 msgid "Select the scopes to request from the authorization server"
 msgstr ""
 
-#: src/auth_playground/forms.py:438
+#: src/auth_playground/forms.py:704
 msgid "Other scopes:"
 msgstr ""
 
-#: src/auth_playground/forms.py:439
+#: src/auth_playground/forms.py:705
 msgid "Space-separated, sent as they are."
 msgstr ""
 
-#: src/auth_playground/forms.py:442
+#: src/auth_playground/forms.py:708
 msgid "Extra parameters:"
 msgstr ""
 
-#: src/auth_playground/forms.py:443
+#: src/auth_playground/forms.py:709
 msgid "One name=value per line, added to the request as they are."
 msgstr ""
 
-#: src/auth_playground/forms.py:456
+#: src/auth_playground/forms.py:722
 #, python-brace-format
 msgid ""
 "Each line must be name=value, with a parameter the playground does not "
 "set itself: {errors}"
 msgstr ""
 
-#: src/auth_playground/forms.py:468
+#: src/auth_playground/forms.py:734
 #: src/auth_playground/templates/_tokens.html:14
 msgid "PKCE:"
 msgstr ""
 
-#: src/auth_playground/forms.py:472
+#: src/auth_playground/forms.py:738
 msgid "Sends a code_challenge here, and the code_verifier with the token request."
 msgstr ""
 
-#: src/auth_playground/forms.py:477
+#: src/auth_playground/forms.py:743
 msgid "Prompt:"
 msgstr ""
 
-#: src/auth_playground/forms.py:479
+#: src/auth_playground/forms.py:745
 msgid "Control the authentication UI behavior"
 msgstr ""
 
-#: src/auth_playground/forms.py:482 src/auth_playground/forms.py:618
+#: src/auth_playground/forms.py:748 src/auth_playground/forms.py:884
 msgid "UI Locale:"
 msgstr ""
 
-#: src/auth_playground/forms.py:485
+#: src/auth_playground/forms.py:751
 msgid "Preferred language for the authentication UI"
 msgstr ""
 
-#: src/auth_playground/forms.py:488
+#: src/auth_playground/forms.py:754
 msgid "Max age (seconds):"
 msgstr ""
 
-#: src/auth_playground/forms.py:491
+#: src/auth_playground/forms.py:757
 msgid ""
 "Maximum authentication age. 0 forces re-authentication and refreshes "
 "auth_time."
 msgstr ""
 
-#: src/auth_playground/forms.py:496
+#: src/auth_playground/forms.py:762
 msgid "ACR values:"
 msgstr ""
 
-#: src/auth_playground/forms.py:498
+#: src/auth_playground/forms.py:764
 msgid ""
 "Requested authentication context classes, space-separated (step-up "
 "authentication)."
 msgstr ""
 
-#: src/auth_playground/forms.py:502
+#: src/auth_playground/forms.py:768
 msgid "Login hint:"
 msgstr ""
 
-#: src/auth_playground/forms.py:503
+#: src/auth_playground/forms.py:769
 msgid "Identifier to pre-fill on the provider's login screen."
 msgstr ""
 
-#: src/auth_playground/forms.py:506
+#: src/auth_playground/forms.py:772
 msgid "Claims (JSON):"
 msgstr ""
 
-#: src/auth_playground/forms.py:508
+#: src/auth_playground/forms.py:774
 msgid "Specific claims to request, as an OIDC claims JSON object (advanced)."
 msgstr ""
 
-#: src/auth_playground/forms.py:512
+#: src/auth_playground/forms.py:778
 msgid "Authorization request"
 msgstr ""
 
-#: src/auth_playground/forms.py:514
+#: src/auth_playground/forms.py:780
 msgid "Sign in"
 msgstr ""
 
-#: src/auth_playground/forms.py:526
+#: src/auth_playground/forms.py:792
 msgid "Claims must be a JSON object."
 msgstr ""
 
-#: src/auth_playground/forms.py:537 src/auth_playground/forms.py:561
+#: src/auth_playground/forms.py:803 src/auth_playground/forms.py:827
 msgid "Token request"
 msgstr ""
 
-#: src/auth_playground/forms.py:539 src/auth_playground/forms.py:563
+#: src/auth_playground/forms.py:805 src/auth_playground/forms.py:829
 msgid "Request tokens"
 msgstr ""
 
-#: src/auth_playground/forms.py:549
+#: src/auth_playground/forms.py:815
 msgid "Username:"
 msgstr ""
 
-#: src/auth_playground/forms.py:554
+#: src/auth_playground/forms.py:820
 msgid "Password:"
 msgstr ""
 
-#: src/auth_playground/forms.py:570
+#: src/auth_playground/forms.py:836
 msgid "deprecated"
 msgstr ""
 
-#: src/auth_playground/forms.py:572
+#: src/auth_playground/forms.py:838
 msgid "not advertised"
 msgstr ""
 
-#: src/auth_playground/forms.py:575
+#: src/auth_playground/forms.py:841
 #, python-brace-format
 msgid "{label} ({marks})"
 msgstr ""
 
-#: src/auth_playground/forms.py:594
+#: src/auth_playground/forms.py:860
 #: src/auth_playground/templates/_tokens.html:6
 msgid "Grant type:"
 msgstr ""
 
-#: src/auth_playground/forms.py:595
+#: src/auth_playground/forms.py:861
 msgid "Choose"
 msgstr ""
 
-#: src/auth_playground/forms.py:602
+#: src/auth_playground/forms.py:868
 msgid "ID Token Hint:"
 msgstr ""
 
-#: src/auth_playground/forms.py:603
+#: src/auth_playground/forms.py:869
 msgid "ID Token previously issued, used to identify the user session"
 msgstr ""
 
-#: src/auth_playground/forms.py:607
+#: src/auth_playground/forms.py:873
 msgid "OAuth client identifier"
 msgstr ""
 
-#: src/auth_playground/forms.py:610
+#: src/auth_playground/forms.py:876
 msgid "Post-Logout Redirect URI:"
 msgstr ""
 
-#: src/auth_playground/forms.py:611
+#: src/auth_playground/forms.py:877
 msgid "URI to redirect to after logout"
 msgstr ""
 
-#: src/auth_playground/forms.py:614
+#: src/auth_playground/forms.py:880
 msgid "Logout Hint:"
 msgstr ""
 
-#: src/auth_playground/forms.py:615
+#: src/auth_playground/forms.py:881
 msgid "Hint about the user to log out"
 msgstr ""
 
-#: src/auth_playground/forms.py:620
+#: src/auth_playground/forms.py:886
 msgid "Preferred language for the logout UI"
 msgstr ""
 
-#: src/auth_playground/forms.py:622
+#: src/auth_playground/forms.py:888
 msgid "Server log out"
 msgstr ""
 
@@ -441,28 +539,28 @@ msgid ""
 "to the token endpoint. The provider never sees the user sign in."
 msgstr ""
 
-#: src/auth_playground/oauth.py:109
+#: src/auth_playground/oauth.py:129
 msgid "Dynamic client registration not supported"
 msgstr ""
 
-#: src/auth_playground/oauth.py:154
+#: src/auth_playground/oauth.py:185
 msgid "Invalid JSON response from registration endpoint"
 msgstr ""
 
-#: src/auth_playground/oauth.py:160
+#: src/auth_playground/oauth.py:191
 #, python-brace-format
 msgid "Dynamic client registration failed: {error}"
 msgstr ""
 
-#: src/auth_playground/oauth.py:164
+#: src/auth_playground/oauth.py:195
 msgid "Dynamic client registration failed"
 msgstr ""
 
-#: src/auth_playground/oauth.py:168
+#: src/auth_playground/oauth.py:199
 msgid "Invalid response from registration endpoint"
 msgstr ""
 
-#: src/auth_playground/oauth.py:175
+#: src/auth_playground/oauth.py:206
 #, python-brace-format
 msgid ""
 "The server registered the client with the {auth_method} authentication "
@@ -470,7 +568,7 @@ msgid ""
 "registered on the server."
 msgstr ""
 
-#: src/auth_playground/oauth.py:187
+#: src/auth_playground/oauth.py:218
 #, python-brace-format
 msgid ""
 "The server registered the client without a client secret, but its "
@@ -478,85 +576,99 @@ msgid ""
 "registered on the server."
 msgstr ""
 
-#: src/auth_playground/oauth.py:211
+#: src/auth_playground/oauth.py:229
+msgid ""
+"The server registered the client with the private_key_jwt authentication "
+"method, but the playground has no key for it. The client is still "
+"registered on the server."
+msgstr ""
+
+#: src/auth_playground/oauth.py:244
+#, python-brace-format
+msgid ""
+"The server registered the client with the {alg} signing algorithm, which "
+"its key cannot use. The client is still registered on the server."
+msgstr ""
+
+#: src/auth_playground/oauth.py:270
 msgid "Client successfully registered!"
 msgstr ""
 
-#: src/auth_playground/oauth.py:231
+#: src/auth_playground/oauth.py:290
 msgid "Client registration management credentials not found"
 msgstr ""
 
-#: src/auth_playground/oauth.py:245
+#: src/auth_playground/oauth.py:304
 #, python-brace-format
 msgid "Client unregistration failed: {error}"
 msgstr ""
 
-#: src/auth_playground/oauth.py:249
+#: src/auth_playground/oauth.py:308
 msgid "Client unregistration failed"
 msgstr ""
 
-#: src/auth_playground/oauth.py:258
+#: src/auth_playground/oauth.py:316
 msgid "Client successfully unregistered"
 msgstr ""
 
-#: src/auth_playground/oauth.py:340
+#: src/auth_playground/oauth.py:428
 msgid "The provider has no token endpoint."
 msgstr ""
 
-#: src/auth_playground/oauth.py:357
+#: src/auth_playground/oauth.py:445
 #, python-brace-format
 msgid "The token request failed: {error}"
 msgstr ""
 
-#: src/auth_playground/oauth.py:384
+#: src/auth_playground/oauth.py:472
 msgid "The client obtained tokens."
 msgstr ""
 
-#: src/auth_playground/oauth.py:411 src/auth_playground/oauth.py:477
+#: src/auth_playground/oauth.py:499 src/auth_playground/oauth.py:565
 msgid "You have been successfully logged in."
 msgstr ""
 
-#: src/auth_playground/oauth.py:414
+#: src/auth_playground/oauth.py:502
 #, python-brace-format
 msgid "Tokens obtained for {username}."
 msgstr ""
 
-#: src/auth_playground/oauth.py:429
+#: src/auth_playground/oauth.py:517
 #, python-brace-format
 msgid "The signing keys of the provider could not be fetched: {error}"
 msgstr ""
 
-#: src/auth_playground/oauth.py:435 src/auth_playground/oauth.py:458
+#: src/auth_playground/oauth.py:523 src/auth_playground/oauth.py:546
 #, python-brace-format
 msgid "The ID token is not valid: {error}"
 msgstr ""
 
-#: src/auth_playground/oauth.py:451 src/auth_playground/oauth.py:462
+#: src/auth_playground/oauth.py:539 src/auth_playground/oauth.py:550
 #, python-brace-format
 msgid "An error happened during login: {error}"
 msgstr ""
 
-#: src/auth_playground/oauth.py:490
+#: src/auth_playground/oauth.py:578
 msgid "The tokens were forgotten"
 msgstr ""
 
-#: src/auth_playground/oauth.py:492
+#: src/auth_playground/oauth.py:580
 msgid "You have been logged out"
 msgstr ""
 
-#: src/auth_playground/oauth.py:542
+#: src/auth_playground/oauth.py:630
 msgid "You have been logged out from the server"
 msgstr ""
 
-#: src/auth_playground/oauth.py:556
+#: src/auth_playground/oauth.py:644
 msgid "No refresh token available"
 msgstr ""
 
-#: src/auth_playground/oauth.py:568
+#: src/auth_playground/oauth.py:656
 msgid "Token successfully refreshed"
 msgstr ""
 
-#: src/auth_playground/oauth.py:571
+#: src/auth_playground/oauth.py:659
 #, python-brace-format
 msgid "An error happened during token refresh: {error}"
 msgstr ""
@@ -589,7 +701,7 @@ msgstr ""
 
 #: src/auth_playground/steps.py:62 src/auth_playground/steps.py:66
 #: src/auth_playground/steps.py:76
-#: src/auth_playground/templates/configure_client.html:11
+#: src/auth_playground/templates/configure_client.html:39
 msgid "Client"
 msgstr ""
 
@@ -641,6 +753,41 @@ msgstr ""
 msgid "Tokens obtained"
 msgstr ""
 
+#: src/auth_playground/templates/_client_key_preview.html:4
+msgid "Sent in the registration request"
+msgstr ""
+
+#: src/auth_playground/templates/_client_key_preview.html:5
+#: src/auth_playground/templates/_client_key_preview.html:11
+#, python-format
+msgid "%(description)s key, kid %(kid)s."
+msgstr ""
+
+#: src/auth_playground/templates/_client_key_preview.html:10
+msgid "Settings to enter at the provider"
+msgstr ""
+
+#: src/auth_playground/templates/_client_key_preview.html:12
+msgid "Enter its public key at the provider, then the client ID it gives you."
+msgstr ""
+
+#: src/auth_playground/templates/_client_key_preview.html:21
+#: src/auth_playground/templates/_client_key_preview.html:27
+#: src/auth_playground/templates/_tokens.html:36
+#: src/auth_playground/templates/_tokens.html:215
+#: src/auth_playground/templates/_tokens.html:240
+#: src/auth_playground/templates/configure_client.html:20
+msgid "Copy"
+msgstr ""
+
+#: src/auth_playground/templates/_client_key_preview.html:25
+msgid "Or the public key itself"
+msgstr ""
+
+#: src/auth_playground/templates/_client_key_preview.html:31
+msgid "Paste a valid private key to see its public key."
+msgstr ""
+
 #: src/auth_playground/templates/_grant_authorization_code.html:5
 #: src/auth_playground/templates/_grant_client_credentials.html:5
 #: src/auth_playground/templates/_grant_password.html:10
@@ -686,6 +833,22 @@ msgstr ""
 msgid "User"
 msgstr ""
 
+#: src/auth_playground/templates/_request_preview.html:5
+msgid "Client assertion"
+msgstr ""
+
+#: src/auth_playground/templates/_request_preview.html:5
+msgid "Signed when the request is sent"
+msgstr ""
+
+#: src/auth_playground/templates/_request_preview.html:6
+msgid "Header"
+msgstr ""
+
+#: src/auth_playground/templates/_request_preview.html:9
+msgid "Claims"
+msgstr ""
+
 #: src/auth_playground/templates/_server_tabs.html:4
 msgid "Specifications"
 msgstr ""
@@ -728,12 +891,6 @@ msgstr ""
 
 #: src/auth_playground/templates/_tokens.html:33
 msgid "Contains user identity information in JWT format."
-msgstr ""
-
-#: src/auth_playground/templates/_tokens.html:36
-#: src/auth_playground/templates/_tokens.html:215
-#: src/auth_playground/templates/_tokens.html:240
-msgid "Copy"
 msgstr ""
 
 #: src/auth_playground/templates/_tokens.html:41
@@ -891,29 +1048,66 @@ msgstr ""
 msgid "Token response"
 msgstr ""
 
-#: src/auth_playground/templates/configure_client.html:5
+#: src/auth_playground/templates/configure_client.html:8
+msgid "Client key"
+msgstr ""
+
+#: src/auth_playground/templates/configure_client.html:10
+msgid "The client signs its token requests with this key (private_key_jwt)."
+msgstr ""
+
+#: src/auth_playground/templates/configure_client.html:12
+msgid "Key:"
+msgstr ""
+
+#: src/auth_playground/templates/configure_client.html:14
+msgid "Algorithm:"
+msgstr ""
+
+#: src/auth_playground/templates/configure_client.html:18
+msgid "Public key"
+msgstr ""
+
+#: src/auth_playground/templates/configure_client.html:24
+msgid "Download the private key"
+msgstr ""
+
+#: src/auth_playground/templates/configure_client.html:26
+msgid ""
+"To replay requests with curl or another client. Anyone with this file can"
+" act as the client."
+msgstr ""
+
+#: src/auth_playground/templates/configure_client.html:28
+msgid ""
+"The key lives in your session. Forgetting the client, or the end of the "
+"session, deletes it. The jwks_uri then answers 404, and the provider can "
+"no longer check the client."
+msgstr ""
+
+#: src/auth_playground/templates/configure_client.html:33
 msgid "Configure OAuth Client"
 msgstr ""
 
-#: src/auth_playground/templates/configure_client.html:13
+#: src/auth_playground/templates/configure_client.html:41
 msgid "This client is set via environment variables and cannot be changed."
 msgstr ""
 
-#: src/auth_playground/templates/configure_client.html:23
+#: src/auth_playground/templates/configure_client.html:54
 msgid "Registered client"
 msgstr ""
 
-#: src/auth_playground/templates/configure_client.html:25
+#: src/auth_playground/templates/configure_client.html:56
 msgid ""
 "This client was dynamically registered (RFC 7591). You can remove it from"
 " the server (RFC 7592)."
 msgstr ""
 
-#: src/auth_playground/templates/configure_client.html:32
+#: src/auth_playground/templates/configure_client.html:66
 msgid "Choose a configuration method"
 msgstr ""
 
-#: src/auth_playground/templates/configure_client.html:35
+#: src/auth_playground/templates/configure_client.html:69
 #, python-format
 msgid ""
 "The %(display_name)s configuration has been successfully loaded. Now "
@@ -921,75 +1115,75 @@ msgid ""
 " options:"
 msgstr ""
 
-#: src/auth_playground/templates/configure_client.html:43
+#: src/auth_playground/templates/configure_client.html:77
 msgid "Dynamic registration"
 msgstr ""
 
-#: src/auth_playground/templates/configure_client.html:46
+#: src/auth_playground/templates/configure_client.html:80
 msgid "This server supports"
 msgstr ""
 
-#: src/auth_playground/templates/configure_client.html:46
+#: src/auth_playground/templates/configure_client.html:80
 msgid "dynamic client registration"
 msgstr ""
 
-#: src/auth_playground/templates/configure_client.html:46
+#: src/auth_playground/templates/configure_client.html:80
 msgid ""
 "Provide an Initial Access Token if required, then click the button to "
 "automatically register this application."
 msgstr ""
 
-#: src/auth_playground/templates/configure_client.html:60
+#: src/auth_playground/templates/configure_client.html:101
 #: src/auth_playground/templates/configure_server.html:44
 msgid "What happens next?"
 msgstr ""
 
-#: src/auth_playground/templates/configure_client.html:63
+#: src/auth_playground/templates/configure_client.html:104
 #, python-format
 msgid ""
 "A new OAuth client will be created automatically at the %(display_name)s,"
 " with the correct configuration,"
 msgstr ""
 
-#: src/auth_playground/templates/configure_client.html:66
+#: src/auth_playground/templates/configure_client.html:107
 msgid ""
 "Client ID, and Secret for a confidential client, will be generated by the"
 " server,"
 msgstr ""
 
-#: src/auth_playground/templates/configure_client.html:67
+#: src/auth_playground/templates/configure_client.html:108
 msgid "Configuration will be stored in your session."
 msgstr ""
 
-#: src/auth_playground/templates/configure_client.html:75
+#: src/auth_playground/templates/configure_client.html:116
 msgid "Manual configuration"
 msgstr ""
 
-#: src/auth_playground/templates/configure_client.html:78
+#: src/auth_playground/templates/configure_client.html:119
 #, python-format
 msgid ""
 "Manually register the client at the %(display_name)s, then enter the "
 "client credentials below."
 msgstr ""
 
-#: src/auth_playground/templates/configure_client.html:82
+#: src/auth_playground/templates/configure_client.html:123
 #, python-format
 msgid "%(display_name)s configuration"
 msgstr ""
 
-#: src/auth_playground/templates/configure_client.html:83
+#: src/auth_playground/templates/configure_client.html:124
 #, python-format
 msgid ""
 "When creating your OAuth client at the %(display_name)s, configure these "
 "URIs:"
 msgstr ""
 
-#: src/auth_playground/templates/configure_client.html:84
+#: src/auth_playground/templates/configure_client.html:125
 #: src/auth_playground/templates/static-configuration.html:13
 msgid "Redirect URIs"
 msgstr ""
 
-#: src/auth_playground/templates/configure_client.html:88
+#: src/auth_playground/templates/configure_client.html:129
 #: src/auth_playground/templates/static-configuration.html:17
 msgid "Post-Logout Redirect URIs"
 msgstr ""

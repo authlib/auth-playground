@@ -1,4 +1,5 @@
 from flask import g
+from flask import has_request_context
 from flask import session
 from flask_babel import Babel
 from flask_babel import get_locale
@@ -78,6 +79,9 @@ def setup_i18n(app):
         Routes without a language prefix, such as the htmx endpoints and the
         OAuth callbacks, answer in the language the user browses in.
         """
+        if not has_request_context():
+            return app.config["BABEL_DEFAULT_LOCALE"]
+
         return (
             g.get("lang_code")
             or session.get("lang_code")

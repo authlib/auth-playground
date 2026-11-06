@@ -1,0 +1,33 @@
+<article class="request-preview" {{ attributes }}{% if key is none %} hidden{% endif %}>
+    {% if key %}
+        {% if registration %}
+            <header><strong>{% trans %}Sent in the registration request{% endtrans %}</strong></header>
+            <p><small>{% trans description=key.description, kid=key.kid %}{{ description }} key, kid {{ kid }}.{% endtrans %}</small></p>
+            <pre><code>"token_endpoint_auth_method": "private_key_jwt",
+"token_endpoint_auth_signing_alg": "{{ key.alg }}",
+{% if jwks_delivery == "jwks_uri" %}"jwks_uri": "{{ key.jwks_uri }}"{% else %}"jwks": {{ key.jwks }}{% endif %}</code></pre>
+        {% else %}
+            <header><strong>{% trans %}Settings to enter at the provider{% endtrans %}</strong></header>
+            <p><small>{% trans description=key.description, kid=key.kid %}{{ description }} key, kid {{ kid }}.{% endtrans %}
+                {% if key.generated %}{% trans %}Enter its public key at the provider, then the client ID it gives you.{% endtrans %}{% endif %}</small></p>
+            <p>
+                <code>token_endpoint_auth_method</code>: <code>private_key_jwt</code><br>
+                <code>token_endpoint_auth_signing_alg</code>: <code>{{ key.alg }}</code>
+            </p>
+            <label>
+                <code>jwks_uri</code>
+                <div role="group">
+                    <input type="text" value="{{ key.jwks_uri }}" readonly>
+                    <button type="button" class="copy-token-btn secondary">{% trans %}Copy{% endtrans %}</button>
+                </div>
+            </label>
+            <label>
+                {% trans %}Or the public key itself{% endtrans %} (<code>jwks</code>)
+                <textarea rows="8" readonly>{{ key.jwks }}</textarea>
+                <button type="button" class="copy-token-btn secondary">{% trans %}Copy{% endtrans %}</button>
+            </label>
+        {% endif %}
+    {% elif key is not none %}
+        <p><small>{% trans %}Paste a valid private key to see its public key.{% endtrans %}</small></p>
+    {% endif %}
+</article>
