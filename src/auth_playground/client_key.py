@@ -26,11 +26,14 @@ ALGORITHMS = {
     "ES256": ("EC", "P-256"),
     "ES384": ("EC", "P-384"),
     "ES512": ("EC", "P-521"),
+    # Per RFC 9864, Ed25519 replaces EdDSA. EdDSA stays for the providers
+    # that only know it.
+    "Ed25519": ("OKP", "Ed25519"),
     "EdDSA": ("OKP", "Ed25519"),
 }
 
 # Offered when the server does not advertise its algorithms.
-DEFAULT_ALGORITHMS = ("RS256", "ES256", "EdDSA")
+DEFAULT_ALGORITHMS = ("RS256", "ES256", "Ed25519")
 
 
 class InvalidKeyError(ValueError):

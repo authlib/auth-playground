@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-06 23:01+0100\n"
+"POT-Creation-Date: 2026-11-07 08:52+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -22,37 +22,37 @@ msgstr ""
 msgid "This request should be sent to %(server_name)s"
 msgstr ""
 
-#: src/auth_playground/client_key.py:73
+#: src/auth_playground/client_key.py:76
 msgid "This is a public key. Paste the private key."
 msgstr ""
 
-#: src/auth_playground/client_key.py:84
+#: src/auth_playground/client_key.py:87
 msgid "This key is not meant for signing."
 msgstr ""
 
-#: src/auth_playground/client_key.py:89
+#: src/auth_playground/client_key.py:92
 #, python-brace-format
 msgid "The playground cannot sign with this key for {alg}."
 msgstr ""
 
-#: src/auth_playground/client_key.py:93
+#: src/auth_playground/client_key.py:96
 msgid "The playground cannot sign with this key."
 msgstr ""
 
-#: src/auth_playground/client_key.py:102
+#: src/auth_playground/client_key.py:105
 msgid "This JWK is not valid JSON."
 msgstr ""
 
-#: src/auth_playground/client_key.py:105
+#: src/auth_playground/client_key.py:108
 msgid "The JWK must be an RSA, EC or OKP key."
 msgstr ""
 
-#: src/auth_playground/client_key.py:111
+#: src/auth_playground/client_key.py:114
 #, python-brace-format
 msgid "This JWK is not valid: {error}"
 msgstr ""
 
-#: src/auth_playground/client_key.py:120
+#: src/auth_playground/client_key.py:123
 msgid "This is not an RSA, EC or Ed25519 key in PEM format."
 msgstr ""
 

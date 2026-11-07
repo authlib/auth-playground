@@ -70,7 +70,10 @@ def test_import_a_jwk_keeps_its_kid():
 
     assert client_key.import_private_key(text)["kid"] == "mine"
     assert client_key.import_private_key(text, "other")["kid"] == "other"
-    assert client_key.key_algorithms(client_key.import_private_key(text)) == ["EdDSA"]
+    assert client_key.key_algorithms(client_key.import_private_key(text)) == [
+        "Ed25519",
+        "EdDSA",
+    ]
 
 
 def rsa_jwk(**extra):
@@ -416,7 +419,7 @@ def test_dynamic_registration_sends_the_public_key(unconfigured_testapp):
     server_session(unconfigured_testapp)
     form = unconfigured_testapp.get("/en/client").forms["dynamic-registration-form"]
     form["auth_method"] = "private_key_jwt"
-    form["signing_alg"] = "EdDSA"
+    form["signing_alg"] = "Ed25519"
     with patch("requests.post") as mock_post:
         mock_post.return_value.json.return_value = {
             "client_id": "keyed-client",
@@ -426,7 +429,7 @@ def test_dynamic_registration_sends_the_public_key(unconfigured_testapp):
 
     sent = mock_post.call_args.kwargs["json"]
     assert sent["token_endpoint_auth_method"] == "private_key_jwt"
-    assert sent["token_endpoint_auth_signing_alg"] == "EdDSA"
+    assert sent["token_endpoint_auth_signing_alg"] == "Ed25519"
     assert "jwks_uri" not in sent
     with unconfigured_testapp.session_transaction() as sess:
         config = sess["oauth_config"]
