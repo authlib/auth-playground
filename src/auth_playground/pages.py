@@ -11,6 +11,7 @@ from auth_playground.client_auth import PUBLIC_METHOD
 from auth_playground.forms import AuthorizationParamsForm
 from auth_playground.forms import ClientCredentialsForm
 from auth_playground.forms import GrantForm
+from auth_playground.forms import JwtBearerForm
 from auth_playground.forms import LogoutLocalForm
 from auth_playground.forms import LogoutParamsForm
 from auth_playground.forms import PasswordForm
@@ -24,13 +25,14 @@ GRANT_FORMS = {
     "authorization_code": AuthorizationParamsForm,
     "client_credentials": ClientCredentialsForm,
     "password": PasswordForm,
+    "jwt_bearer": JwtBearerForm,
 }
 
 
 def render_tokens_page(tab, grant=None, grant_form=None):
     """Render a tab of the tokens page.
 
-    The grant type comes from ``grant``, or else from the query string.
+    The grant type is called ``grant``, or else is in the query string.
     """
     oauth_config = auth_playground.get_oauth_config(current_app)
     logout_params_form = LogoutParamsForm(
@@ -46,8 +48,8 @@ def render_tokens_page(tab, grant=None, grant_form=None):
     grant_forms = {}
     if tab == "request":
         grant_forms = {
-            "grant_selector": GrantForm(data={"grant": grant.value}),
-            "grant_form": grant_form or GRANT_FORMS[grant.value](),
+            "grant_selector": GrantForm(data={"grant": grant.name}),
+            "grant_form": grant_form or GRANT_FORMS[grant.name](),
         }
 
     return render_template(

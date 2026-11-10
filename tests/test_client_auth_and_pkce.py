@@ -402,6 +402,7 @@ def test_invalid_manual_form_keeps_the_registration_form(unconfigured_testapp):
         True,
         False,
         False,
+        False,
     ]
 
 

@@ -1,0 +1,32 @@
+{% from "_form.html" import render_form %}
+{% call render_form(grant_form, url_for('oauth.jwt_bearer'), id="jwt-bearer-form") %}
+    <div class="param-groups">
+        <fieldset>
+            <legend>{% trans %}Assertion{% endtrans %}</legend>
+            {{ grant_form.source() }}
+            {{ grant_form.assertion() }}
+            {{ grant_form.subject() }}
+            {{ grant_form.issuer() }}
+            {{ grant_form.audience() }}
+            {{ grant_form.lifetime() }}
+            {{ grant_form.extra_claims() }}
+        </fieldset>
+        <fieldset>
+            <legend>{% trans %}Request{% endtrans %}</legend>
+            {% if grant_form.scopes.choices %}
+                {{ grant_form.scopes() }}
+            {% endif %}
+            {{ grant_form.other_scopes() }}
+        </fieldset>
+        <fieldset>
+            <legend>{% trans %}Advanced{% endtrans %}</legend>
+            {{ grant_form.extra_params() }}
+        </fieldset>
+    </div>
+
+    {{ grant_form.preview() }}
+
+    {{ grant_form.assertion_preview() }}
+
+    {{ grant_form.request_tokens() }}
+{% endcall %}

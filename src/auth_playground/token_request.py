@@ -53,6 +53,17 @@ def client_auth_preview(method, client_id):
     return [], [("client_id", client_id)]
 
 
+def signed_header(alg, kid=None):
+    """Return the header of a JWT the playground signs.
+
+    It is in the order joserfc writes it.
+    """
+    header = {"typ": "JWT", "alg": alg}
+    if kid:
+        header["kid"] = kid
+    return header
+
+
 def client_assertion_preview(oauth_config, token_endpoint):
     """Return the header and the claims of the client assertion, or ``None``.
 
@@ -62,13 +73,12 @@ def client_assertion_preview(oauth_config, token_endpoint):
     if method not in JWT_METHODS:
         return None
 
-    header = {"alg": "HS256", "typ": "JWT"}
+    header = signed_header("HS256")
     if method == KEY_METHOD:
-        header = {
-            "alg": oauth_config["token_endpoint_auth_signing_alg"],
-            "kid": oauth_config["client_key"]["kid"],
-            "typ": "JWT",
-        }
+        header = signed_header(
+            oauth_config["token_endpoint_auth_signing_alg"],
+            oauth_config["client_key"]["kid"],
+        )
     client_id = oauth_config.get("client_id", "")
     claims = {
         "iss": client_id,

@@ -273,8 +273,8 @@ def test_grant_defaults_to_the_grant_of_the_last_tokens(unconfigured_testapp):
 def test_every_grant_has_a_form_and_a_template(app):
     """Test each grant type of the selector can be rendered."""
     for grant in GRANTS:
-        assert grant.value in GRANT_FORMS
-        app.jinja_env.get_template(f"_grant_{grant.value}.html")
+        assert grant.name in GRANT_FORMS
+        app.jinja_env.get_template(f"_grant_{grant.name}.html")
 
 
 @pytest.mark.usefixtures("provider_metadata")
