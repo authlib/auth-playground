@@ -15,8 +15,10 @@ from auth_playground.forms import LogoutLocalForm
 from auth_playground.forms import LogoutParamsForm
 from auth_playground.forms import PasswordForm
 from auth_playground.forms import RefreshTokenForm
+from auth_playground.forms import UserInfoForm
 from auth_playground.grants import get_grant
 from auth_playground.grants import tokens_grant
+from auth_playground.session import server_metadata
 
 GRANT_FORMS = {
     "authorization_code": AuthorizationParamsForm,
@@ -52,6 +54,8 @@ def render_tokens_page(tab, grant=None, grant_form=None):
         "tokens.html",
         tab=tab,
         refresh_form=RefreshTokenForm(),
+        userinfo_form=UserInfoForm(),
+        userinfo_endpoint=server_metadata().get("userinfo_endpoint"),
         grant=grant,
         tokens_grant=tokens_grant(),
         public_client=oauth_config.get("token_endpoint_auth_method") == PUBLIC_METHOD,

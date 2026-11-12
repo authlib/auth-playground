@@ -46,6 +46,7 @@ from auth_playground.forms import LogoutParamsForm
 from auth_playground.forms import PasswordForm
 from auth_playground.forms import RefreshTokenForm
 from auth_playground.forms import UnregisterClientForm
+from auth_playground.forms import UserInfoForm
 from auth_playground.grants import tokens_grant
 from auth_playground.pages import render_tokens_page
 from auth_playground.session import server_metadata
@@ -93,9 +94,19 @@ def get_response_error(exc: requests.RequestException) -> str | None:
     return error if isinstance(error, str) else None
 
 
+def www_authenticate(exc: requests.RequestException) -> str | None:
+    """Get the WWW-Authenticate header of an error response.
+
+    Per RFC 6750 §3, a protected resource gives its error there.
+    """
+    if exc.response is None:
+        return None
+    return exc.response.headers.get("WWW-Authenticate")
+
+
 def forget_tokens():
     """Forget the user and the tokens."""
-    for key in ("user", "token", "token_info"):
+    for key in ("user", "token", "token_info", "userinfo"):
         session.pop(key, None)
 
 
@@ -400,6 +411,7 @@ def store_token(token, grant_type, requested_scope=None, pkce=None):
     """
     old_token = session.get("token", {})
     old_info = session.get("token_info", {})
+    session.pop("userinfo", None)
     session["token"] = {
         "access_token": token.get("access_token"),
         "refresh_token": token.get("refresh_token") or old_token.get("refresh_token"),
@@ -662,4 +674,64 @@ def refresh():
             "error",
         )
 
+    return redirect(url_for("routes.tokens"))
+
+
+def bearer_token():
+    """Return the access token alone, to send it to the provider as it is.
+
+    With an expiry date or a refresh token, Authlib could refuse the token
+    before sending it, or refresh it without the playground knowing.
+    """
+    token = session.get("token", {})
+    return {key: token[key] for key in ("access_token", "token_type") if token.get(key)}
+
+
+@bp.route("/userinfo", methods=["POST"])
+@server_config_needed
+def userinfo():
+    """Call the UserInfo endpoint with the access token."""
+    form = UserInfoForm()
+    if not form.validate_on_submit():
+        flash(_("Invalid request"), "error")
+        return redirect(url_for("routes.tokens"))
+
+    if not session.get("token", {}).get("access_token"):
+        flash(_("No access token available"), "error")
+        return redirect(url_for("routes.tokens"))
+
+    if not tokens_grant().user:
+        flash(_("These tokens are not tied to a user."), "error")
+        return redirect(url_for("routes.tokens"))
+
+    endpoint = server_metadata().get("userinfo_endpoint")
+    if not endpoint:
+        flash(_("The provider has no UserInfo endpoint."), "error")
+        return redirect(url_for("routes.tokens"))
+
+    try:
+        claims = auth_playground.oauth.default.userinfo(
+            token=bearer_token(), timeout=10
+        )
+    except AuthlibBaseError as exc:
+        error = exc.description or exc.error
+    except requests.JSONDecodeError:
+        error = _("The response is not JSON.")
+    except requests.RequestException as exc:
+        error = get_response_error(exc) or www_authenticate(exc) or exc
+    except (TypeError, ValueError):
+        error = _("The response is not a JSON object.")
+    else:
+        session["userinfo"] = {
+            "endpoint": endpoint,
+            "received_at": int(time.time()),
+            "claims": dict(claims),
+        }
+        flash(_("User info received"), "success")
+        return redirect(url_for("routes.tokens"))
+
+    flash(
+        _("An error happened during the UserInfo request: {error}").format(error=error),
+        "error",
+    )
     return redirect(url_for("routes.tokens"))
