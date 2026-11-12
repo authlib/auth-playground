@@ -434,28 +434,35 @@ def store_token(token, grant_type, requested_scope=None, pkce=None):
     }
 
 
-def fetch_tokens(grant_type, form, **params):
+def token_request_error(exc):
+    """Return the message of a failed token request."""
+    if isinstance(exc, AuthlibBaseError):
+        return exc.description or exc.error
+    if isinstance(exc, requests.RequestException):
+        return get_response_error(exc) or str(exc)
+    return str(exc)
+
+
+def fetch_tokens(grant_type, form=None, **params):
     """Request tokens at the token endpoint, or flash why it failed."""
     if not server_metadata().get("token_endpoint"):
         flash(_("The provider has no token endpoint."), "error")
         return None
 
+    if form is not None:
+        params["body"] = urlencode(extra_token_params(form))
     try:
         return auth_playground.oauth.default.fetch_access_token(
-            grant_type=grant_type,
-            body=urlencode(extra_token_params(form)),
-            timeout=10,
-            **params,
+            grant_type=grant_type, **params
         )
-    except AuthlibBaseError as exc:
-        error = exc.description or exc.error
-    except requests.HTTPError as exc:
-        error = get_response_error(exc) or str(exc)
-    except (requests.RequestException, ValueError) as exc:
-        error = str(exc)
-
-    flash(_("The token request failed: {error}").format(error=error), "error")
-    return None
+    except (AuthlibBaseError, requests.RequestException, ValueError) as exc:
+        flash(
+            _("The token request failed: {error}").format(
+                error=token_request_error(exc)
+            ),
+            "error",
+        )
+        return None
 
 
 def render_grant_form(grant_type, form):
@@ -551,21 +558,22 @@ def authorize_callback():
 
     try:
         token = auth_playground.oauth.default.authorize_access_token(**kwargs)
-    except AuthlibBaseError as exc:
-        flash(
-            _("An error happened during login: {error}").format(
-                error=exc.description or exc.error
-            ),
-            "error",
-        )
-        return redirect(url_for("routes.tokens"))
     except JoseError as exc:
         flash(_("The ID token is not valid: {error}").format(error=exc), "error")
         return redirect(url_for("routes.tokens"))
-    except requests.RequestException as exc:
+    # RuntimeError and KeyError come from the ID token check, for instance a
+    # provider without jwks_uri. ValueError comes from a token response that
+    # is not a JSON object.
+    except (
+        AuthlibBaseError,
+        requests.RequestException,
+        RuntimeError,
+        ValueError,
+        KeyError,
+    ) as exc:
         flash(
             _("An error happened during login: {error}").format(
-                error=get_response_error(exc) or exc
+                error=token_request_error(exc)
             ),
             "error",
         )
@@ -668,6 +676,7 @@ def logout_callback():
 
 
 @bp.route("/refresh", methods=["POST"])
+@server_config_needed
 def refresh():
     """Refresh the access token using the refresh token."""
     form = RefreshTokenForm()
@@ -681,19 +690,10 @@ def refresh():
         return redirect(url_for("routes.tokens"))
 
     original_scope = session.get("token", {}).get("scope", "")
-    try:
-        new_token = auth_playground.oauth.default.fetch_access_token(
-            grant_type="refresh_token",
-            refresh_token=refresh_token,
-            scope=original_scope,
-        )
-    except AuthlibBaseError as exc:
-        flash(
-            _("An error happened during token refresh: {error}").format(
-                error=exc.description or exc.error
-            ),
-            "error",
-        )
+    new_token = fetch_tokens(
+        "refresh_token", refresh_token=refresh_token, scope=original_scope
+    )
+    if new_token is None:
         return redirect(url_for("routes.tokens"))
 
     claims, reason = read_id_token(new_token)
@@ -747,9 +747,7 @@ def userinfo():
         return redirect(url_for("routes.tokens"))
 
     try:
-        claims = auth_playground.oauth.default.userinfo(
-            token=bearer_token(), timeout=10
-        )
+        claims = auth_playground.oauth.default.userinfo(token=bearer_token())
     except AuthlibBaseError as exc:
         error = exc.description or exc.error
     except requests.JSONDecodeError:

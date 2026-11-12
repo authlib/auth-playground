@@ -474,7 +474,7 @@ def test_refresh_shows_provider_error(testapp):
     res = testapp.get("/en/tokens/current")
     res = res.forms["refresh-form"].submit("refresh").maybe_follow()
 
-    assert "An error happened during token refresh" in res.text
+    assert "The token request failed:" in res.text
 
 
 def test_authorize_with_empty_parameters(testapp):

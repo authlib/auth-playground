@@ -109,6 +109,41 @@ def test_authorize_callback_reports_an_unreachable_provider(
         assert "token" not in sess
 
 
+@pytest.mark.parametrize(
+    "target, error",
+    [
+        ("parse_id_token", RuntimeError('Missing "jwks_uri" in metadata')),
+        (
+            "fetch_access_token",
+            ValueError("Token endpoint response is not a JSON object (HTTP 200)."),
+        ),
+    ],
+)
+def test_authorize_callback_reports_an_unusable_response(
+    iam_server, iam_client, user, test_client, target, error
+):
+    """Test a provider without signing keys or a broken token response shows an error.
+
+    The previous tokens are kept.
+    """
+    iam_server.login(user)
+    iam_server.consent(user, iam_client)
+    with test_client.session_transaction() as sess:
+        sess["token"] = {"access_token": "previous"}
+
+    res = test_client.get("/authorize")
+    res = iam_server.test_client.get(res.location)
+    with patch(
+        f"auth_playground.oauth_client.PlaygroundOAuth2App.{target}",
+        side_effect=error,
+    ):
+        res = test_client.get(res.location, follow_redirects=True)
+
+    assert f"An error happened during login: {error}" in html.unescape(res.text)
+    with test_client.session_transaction() as sess:
+        assert sess["token"] == {"access_token": "previous"}
+
+
 def test_consent_redirects_with_prompt(iam_server, test_client):
     """Test that the authorization parameters form includes consent option."""
     res = test_client.get("/en/tokens", follow_redirects=True)
@@ -363,7 +398,41 @@ def test_refresh_token_error_without_description(test_client, csrf_token):
             follow_redirects=True,
         )
 
-    assert "An error happened during token refresh: invalid_grant" in res.text
+    assert "The token request failed: invalid_grant" in res.text
+
+
+def test_refresh_reports_an_unreachable_provider(test_client, csrf_token):
+    """Test a network failure during the refresh shows an error, and the request has a timeout."""
+    with test_client.session_transaction() as sess:
+        sess["token"] = {"access_token": "a", "refresh_token": "r"}
+    token_requests = []
+    send_request = requests.Session.request
+
+    def request(session, method, url, **kwargs):
+        if not url.endswith("/token"):
+            return send_request(session, method, url, **kwargs)
+        token_requests.append(kwargs)
+        raise requests.ConnectionError("Connection refused")
+
+    with patch("requests.Session.request", request):
+        res = test_client.post(
+            "/refresh",
+            data={"csrf_token": csrf_token(test_client)},
+            follow_redirects=True,
+        )
+
+    assert token_requests[0]["timeout"] == 10
+    assert "The token request failed: Connection refused" in res.text
+    with test_client.session_transaction() as sess:
+        assert sess["token"]["access_token"] == "a"
+
+
+def test_refresh_without_client(unconfigured_test_client):
+    """Test a refresh asks for the configuration when there is no client."""
+    res = unconfigured_test_client.post("/refresh")
+
+    assert res.status_code == 302
+    assert "/server" in res.location
 
 
 def sign_in_and_get_refresh_form(iam_server, iam_client, user, testapp):

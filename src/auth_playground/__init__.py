@@ -153,6 +153,8 @@ def setup_oauth(app):
         client_secret=client_secret,
         server_metadata_url=get_well_known_url(config["auth_server"], external=True),
         client_kwargs={
+            # Every request of the Authlib client: metadata, token, JWKS, UserInfo.
+            "default_timeout": 10,
             "scope": DEFAULT_SCOPE,
             "token_endpoint_auth_method": config["token_endpoint_auth_method"],
         },

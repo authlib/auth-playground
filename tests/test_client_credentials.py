@@ -66,7 +66,6 @@ def test_client_credentials_sends_scope_and_extra_params(testapp):
         "grant_type": "client_credentials",
         "scope": "api:read api:write",
         "body": "resource=https%3A%2F%2Fa.example&resource=https%3A%2F%2Fb.example",
-        "timeout": 10,
     }
 
 
