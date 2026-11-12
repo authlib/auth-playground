@@ -633,12 +633,31 @@ def logout():
 
 
 @bp.route("/logout_callback")
+@server_config_needed
 def logout_callback():
-    """Handle callback after server-side logout."""
+    """Handle callback after server-side logout.
+
+    A response with a missing or unknown state may be forged, so the session is kept.
+    """
     try:
         auth_playground.oauth.default.validate_logout_response()
-    except OAuthError:
-        pass
+    except OAuthError as exc:
+        error = exc.description or exc.error
+        if not session.get("token"):
+            flash(
+                _("The logout response is not valid: {error}.").format(error=error),
+                "error",
+            )
+            return redirect(url_for("routes.tokens"))
+
+        flash(
+            _(
+                "The logout response is not valid: {error}. "
+                "You are still logged in here."
+            ).format(error=error),
+            "error",
+        )
+        return redirect(url_for("routes.tokens", tab="logout"))
 
     clear_user_session()
     flash(_("You have been logged out from the server"), "success")

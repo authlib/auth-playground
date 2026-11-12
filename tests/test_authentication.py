@@ -1,5 +1,9 @@
+import html
 from unittest.mock import patch
+from urllib.parse import parse_qs
+from urllib.parse import urlsplit
 
+import pytest
 import requests
 from authlib.integrations.base_client import OAuthError
 from joserfc.errors import InvalidClaimError
@@ -132,18 +136,62 @@ def test_logout_redirects_to_end_session(iam_server, iam_client, user, test_clie
     assert "end" in res.location.lower()
 
 
-def test_logout_callback_clears_session(test_client):
-    """Test that logout callback clears user and token from session."""
+def test_logout_callback_clears_session(iam_server, iam_client, user, test_client):
+    """Test the logout callback with the state of the logout request clears the session."""
+    iam_server.login(user)
+    iam_server.consent(user, iam_client)
+    res = test_client.get("/authorize")
+    res = iam_server.test_client.get(res.location)
+    test_client.get(res.location)
+    res = test_client.get("/logout")
+    state = parse_qs(urlsplit(res.location).query)["state"][0]
+
+    res = test_client.get(f"/logout_callback?state={state}", follow_redirects=True)
+
+    assert b"You have been logged out from the server" in res.data
+    with test_client.session_transaction() as sess:
+        assert "user" not in sess
+        assert "token" not in sess
+
+
+@pytest.mark.parametrize(
+    "query,error",
+    [
+        ("", 'Missing "state" parameter'),
+        ("?state=other", 'Invalid "state" parameter'),
+    ],
+)
+def test_logout_callback_keeps_session_without_valid_state(test_client, query, error):
+    """Test a logout response without the state of the logout request is refused."""
     with test_client.session_transaction() as sess:
         sess["user"] = {"sub": "testuser"}
         sess["token"] = {"id_token": "test_token"}
 
-    res = test_client.get("/logout_callback")
-    assert res.status_code == 302
+    res = test_client.get(f"/logout_callback{query}", follow_redirects=True)
 
+    text = html.unescape(res.text)
+    assert f"The logout response is not valid: {error}." in text
+    assert "You are still logged in here." in text
     with test_client.session_transaction() as sess:
-        assert "user" not in sess
-        assert "token" not in sess
+        assert sess["user"] == {"sub": "testuser"}
+        assert sess["token"] == {"id_token": "test_token"}
+
+
+def test_logout_callback_without_session(test_client):
+    """Test a logout response replayed after the logout does not claim a session."""
+    res = test_client.get("/logout_callback?state=consumed", follow_redirects=True)
+
+    text = html.unescape(res.text)
+    assert 'The logout response is not valid: Invalid "state" parameter.' in text
+    assert "You are still logged in here." not in text
+
+
+def test_logout_callback_without_client(unconfigured_test_client):
+    """Test a logout response asks for the configuration when there is no client."""
+    res = unconfigured_test_client.get("/logout_callback?state=state")
+
+    assert res.status_code == 302
+    assert "/server" in res.location
 
 
 def test_logout_local_clears_session_without_contacting_provider(testapp):
