@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 15:14+0100\n"
+"POT-Creation-Date: 2026-11-12 15:40+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -91,10 +91,10 @@ msgstr ""
 msgid "Server metadata successfully loaded"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:199 src/auth_playground/oauth.py:135
-#: src/auth_playground/oauth.py:294 src/auth_playground/oauth.py:368
-#: src/auth_playground/oauth.py:471 src/auth_playground/oauth.py:599
-#: src/auth_playground/oauth.py:684 src/auth_playground/oauth.py:733
+#: src/auth_playground/endpoints.py:199 src/auth_playground/oauth.py:136
+#: src/auth_playground/oauth.py:295 src/auth_playground/oauth.py:369
+#: src/auth_playground/oauth.py:472 src/auth_playground/oauth.py:611
+#: src/auth_playground/oauth.py:696 src/auth_playground/oauth.py:745
 msgid "Invalid request"
 msgstr ""
 
@@ -543,28 +543,28 @@ msgid ""
 "to the token endpoint. The provider never sees the user sign in."
 msgstr ""
 
-#: src/auth_playground/oauth.py:140
+#: src/auth_playground/oauth.py:141
 msgid "Dynamic client registration not supported"
 msgstr ""
 
-#: src/auth_playground/oauth.py:196
+#: src/auth_playground/oauth.py:197
 msgid "Invalid JSON response from registration endpoint"
 msgstr ""
 
-#: src/auth_playground/oauth.py:202
+#: src/auth_playground/oauth.py:203
 #, python-brace-format
 msgid "Dynamic client registration failed: {error}"
 msgstr ""
 
-#: src/auth_playground/oauth.py:206
+#: src/auth_playground/oauth.py:207
 msgid "Dynamic client registration failed"
 msgstr ""
 
-#: src/auth_playground/oauth.py:210
+#: src/auth_playground/oauth.py:211
 msgid "Invalid response from registration endpoint"
 msgstr ""
 
-#: src/auth_playground/oauth.py:217
+#: src/auth_playground/oauth.py:218
 #, python-brace-format
 msgid ""
 "The server registered the client with the {auth_method} authentication "
@@ -572,7 +572,7 @@ msgid ""
 "registered on the server."
 msgstr ""
 
-#: src/auth_playground/oauth.py:229
+#: src/auth_playground/oauth.py:230
 #, python-brace-format
 msgid ""
 "The server registered the client without a client secret, but its "
@@ -580,145 +580,145 @@ msgid ""
 "registered on the server."
 msgstr ""
 
-#: src/auth_playground/oauth.py:240
+#: src/auth_playground/oauth.py:241
 msgid ""
 "The server registered the client with the private_key_jwt authentication "
 "method, but the playground has no key for it. The client is still "
 "registered on the server."
 msgstr ""
 
-#: src/auth_playground/oauth.py:255
+#: src/auth_playground/oauth.py:256
 #, python-brace-format
 msgid ""
 "The server registered the client with the {alg} signing algorithm, which "
 "its key cannot use. The client is still registered on the server."
 msgstr ""
 
-#: src/auth_playground/oauth.py:281
+#: src/auth_playground/oauth.py:282
 msgid "Client successfully registered!"
 msgstr ""
 
-#: src/auth_playground/oauth.py:301
+#: src/auth_playground/oauth.py:302
 msgid "Client registration management credentials not found"
 msgstr ""
 
-#: src/auth_playground/oauth.py:315
+#: src/auth_playground/oauth.py:316
 #, python-brace-format
 msgid "Client unregistration failed: {error}"
 msgstr ""
 
-#: src/auth_playground/oauth.py:319
+#: src/auth_playground/oauth.py:320
 msgid "Client unregistration failed"
 msgstr ""
 
-#: src/auth_playground/oauth.py:327
+#: src/auth_playground/oauth.py:328
 msgid "Client successfully unregistered"
 msgstr ""
 
-#: src/auth_playground/oauth.py:449
+#: src/auth_playground/oauth.py:450
 msgid "The provider has no token endpoint."
 msgstr ""
 
-#: src/auth_playground/oauth.py:460
+#: src/auth_playground/oauth.py:461
 #, python-brace-format
 msgid "The token request failed: {error}"
 msgstr ""
 
-#: src/auth_playground/oauth.py:491
+#: src/auth_playground/oauth.py:492
 msgid "The client obtained tokens."
 msgstr ""
 
-#: src/auth_playground/oauth.py:516
+#: src/auth_playground/oauth.py:517 src/auth_playground/oauth.py:591
 #, python-brace-format
 msgid "The tokens are not kept. {reason}"
 msgstr ""
 
-#: src/auth_playground/oauth.py:523 src/auth_playground/oauth.py:590
+#: src/auth_playground/oauth.py:524 src/auth_playground/oauth.py:602
 msgid "You have been successfully logged in."
 msgstr ""
 
-#: src/auth_playground/oauth.py:526
+#: src/auth_playground/oauth.py:527
 #, python-brace-format
 msgid "Tokens obtained for {username}."
 msgstr ""
 
-#: src/auth_playground/oauth.py:545
+#: src/auth_playground/oauth.py:547
 #, python-brace-format
 msgid "The signing keys of the provider could not be fetched: {error}"
 msgstr ""
 
-#: src/auth_playground/oauth.py:548 src/auth_playground/oauth.py:562
+#: src/auth_playground/oauth.py:550 src/auth_playground/oauth.py:564
 #, python-brace-format
 msgid "The ID token is not valid: {error}"
 msgstr ""
 
-#: src/auth_playground/oauth.py:575
+#: src/auth_playground/oauth.py:577
 #, python-brace-format
 msgid "An error happened during login: {error}"
 msgstr ""
 
-#: src/auth_playground/oauth.py:603
+#: src/auth_playground/oauth.py:615
 msgid "The tokens were forgotten"
 msgstr ""
 
-#: src/auth_playground/oauth.py:605
+#: src/auth_playground/oauth.py:617
 msgid "You have been logged out"
 msgstr ""
 
-#: src/auth_playground/oauth.py:659
+#: src/auth_playground/oauth.py:671
 #, python-brace-format
 msgid "The logout response is not valid: {error}."
 msgstr ""
 
-#: src/auth_playground/oauth.py:666
+#: src/auth_playground/oauth.py:678
 #, python-brace-format
 msgid "The logout response is not valid: {error}. You are still logged in here."
 msgstr ""
 
-#: src/auth_playground/oauth.py:674
+#: src/auth_playground/oauth.py:686
 msgid "You have been logged out from the server"
 msgstr ""
 
-#: src/auth_playground/oauth.py:689
+#: src/auth_playground/oauth.py:701
 msgid "No refresh token available"
 msgstr ""
 
-#: src/auth_playground/oauth.py:703
+#: src/auth_playground/oauth.py:715
 #, python-brace-format
 msgid ""
 "The refresh response is rejected and the previous tokens are kept. If the"
 " provider rotates refresh tokens, sign in again. {reason}"
 msgstr ""
 
-#: src/auth_playground/oauth.py:713
+#: src/auth_playground/oauth.py:725
 msgid "Token successfully refreshed"
 msgstr ""
 
-#: src/auth_playground/oauth.py:737
+#: src/auth_playground/oauth.py:749
 msgid "No access token available"
 msgstr ""
 
-#: src/auth_playground/oauth.py:741
+#: src/auth_playground/oauth.py:753
 msgid "These tokens are not tied to a user."
 msgstr ""
 
-#: src/auth_playground/oauth.py:746
+#: src/auth_playground/oauth.py:758
 msgid "The provider has no UserInfo endpoint."
 msgstr ""
 
-#: src/auth_playground/oauth.py:754
+#: src/auth_playground/oauth.py:766
 msgid "The response is not JSON."
 msgstr ""
 
-#: src/auth_playground/oauth.py:758
+#: src/auth_playground/oauth.py:770
 msgid "The response is not a JSON object."
 msgstr ""
 
-#: src/auth_playground/oauth.py:765
+#: src/auth_playground/oauth.py:777
 msgid "User info received"
 msgstr ""
 
-#: src/auth_playground/oauth.py:769
+#: src/auth_playground/oauth.py:781
 #, python-brace-format
 msgid "An error happened during the UserInfo request: {error}"
 msgstr ""

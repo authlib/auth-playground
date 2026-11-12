@@ -7,6 +7,7 @@ import requests
 from authlib.common.errors import AuthlibBaseError
 from authlib.common.security import generate_token
 from authlib.integrations.base_client import OAuthError
+from authlib.oidc.core import UserInfo
 from flask import Blueprint
 from flask import Response
 from flask import abort
@@ -534,7 +535,8 @@ def read_id_token(token):
 
     When the reason is ``None``, the token can be kept. The claims are then
     ``None`` if the token has no ID token.
-    No nonce is checked. The password grant sends none. Per OIDC Core §12.2, a
+    No nonce is checked. The password grant sends none, and neither does an
+    authorization request without the openid scope. Per OIDC Core §12.2, a
     refreshed ID token should have none, and Authlib does not compare it with
     the original ID token.
     """
@@ -579,8 +581,18 @@ def authorize_callback():
         )
         return redirect(url_for("routes.tokens"))
 
+    # Authlib only checks the ID token when the request had a nonce, that is
+    # when the scope had openid. The checked claims are then a UserInfo. A
+    # plain "userinfo" member would come from the provider response.
+    claims = token.get("userinfo")
+    if not isinstance(claims, UserInfo):
+        claims, reason = read_id_token(token)
+        if reason:
+            flash(_("The tokens are not kept. {reason}").format(reason=reason), "error")
+            return redirect(url_for("routes.tokens"))
+
     session.pop("token", None)
-    session["user"] = token.get("userinfo")
+    session["user"] = claims
     store_token(
         token,
         "authorization_code",

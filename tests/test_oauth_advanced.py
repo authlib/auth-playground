@@ -5,6 +5,7 @@ from urllib.parse import urlsplit
 
 import pytest
 import requests
+from joserfc.errors import InvalidClaimError
 
 from auth_playground.oauth import get_response_error
 from auth_playground.oauth import get_software_id
@@ -363,6 +364,63 @@ def check_scopes(form, scopes):
         # WebTest only exposes the value of a checked checkbox.
         checkbox.checked = True
         checkbox.checked = checkbox.value in scopes
+
+
+def callback_without_openid(testapp, **parse_id_token):
+    """Sign in with a scope without openid, then get an ID token anyway.
+
+    Authlib sends no nonce for this scope, so it does not check the ID token.
+    The response also has a userinfo member that the playground must ignore.
+    """
+    form = testapp.get("/en/tokens/request").forms["auth-params-form"]
+    check_scopes(form, ["profile"])
+    res = form.submit("sign_in")
+    state = parse_qs(urlsplit(res.location).query)["state"][0]
+    with (
+        patch(
+            "auth_playground.oauth_client.PlaygroundOAuth2App.fetch_access_token",
+            return_value={
+                "access_token": "a",
+                "token_type": "Bearer",
+                "id_token": "i",
+                "userinfo": {"sub": "admin"},
+            },
+        ),
+        patch(
+            "auth_playground.oauth_client.PlaygroundOAuth2App.parse_id_token",
+            **parse_id_token,
+        ) as parse,
+    ):
+        res = testapp.get(f"/authorize_callback?code=c&state={state}").maybe_follow()
+    return res, parse
+
+
+def test_authorize_callback_checks_the_id_token_without_openid(testapp):
+    """Test the playground checks the ID token when Authlib did not."""
+    res, parse = callback_without_openid(testapp, return_value={"sub": "jane"})
+
+    assert parse.call_args.kwargs == {"nonce": None}
+    assert "You have been successfully logged in." in res.text
+    with testapp.session_transaction() as sess:
+        assert sess["user"] == {"sub": "jane"}
+        assert sess["token"]["access_token"] == "a"
+
+
+def test_authorize_callback_rejects_an_invalid_id_token_without_openid(testapp):
+    """Test an invalid ID token is rejected when the scope had no openid.
+
+    The previous tokens are kept.
+    """
+    with testapp.session_transaction() as sess:
+        sess["token"] = {"access_token": "previous"}
+
+    res, _ = callback_without_openid(testapp, side_effect=InvalidClaimError("iss"))
+
+    assert "The tokens are not kept. The ID token is not valid:" in res.text
+    assert "You have been successfully logged in." not in res.text
+    with testapp.session_transaction() as sess:
+        assert sess["token"] == {"access_token": "previous"}
+        assert "user" not in sess
 
 
 def test_each_session_uses_its_own_client(iam_server, unconfigured_app):
