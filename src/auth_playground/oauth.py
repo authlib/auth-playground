@@ -504,10 +504,15 @@ def password():
     if token is None:
         return render_grant_form("password", form)
 
+    claims, reason = read_id_token(token)
+    if reason:
+        flash(_("The tokens are not kept. {reason}").format(reason=reason), "error")
+        return render_grant_form("password", form)
+
     forget_tokens()
     store_token(token, "password", requested_scope=scope or None)
-    session["user"] = read_id_token(token)
-    if session["user"]:
+    session["user"] = claims
+    if claims:
         flash(_("You have been successfully logged in."), "success")
     else:
         flash(
@@ -518,24 +523,22 @@ def password():
 
 
 def read_id_token(token):
-    """Return the claims of the ID token, or flash why it cannot be read.
+    """Return the claims of the ID token, and why it cannot be read.
 
+    When the reason is ``None``, the token can be kept. The claims are then
+    ``None`` if the token has no ID token.
     No nonce is checked. The password grant sends none. Per OIDC Core §12.2, a
     refreshed ID token should have none, and Authlib does not compare it with
     the original ID token.
     """
     try:
-        return auth_playground.oauth.default.parse_id_token(token, nonce=None)
+        return auth_playground.oauth.default.parse_id_token(token, nonce=None), None
     except requests.RequestException as exc:
-        flash(
-            _("The signing keys of the provider could not be fetched: {error}").format(
-                error=exc
-            ),
-            "warning",
-        )
+        return None, _(
+            "The signing keys of the provider could not be fetched: {error}"
+        ).format(error=exc)
     except (JoseError, RuntimeError, ValueError, KeyError) as exc:
-        flash(_("The ID token is not valid: {error}").format(error=exc), "warning")
-    return None
+        return None, _("The ID token is not valid: {error}").format(error=exc)
 
 
 @bp.route("/authorize_callback")
@@ -677,18 +680,13 @@ def refresh():
         flash(_("No refresh token available"), "error")
         return redirect(url_for("routes.tokens"))
 
+    original_scope = session.get("token", {}).get("scope", "")
     try:
-        original_scope = session.get("token", {}).get("scope", "")
         new_token = auth_playground.oauth.default.fetch_access_token(
             grant_type="refresh_token",
             refresh_token=refresh_token,
             scope=original_scope,
         )
-
-        store_token(new_token, "refresh_token", requested_scope=original_scope)
-        flash(_("Token successfully refreshed"), "success")
-        if new_token.get("id_token"):
-            session["user"] = read_id_token(new_token)
     except AuthlibBaseError as exc:
         flash(
             _("An error happened during token refresh: {error}").format(
@@ -696,7 +694,23 @@ def refresh():
             ),
             "error",
         )
+        return redirect(url_for("routes.tokens"))
 
+    claims, reason = read_id_token(new_token)
+    if reason:
+        flash(
+            _(
+                "The refresh response is rejected and the previous tokens are kept. "
+                "If the provider rotates refresh tokens, sign in again. {reason}"
+            ).format(reason=reason),
+            "error",
+        )
+        return redirect(url_for("routes.tokens"))
+
+    store_token(new_token, "refresh_token", requested_scope=original_scope)
+    if claims is not None:
+        session["user"] = claims
+    flash(_("Token successfully refreshed"), "success")
     return redirect(url_for("routes.tokens"))
 
 

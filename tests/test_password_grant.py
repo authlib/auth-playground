@@ -79,8 +79,18 @@ def test_password_grant_shows_a_wrong_password(
         assert "token" not in sess
 
 
-def test_password_grant_warns_about_an_invalid_id_token(testapp):
-    """Test the tokens are kept when the ID token is not valid."""
+@pytest.mark.parametrize(
+    "error, message",
+    [
+        (InvalidClaimError("iss"), "The ID token is not valid:"),
+        (
+            requests.ConnectionError("Connection refused"),
+            "The signing keys of the provider could not be fetched:",
+        ),
+    ],
+)
+def test_password_grant_rejects_an_id_token_it_cannot_validate(testapp, error, message):
+    """Test the tokens are not kept when the ID token cannot be validated."""
     with (
         patch(
             "auth_playground.oauth_client.PlaygroundOAuth2App.fetch_access_token",
@@ -88,33 +98,17 @@ def test_password_grant_warns_about_an_invalid_id_token(testapp):
         ),
         patch(
             "auth_playground.oauth_client.PlaygroundOAuth2App.parse_id_token",
-            side_effect=InvalidClaimError("iss"),
+            side_effect=error,
         ),
     ):
-        res = request_tokens(testapp, username="jane", password=PASSWORD).follow()
+        res = request_tokens(testapp, username="jane", password=PASSWORD)
 
-    assert "The ID token is not valid:" in res.text
+    assert "The tokens are not kept." in res.text
+    assert message in res.text
+    assert "Tokens obtained for jane." not in res.text
+    assert "password-form" in res.forms
     with testapp.session_transaction() as sess:
-        assert sess["token"]["access_token"] == "a"
-        assert sess["user"] is None
-
-
-def test_password_grant_reports_unreachable_signing_keys(testapp):
-    """Test a failure to fetch the signing keys is not reported as an invalid token."""
-    with (
-        patch(
-            "auth_playground.oauth_client.PlaygroundOAuth2App.fetch_access_token",
-            return_value={"access_token": "a", "token_type": "Bearer", "id_token": "i"},
-        ),
-        patch(
-            "auth_playground.oauth_client.PlaygroundOAuth2App.parse_id_token",
-            side_effect=requests.ConnectionError("Connection refused"),
-        ),
-    ):
-        res = request_tokens(testapp, username="jane", password=PASSWORD).follow()
-
-    assert "The signing keys of the provider could not be fetched" in res.text
-    assert "Tokens obtained for jane." in res.text
+        assert "token" not in sess
 
 
 def test_password_grant_sends_the_credentials_and_the_scope(testapp):

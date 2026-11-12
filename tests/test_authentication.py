@@ -404,28 +404,44 @@ def test_refresh_reads_the_new_id_token(iam_server, iam_client, user, testapp):
         assert sess["user"]["sub"] == user.user_name
 
 
-def test_refresh_with_an_invalid_id_token(iam_server, iam_client, user, testapp):
-    """Test an invalid ID token in the refresh response shows a warning.
+@pytest.mark.parametrize(
+    "error, message",
+    [
+        (InvalidClaimError("iss"), "The ID token is not valid:"),
+        (
+            requests.ConnectionError("down"),
+            "The signing keys of the provider could not be fetched:",
+        ),
+    ],
+)
+def test_refresh_with_an_invalid_id_token(
+    iam_server, iam_client, user, testapp, error, message
+):
+    """Test a refresh response is rejected when its ID token cannot be validated.
 
-    The new tokens are kept, but the user claims are not trusted anymore.
+    The previous tokens and user claims are kept.
     """
     form, token = sign_in_and_get_refresh_form(iam_server, iam_client, user, testapp)
-    new_token = {**token, "access_token": "new"}
+    new_token = {**token, "access_token": "new", "refresh_token": "new"}
 
     with (
         refresh_response(new_token),
         patch(
             "auth_playground.oauth_client.PlaygroundOAuth2App.parse_id_token",
-            side_effect=InvalidClaimError("iss"),
+            side_effect=error,
         ),
     ):
         res = form.submit("refresh").maybe_follow()
 
-    assert "Token successfully refreshed" in res.text
-    assert "The ID token is not valid:" in res.text
+    assert "Token successfully refreshed" not in res.text
+    assert message in res.text
+    assert (
+        "The refresh response is rejected and the previous tokens are kept." in res.text
+    )
     with testapp.session_transaction() as sess:
-        assert sess["token"]["access_token"] == "new"
-        assert sess["user"] is None
+        assert sess["token"]["access_token"] == token["access_token"]
+        assert sess["token"]["refresh_token"] == token["refresh_token"]
+        assert sess["user"]["sub"] == user.user_name
 
 
 def test_refresh_without_id_token_keeps_the_user(test_client, csrf_token):
