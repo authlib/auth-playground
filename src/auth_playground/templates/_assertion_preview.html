@@ -1,0 +1,18 @@
+<article class="request-preview" {{ attributes }}>
+  <header><strong>{{ label }}</strong> <small>{{ preview.note }}</small></header>
+  {% for type, message in preview.notices %}
+    <article class="notice" data-type="{{ type }}">{{ message }}</article>
+  {% endfor %}
+  {% if preview.claims %}
+    <pre><code>{% trans %}Header{% endtrans %}
+{{ preview.header }}
+
+{% trans %}Claims{% endtrans %}
+{{ preview.claims }}
+{%- if preview.dates %}
+
+{% trans %}Dates{% endtrans %}
+{% for name, date in preview.dates %}{{ name }}: {{ date }}
+{% endfor %}{% endif %}</code></pre>
+  {% endif %}
+</article>

@@ -42,13 +42,18 @@ from auth_playground.decorators import server_config_needed
 from auth_playground.forms import AuthorizationParamsForm
 from auth_playground.forms import ClientCredentialsForm
 from auth_playground.forms import DynamicRegistrationForm
+from auth_playground.forms import JwtBearerForm
 from auth_playground.forms import LogoutLocalForm
 from auth_playground.forms import LogoutParamsForm
 from auth_playground.forms import PasswordForm
 from auth_playground.forms import RefreshTokenForm
 from auth_playground.forms import UnregisterClientForm
 from auth_playground.forms import UserInfoForm
+from auth_playground.grants import JWT_BEARER
 from auth_playground.grants import tokens_grant
+from auth_playground.jwt_bearer import assertion_subject
+from auth_playground.jwt_bearer import pasted_assertion
+from auth_playground.jwt_bearer import sign_assertion
 from auth_playground.pages import render_tokens_page
 from auth_playground.session import server_metadata
 from auth_playground.token_request import extra_token_params
@@ -466,11 +471,11 @@ def fetch_tokens(grant_type, form=None, **params):
         return None
 
 
-def render_grant_form(grant_type, form):
-    """Render the request tab again, with the form of ``grant_type``."""
+def render_grant_form(grant, form):
+    """Render the request tab again, with the form of the grant type called ``grant``."""
     if "csrf_token" in form.errors:
         flash(_("Invalid request"), "error")
-    return render_tokens_page("request", grant=grant_type, grant_form=form)
+    return render_tokens_page("request", grant=grant, grant_form=form)
 
 
 @bp.route("/token/client-credentials", methods=["POST"])
@@ -519,15 +524,55 @@ def password():
 
     forget_tokens()
     store_token(token, "password", requested_scope=scope or None)
+    sign_in_user(claims, form.username.data)
+    return redirect(url_for("routes.tokens", tab="current"))
+
+
+@bp.route("/token/jwt-bearer", methods=["POST"])
+@server_config_needed
+def jwt_bearer():
+    """Request tokens with a JWT that says who they are for."""
+    form = JwtBearerForm()
+    if not form.validate_on_submit():
+        return render_grant_form("jwt_bearer", form)
+
+    if not form.signing():
+        assertion = pasted_assertion(form)
+    else:
+        try:
+            assertion = sign_assertion(form)
+        except (JoseError, ValueError) as exc:
+            flash(
+                _("The assertion could not be signed: {error}").format(error=exc),
+                "error",
+            )
+            return render_grant_form("jwt_bearer", form)
+
+    scope = requested_scope(form)
+    token = fetch_tokens(JWT_BEARER, form, assertion=assertion, scope=scope)
+    if token is None:
+        return render_grant_form("jwt_bearer", form)
+
+    claims, reason = read_id_token(token)
+    if reason:
+        flash(_("The tokens are not kept. {reason}").format(reason=reason), "error")
+        return render_grant_form("jwt_bearer", form)
+
+    forget_tokens()
+    store_token(token, JWT_BEARER, requested_scope=scope or None)
+    sign_in_user(claims, assertion_subject(form))
+    return redirect(url_for("routes.tokens", tab="current"))
+
+
+def sign_in_user(claims, subject):
+    """Sign in the user of the ID token, or else say who the tokens are for."""
     session["user"] = claims
     if claims:
         flash(_("You have been successfully logged in."), "success")
+    elif subject:
+        flash(_("Tokens obtained for {subject}.").format(subject=subject), "success")
     else:
-        flash(
-            _("Tokens obtained for {username}.").format(username=form.username.data),
-            "success",
-        )
-    return redirect(url_for("routes.tokens", tab="current"))
+        flash(_("Tokens obtained."), "success")
 
 
 def read_id_token(token):
@@ -535,7 +580,7 @@ def read_id_token(token):
 
     When the reason is ``None``, the token can be kept. The claims are then
     ``None`` if the token has no ID token.
-    No nonce is checked. The password grant sends none, and neither does an
+    No nonce is checked. The direct grant types send none, and neither does an
     authorization request without the openid scope. Per OIDC Core §12.2, a
     refreshed ID token should have none, and Authlib does not compare it with
     the original ID token.
@@ -727,13 +772,19 @@ def refresh():
 
 
 def bearer_token():
-    """Return the access token alone, to send it to the provider as it is.
+    """Return the access token to send to the provider as it is.
 
     With an expiry date or a refresh token, Authlib could refuse the token
-    before sending it, or refresh it without the playground knowing.
+    before sending it, or refresh it without the playground knowing. The ID
+    token claims let Authlib check the UserInfo sub (OIDC Core §5.3.2).
     """
     token = session.get("token", {})
-    return {key: token[key] for key in ("access_token", "token_type") if token.get(key)}
+    bearer = {
+        key: token[key] for key in ("access_token", "token_type") if token.get(key)
+    }
+    if session.get("user"):
+        bearer["userinfo"] = session["user"]
+    return bearer
 
 
 @bp.route("/userinfo", methods=["POST"])
@@ -766,6 +817,8 @@ def userinfo():
         error = _("The response is not JSON.")
     except requests.RequestException as exc:
         error = get_response_error(exc) or www_authenticate(exc) or exc
+    except (JoseError, RuntimeError, KeyError) as exc:
+        error = _("The signed response is not valid: {error}").format(error=exc)
     except (TypeError, ValueError):
         error = _("The response is not a JSON object.")
     else:

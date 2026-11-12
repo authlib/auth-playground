@@ -134,17 +134,9 @@ def setup_oauth(app):
     client_secret = config.get("client_secret")
     client_auth_methods = [ClientSecretJWT()]
     if config["token_endpoint_auth_method"] == KEY_METHOD:
-        client_key = config["client_key"]
-        # Authlib 1.9.4 reads a key given as text as an RSA key only.
-        # TODO: with Authlib 1.10, pass client_key itself.
-        client_secret = load_key(client_key)
+        client_secret = load_key(config["client_key"])
         client_auth_methods.append(
-            PrivateKeyJWT(
-                alg=config["token_endpoint_auth_signing_alg"],
-                # Authlib 1.9.4 does not put the kid of the key in the header.
-                # TODO: remove with Authlib 1.10, which does.
-                headers={"kid": client_key["kid"]},
-            )
+            PrivateKeyJWT(alg=config["token_endpoint_auth_signing_alg"])
         )
 
     registry.register(

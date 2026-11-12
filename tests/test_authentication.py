@@ -41,7 +41,7 @@ def test_login_flow_fast(iam_server, iam_client, user, test_client):
     assert res.status_code == 302
 
     res = iam_server.test_client.get(res.location)
-    assert res.status_code == 302
+    assert res.status_code == 303
 
     res = test_client.get(res.location)
     assert res.status_code == 302

@@ -8,6 +8,7 @@ from babel import UnknownLocaleError
 from flask import current_app
 from flask import g
 from flask import render_template
+from flask import session
 from flask import url_for
 from flask_babel import lazy_gettext as _
 from flask_wtforms_htmx import HtmxFlaskForm
@@ -34,6 +35,7 @@ from wtforms.validators import NumberRange
 from wtforms.validators import Optional
 from wtforms.widgets import CheckboxInput
 from wtforms.widgets import ListWidget
+from wtforms.widgets import RadioInput
 from wtforms.widgets import html_params
 
 import auth_playground
@@ -58,7 +60,19 @@ from auth_playground.client_key import pending_key
 from auth_playground.client_key import preferred_algorithm
 from auth_playground.client_key import publish_key
 from auth_playground.grants import GRANTS
+from auth_playground.grants import JWT_BEARER
 from auth_playground.grants import advertised_grant_types
+from auth_playground.jwt_bearer import DEFAULT_LIFETIME
+from auth_playground.jwt_bearer import FORM_CLAIMS
+from auth_playground.jwt_bearer import KEY_SOURCE
+from auth_playground.jwt_bearer import PASTED_SOURCE
+from auth_playground.jwt_bearer import SECRET_SOURCE
+from auth_playground.jwt_bearer import assertion_alg
+from auth_playground.jwt_bearer import available_sources
+from auth_playground.jwt_bearer import build_assertion_preview
+from auth_playground.jwt_bearer import claims_object
+from auth_playground.jwt_bearer import jwt_bearer_preview
+from auth_playground.jwt_bearer import pasted_assertion
 from auth_playground.session import server_metadata
 from auth_playground.token_request import TOKEN_RESERVED_PARAMS
 from auth_playground.token_request import client_credentials_preview
@@ -69,6 +83,7 @@ REGISTRABLE_GRANT_TYPES = (
     "refresh_token",
     "client_credentials",
     "password",
+    JWT_BEARER,
 )
 
 DEFAULT_REGISTERED_GRANT_TYPES = ["authorization_code", "refresh_token"]
@@ -654,17 +669,20 @@ def get_pkce_default():
     return ""
 
 
-class RequestPreviewWidget:
-    """Render the request that the form builds."""
+class PreviewWidget:
+    """Render what the form builds, with ``template``."""
+
+    def __init__(self, template):
+        self.template = template
 
     def __call__(self, field, **kwargs):
         kwargs.setdefault("id", field.id)
         return Markup(
             render_template(
-                "_request_preview.html",
+                self.template,
                 attributes=Markup(html_params(**kwargs)),
                 label=field.label.text,
-                request=field.build(field._form),
+                preview=field.build(field._form),
             )
         )
 
@@ -672,7 +690,7 @@ class RequestPreviewWidget:
 class RequestPreviewField(Field):
     """A read-only preview of the request that ``build(form)`` returns."""
 
-    widget = RequestPreviewWidget()
+    widget = PreviewWidget("_request_preview.html")
 
     def __init__(self, label=None, build=None, **kwargs):
         super().__init__(label, **kwargs)
@@ -692,6 +710,12 @@ def scopes_field(default=None):
         widget=ListWidget(prefix_label=False),
         option_widget=CheckboxInput(),
     )
+
+
+class AssertionPreviewField(RequestPreviewField):
+    """A read-only preview of the assertion that ``build(form)`` returns."""
+
+    widget = PreviewWidget("_assertion_preview.html")
 
 
 class RequestParamsForm(BaseForm):
@@ -835,6 +859,196 @@ class PasswordForm(RequestParamsForm):
     request_tokens = ButtonField(_("Request tokens"), render_kw={"class": "primary"})
 
 
+class ChoiceRadioInput(RadioInput):
+    """A radio button that applies the render_kw of its choice."""
+
+    # WTForms 3.3.2 applies the render_kw of the choices to the options of a
+    # select, but not to radio buttons.
+    def __call__(self, field, **kwargs):
+        return super().__call__(field, **{**field.choice.render_kw, **kwargs})
+
+
+def assertion_source_choices():
+    """Offer the sources of the assertion, and disable those the client lacks."""
+    oauth_config = auth_playground.get_oauth_config(current_app)
+    available = available_sources(oauth_config)
+    if KEY_SOURCE in available:
+        key_label = _("Sign with the client key: {alg}").format(
+            alg=assertion_alg(KEY_SOURCE, oauth_config)
+        )
+    else:
+        key_label = _("Sign with the client key: this client has none.")
+    if SECRET_SOURCE in available:
+        secret_label = _("Sign with the client secret: {alg}").format(
+            alg=assertion_alg(SECRET_SOURCE, oauth_config)
+        )
+    else:
+        secret_label = _("Sign with the client secret: this client has none.")
+    return [
+        SelectChoice(
+            KEY_SOURCE, key_label, render_kw={"disabled": KEY_SOURCE not in available}
+        ),
+        SelectChoice(
+            SECRET_SOURCE,
+            secret_label,
+            render_kw={"disabled": SECRET_SOURCE not in available},
+        ),
+        SelectChoice(
+            PASTED_SOURCE,
+            _("Paste an assertion issued elsewhere"),
+        ),
+    ]
+
+
+def assertion_source_default():
+    """Return the first source of the assertion the client can use."""
+    return available_sources(auth_playground.get_oauth_config(current_app))[0]
+
+
+def signed_in_subject():
+    """Return the sub of the signed-in user, or an empty string."""
+    return (session.get("user") or {}).get("sub", "")
+
+
+def configured_client_id():
+    """Return the ID of the configured client, or an empty string."""
+    return auth_playground.get_oauth_config(current_app).get("client_id", "")
+
+
+def audience_choices():
+    """Offer the issuer and the token endpoint as the audience."""
+    metadata = server_metadata()
+    return [
+        SelectChoice(
+            "issuer", _("{url} (issuer)").format(url=metadata.get("issuer", ""))
+        ),
+        SelectChoice(
+            "token_endpoint",
+            _("{url} (token endpoint)").format(url=metadata.get("token_endpoint", "")),
+        ),
+    ]
+
+
+class JwtBearerForm(RequestParamsForm):
+    """Form to request tokens with a JWT that says who they are for (RFC 7523 §2.1)."""
+
+    endpoint = "oauth.jwt_bearer"
+    reserved_params = TOKEN_RESERVED_PARAMS | {"assertion"}
+
+    source = RadioField(
+        _("Assertion:"),
+        choices=assertion_source_choices,
+        default=assertion_source_default,
+        option_widget=ChoiceRadioInput(),
+        description=_(
+            "A client gets a key with private_key_jwt, and a secret with the "
+            "other confidential methods."
+        ),
+    )
+    assertion = TextAreaField(
+        _("Assertion (JWT):"),
+        description=_(
+            "Sent as is. The playground only decodes it, it does not check "
+            "the signature."
+        ),
+        render_kw={"rows": 5, "autocomplete": "off", "spellcheck": "false"},
+    ).triggered_by("source", on="change")
+    subject = StringField(
+        _("Subject (sub):"),
+        default=signed_in_subject,
+        description=_(
+            "Who the tokens are for. Filled with the sub of the signed-in user."
+        ),
+        render_kw={"autocomplete": "off"},
+    ).triggered_by("source", on="change")
+    issuer = StringField(
+        _("Issuer (iss):"),
+        default=configured_client_id,
+        description=_("The client ID, unless another party issues the assertion."),
+    ).triggered_by("source", on="change")
+    audience = SelectField(
+        _("Audience (aud):"),
+        choices=audience_choices,
+        default="issuer",
+        description=_("Per RFC 10070 §4, both are allowed for a grant."),
+    ).triggered_by("source", on="change")
+    lifetime = IntegerField(
+        _("Lifetime (seconds):"),
+        default=DEFAULT_LIFETIME,
+        description=_("From now to exp."),
+        render_kw={"min": 1},
+    ).triggered_by("source", on="change")
+    extra_claims = TextAreaField(
+        _("Extra claims:"),
+        description=_("A JSON object, added to the claims above."),
+        render_kw={"placeholder": '{"act": {"sub": "admin"}}'},
+    ).triggered_by("source", on="change")
+    scopes = scopes_field(default=get_scopes_default)
+    preview = RequestPreviewField(
+        _("Token request"), build=jwt_bearer_preview, wrapper=False
+    ).triggered_by("*")
+    assertion_preview = AssertionPreviewField(
+        _("Assertion"), build=build_assertion_preview, wrapper=False
+    ).triggered_by("*")
+    request_tokens = ButtonField(_("Request tokens"), render_kw={"class": "primary"})
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        signing = self.signing()
+        show_field(self.assertion, not signing)
+        for field in (
+            self.subject,
+            self.issuer,
+            self.audience,
+            self.lifetime,
+            self.extra_claims,
+        ):
+            show_field(field, signing)
+
+    def signing(self):
+        """Tell whether the playground signs the assertion."""
+        return self.source.data != PASTED_SOURCE
+
+    def validate_source(self, field):
+        oauth_config = auth_playground.get_oauth_config(current_app)
+        if field.data not in available_sources(oauth_config):
+            raise ValidationError(_("This client cannot sign the assertion this way."))
+
+    def validate_assertion(self, field):
+        if not self.signing() and not pasted_assertion(self):
+            raise ValidationError(_("Paste the assertion."))
+
+    def validate_subject(self, field):
+        if self.signing() and not field.data:
+            raise ValidationError(_("Enter who the tokens are for."))
+
+    def validate_issuer(self, field):
+        if self.signing() and not field.data:
+            raise ValidationError(_("Enter who issues the assertion."))
+
+    def validate_lifetime(self, field):
+        if not self.signing():
+            # Like Optional, forget that the hidden value is not a number.
+            field.errors[:] = []
+            return
+        if field.data is not None and field.data < 1:
+            raise ValidationError(_("Enter a number of seconds, 1 or more."))
+
+    def validate_extra_claims(self, field):
+        if not self.signing() or not field.data:
+            return
+
+        claims = claims_object(field.data)
+        if claims is None:
+            raise ValidationError(_("The extra claims must be a JSON object."))
+        if form_claims := [name for name in FORM_CLAIMS if name in claims]:
+            raise ValidationError(
+                _("The form already sets these claims: {claims}.").format(
+                    claims=", ".join(form_claims)
+                )
+            )
+
+
 def grant_label(grant):
     """Mark the label of a deprecated grant type, or one the server does not advertise."""
     marks = []
@@ -852,7 +1066,7 @@ def grant_label(grant):
 def get_grant_choices():
     """Group the grant types, and label the ones the server does not advertise."""
     return [
-        SelectChoice(grant.value, grant_label(grant), optgroup=grant.group)
+        SelectChoice(grant.name, grant_label(grant), optgroup=grant.group)
         for grant in GRANTS
     ]
 

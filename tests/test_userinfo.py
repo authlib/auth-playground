@@ -1,8 +1,10 @@
+import html
 import time
 from unittest.mock import patch
 
 import pytest
 import requests
+from joserfc.errors import InvalidClaimError
 
 from tests.fake_provider import server_session
 
@@ -37,6 +39,34 @@ def test_userinfo_shows_the_response(iam_server, iam_client, user, testapp):
     assert f"{iam_server.url}oauth/userinfo" in res.text
     with testapp.session_transaction() as sess:
         assert sess["userinfo"]["claims"]["sub"] == user.user_name
+
+
+def test_userinfo_rejects_another_sub(iam_server, iam_client, user, testapp):
+    """Test a UserInfo response for another user than the ID token is rejected."""
+    sign_in(iam_server, iam_client, user, testapp)
+    with testapp.session_transaction() as sess:
+        sess["user"] = {**sess["user"], "sub": "someone-else"}
+
+    res = get_userinfo(testapp)
+
+    assert "The UserInfo sub does not match the ID token sub." in res.text
+    assert "UserInfo response" not in res.text
+    with testapp.session_transaction() as sess:
+        assert "userinfo" not in sess
+
+
+def test_userinfo_without_id_token(iam_server, iam_client, user, testapp):
+    """Test the UserInfo response is shown when there is no ID token to compare with.
+
+    For instance, the password grant of the provider gives no ID token.
+    """
+    sign_in(iam_server, iam_client, user, testapp)
+    with testapp.session_transaction() as sess:
+        sess["user"] = None
+
+    res = get_userinfo(testapp)
+
+    assert "User info received" in res.text
 
 
 def test_userinfo_sends_an_expired_token_as_it_is(
@@ -119,6 +149,28 @@ def provider_response(status, body, headers=None):
     response._content = body
     response.headers.update(headers or {})
     return response
+
+
+@pytest.mark.parametrize(
+    "error",
+    [InvalidClaimError("aud"), RuntimeError('Missing "jwks_uri" in metadata')],
+)
+def test_userinfo_with_an_invalid_signed_response(
+    iam_server, iam_client, user, testapp, error
+):
+    """Test a signed response that cannot be validated shows an error."""
+    sign_in(iam_server, iam_client, user, testapp)
+    form = userinfo_form(testapp)
+
+    with patch(
+        "auth_playground.oauth_client.PlaygroundOAuth2App.userinfo",
+        side_effect=error,
+    ):
+        res = form.submit("userinfo").maybe_follow()
+
+    assert f"The signed response is not valid: {error}" in html.unescape(res.text)
+    with testapp.session_transaction() as sess:
+        assert "userinfo" not in sess
 
 
 @pytest.mark.parametrize(
