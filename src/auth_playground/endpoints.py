@@ -39,8 +39,35 @@ def _get_metadata_document(url: str, timeout: int) -> dict:
     return metadata
 
 
+class IssuerMismatchError(Exception):
+    """The issuer of the server metadata is not the issuer URL entered.
+
+    The issuer is ``None`` when the metadata has none.
+    """
+
+    def __init__(self, issuer):
+        super().__init__(issuer)
+        self.issuer = issuer
+
+
 def fetch_server_metadata(issuer_url: str, timeout: int = 10) -> tuple[dict, str]:
-    """Fetch server metadata from well-known OIDC or OAuth2 endpoints."""
+    """Fetch server metadata from well-known OIDC or OAuth2 endpoints.
+
+    Per OIDC Discovery §4.3 and RFC 8414 §3.3, the issuer of the metadata must
+    be the issuer URL the well-known URL is built from. ``issuer_url`` has no
+    trailing slash, and a trailing slash in the issuer is accepted.
+    """
+    metadata, server_type = _fetch_metadata_document(issuer_url, timeout)
+    issuer = metadata.get("issuer")
+    if not isinstance(issuer, str):
+        raise IssuerMismatchError(None)
+    if issuer.rstrip("/") != issuer_url:
+        raise IssuerMismatchError(issuer)
+    return metadata, server_type
+
+
+def _fetch_metadata_document(issuer_url: str, timeout: int) -> tuple[dict, str]:
+    """Fetch the OIDC metadata document, or else the OAuth2 one."""
     oidc_url = f"{issuer_url}/.well-known/openid-configuration"
     try:
         return _get_metadata_document(oidc_url, timeout), "oidc"
@@ -54,7 +81,17 @@ def fetch_server_metadata(issuer_url: str, timeout: int = 10) -> tuple[dict, str
 
 def _flash_metadata_error(exception: Exception) -> None:
     """Flash user-friendly error messages for metadata loading errors."""
-    if isinstance(exception, requests.exceptions.ConnectionError):
+    if isinstance(exception, IssuerMismatchError) and exception.issuer is None:
+        flash(_("The server metadata has no issuer."), "error")
+    elif isinstance(exception, IssuerMismatchError):
+        flash(
+            _(
+                "The issuer of the server metadata is {issuer}, not the URL "
+                "you entered. A server must not use the issuer of another one."
+            ).format(issuer=exception.issuer),
+            "error",
+        )
+    elif isinstance(exception, requests.exceptions.ConnectionError):
         flash(_("Cannot connect to the server. Please check the URL."), "error")
     elif isinstance(exception, requests.exceptions.Timeout):
         flash(_("Connection timeout. The server is not responding."), "error")
@@ -108,6 +145,7 @@ def load_server_metadata(
     if not issuer_url:
         return None
 
+    issuer_url = issuer_url.rstrip("/")
     try:
         metadata, server_type = fetch_server_metadata(issuer_url)
     except Exception as e:
@@ -117,7 +155,7 @@ def load_server_metadata(
     if update_config and g.server_config:
         g.server_config.metadata = metadata
         g.server_config.server_type = server_type
-        g.server_config.issuer_url = issuer_url.rstrip("/")
+        g.server_config.issuer_url = issuer_url
         # The client was set up before the metadata, which can change its
         # signing algorithm.
         auth_playground.setup_oauth(current_app)

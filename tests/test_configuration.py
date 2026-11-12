@@ -429,6 +429,28 @@ def test_reloading_the_same_provider_keeps_the_client(unconfigured_test_client):
         assert sess["oauth_config"]["client_id"] == "c"
 
 
+def test_provider_with_another_issuer(unconfigured_test_client):
+    """Test a provider whose metadata gives another issuer is refused."""
+    with patch("requests.get") as mock_get:
+        mock_get.return_value.json.return_value = {
+            "issuer": "https://other.example.com"
+        }
+        res = unconfigured_test_client.get("/en/server/test.example.com")
+
+    assert "The issuer of the server metadata is https://other.example.com" in res.text
+    with unconfigured_test_client.session_transaction() as sess:
+        assert "server_metadata" not in sess
+
+
+def test_provider_without_issuer(unconfigured_test_client):
+    """Test a provider whose metadata has no issuer is refused."""
+    with patch("requests.get") as mock_get:
+        mock_get.return_value.json.return_value = {}
+        res = unconfigured_test_client.get("/en/server/test.example.com")
+
+    assert "The server metadata has no issuer." in res.text
+
+
 def test_failed_provider_load_keeps_the_page(unconfigured_test_client):
     """Test the provider page renders when loading another issuer fails."""
     with unconfigured_test_client.session_transaction() as sess:

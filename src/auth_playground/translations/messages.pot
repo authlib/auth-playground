@@ -56,57 +56,68 @@ msgstr ""
 msgid "This is not an RSA, EC or Ed25519 key in PEM format."
 msgstr ""
 
-#: src/auth_playground/endpoints.py:58
+#: src/auth_playground/endpoints.py:85
+msgid "The server metadata has no issuer."
+msgstr ""
+
+#: src/auth_playground/endpoints.py:89
+#, python-brace-format
+msgid ""
+"The issuer of the server metadata is {issuer}, not the URL you entered. A"
+" server must not use the issuer of another one."
+msgstr ""
+
+#: src/auth_playground/endpoints.py:95
 msgid "Cannot connect to the server. Please check the URL."
 msgstr ""
 
-#: src/auth_playground/endpoints.py:60
+#: src/auth_playground/endpoints.py:97
 msgid "Connection timeout. The server is not responding."
 msgstr ""
 
-#: src/auth_playground/endpoints.py:65
+#: src/auth_playground/endpoints.py:102
 msgid ""
 "This server does not support OIDC Discovery or OAuth 2.0 Authorization "
 "Server Metadata"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:71
+#: src/auth_playground/endpoints.py:108
 #, python-brace-format
 msgid "Server returned an error: HTTP {status_code}"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:77
+#: src/auth_playground/endpoints.py:114
 msgid "Invalid response from server"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:79
+#: src/auth_playground/endpoints.py:116
 msgid "Failed to connect to the server. Please check the URL."
 msgstr ""
 
-#: src/auth_playground/endpoints.py:82
+#: src/auth_playground/endpoints.py:119
 msgid "Cannot load the server metadata."
 msgstr ""
 
-#: src/auth_playground/endpoints.py:179
+#: src/auth_playground/endpoints.py:217
 msgid "Server metadata successfully loaded"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:199 src/auth_playground/oauth.py:136
+#: src/auth_playground/endpoints.py:237 src/auth_playground/oauth.py:136
 #: src/auth_playground/oauth.py:295 src/auth_playground/oauth.py:369
 #: src/auth_playground/oauth.py:472 src/auth_playground/oauth.py:611
 #: src/auth_playground/oauth.py:696 src/auth_playground/oauth.py:751
 msgid "Invalid request"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:206
+#: src/auth_playground/endpoints.py:244
 msgid "You can now configure a different identity provider"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:256
+#: src/auth_playground/endpoints.py:294
 msgid "OAuth configuration completed successfully"
 msgstr ""
 
-#: src/auth_playground/endpoints.py:292
+#: src/auth_playground/endpoints.py:330
 msgid "No server configured"
 msgstr ""
 

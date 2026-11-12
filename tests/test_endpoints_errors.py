@@ -4,6 +4,7 @@ from unittest.mock import patch
 import pytest
 import requests
 
+from auth_playground.endpoints import IssuerMismatchError
 from auth_playground.endpoints import fetch_server_metadata
 
 
@@ -36,6 +37,30 @@ def test_fetch_server_metadata_rejects_non_object_documents(document):
 
         with pytest.raises(requests.exceptions.InvalidJSONError):
             fetch_server_metadata("https://test.example.com")
+
+
+@pytest.mark.parametrize(
+    "issuer", ["https://other.example.com", "https://test.example.com/tenant", None]
+)
+def test_fetch_server_metadata_rejects_another_issuer(issuer):
+    """Test the issuer of the metadata must be the URL it was fetched from."""
+    with patch("requests.get") as mock_get:
+        mock_get.return_value.json.return_value = {"issuer": issuer}
+
+        with pytest.raises(IssuerMismatchError):
+            fetch_server_metadata("https://test.example.com")
+
+
+def test_fetch_server_metadata_accepts_a_trailing_slash():
+    """Test an issuer with a trailing slash matches the URL without one."""
+    with patch("requests.get") as mock_get:
+        mock_get.return_value.json.return_value = {
+            "issuer": "https://test.example.com/"
+        }
+
+        metadata, _ = fetch_server_metadata("https://test.example.com")
+
+    assert metadata["issuer"] == "https://test.example.com/"
 
 
 def test_fetch_server_metadata_raises_non_404_errors():
