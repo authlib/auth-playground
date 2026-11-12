@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-12 15:40+0100\n"
+"POT-Creation-Date: 2026-11-12 17:09+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -94,7 +94,7 @@ msgstr ""
 #: src/auth_playground/endpoints.py:199 src/auth_playground/oauth.py:136
 #: src/auth_playground/oauth.py:295 src/auth_playground/oauth.py:369
 #: src/auth_playground/oauth.py:472 src/auth_playground/oauth.py:611
-#: src/auth_playground/oauth.py:696 src/auth_playground/oauth.py:745
+#: src/auth_playground/oauth.py:696 src/auth_playground/oauth.py:751
 msgid "Invalid request"
 msgstr ""
 
@@ -694,31 +694,36 @@ msgstr ""
 msgid "Token successfully refreshed"
 msgstr ""
 
-#: src/auth_playground/oauth.py:749
+#: src/auth_playground/oauth.py:755
 msgid "No access token available"
 msgstr ""
 
-#: src/auth_playground/oauth.py:753
+#: src/auth_playground/oauth.py:759
 msgid "These tokens are not tied to a user."
 msgstr ""
 
-#: src/auth_playground/oauth.py:758
+#: src/auth_playground/oauth.py:764
 msgid "The provider has no UserInfo endpoint."
 msgstr ""
 
-#: src/auth_playground/oauth.py:766
+#: src/auth_playground/oauth.py:772
 msgid "The response is not JSON."
 msgstr ""
 
-#: src/auth_playground/oauth.py:770
+#: src/auth_playground/oauth.py:776
+#, python-brace-format
+msgid "The signed response is not valid: {error}"
+msgstr ""
+
+#: src/auth_playground/oauth.py:778
 msgid "The response is not a JSON object."
 msgstr ""
 
-#: src/auth_playground/oauth.py:777
+#: src/auth_playground/oauth.py:785
 msgid "User info received"
 msgstr ""
 
-#: src/auth_playground/oauth.py:781
+#: src/auth_playground/oauth.py:789
 #, python-brace-format
 msgid "An error happened during the UserInfo request: {error}"
 msgstr ""

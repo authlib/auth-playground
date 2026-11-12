@@ -727,13 +727,19 @@ def refresh():
 
 
 def bearer_token():
-    """Return the access token alone, to send it to the provider as it is.
+    """Return the access token to send to the provider as it is.
 
     With an expiry date or a refresh token, Authlib could refuse the token
-    before sending it, or refresh it without the playground knowing.
+    before sending it, or refresh it without the playground knowing. The ID
+    token claims let Authlib check the UserInfo sub (OIDC Core §5.3.2).
     """
     token = session.get("token", {})
-    return {key: token[key] for key in ("access_token", "token_type") if token.get(key)}
+    bearer = {
+        key: token[key] for key in ("access_token", "token_type") if token.get(key)
+    }
+    if session.get("user"):
+        bearer["userinfo"] = session["user"]
+    return bearer
 
 
 @bp.route("/userinfo", methods=["POST"])
@@ -766,6 +772,8 @@ def userinfo():
         error = _("The response is not JSON.")
     except requests.RequestException as exc:
         error = get_response_error(exc) or www_authenticate(exc) or exc
+    except (JoseError, RuntimeError, KeyError) as exc:
+        error = _("The signed response is not valid: {error}").format(error=exc)
     except (TypeError, ValueError):
         error = _("The response is not a JSON object.")
     else:
