@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="{{ locale }}">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="color-scheme" content="light dark">
+        <title>{% trans %}Authorization response{% endtrans %} - Auth Playground</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='vendor/blades/pico.min.css') }}">
+        <script src="{{ url_for('static', filename='js/form-post-relay.js') }}" defer></script>
+    </head>
+
+    <body>
+        <main class="container">
+            <form id="form-post-relay" method="post" action="{{ url_for('oauth.authorize_callback') }}">
+                {% for name, value in fields %}
+                    <input type="hidden" name="{{ name }}" value="{{ value }}">
+                {% endfor %}
+                <input type="hidden" name="{{ relayed }}" value="1">
+                <p>{% trans %}The provider posted its response from its own site, so the browser did not send the session cookie of the playground (SameSite=Lax). The playground posts the response again, this time from its own site.{% endtrans %}</p>
+                <noscript>
+                    <button type="submit">{% trans %}Continue{% endtrans %}</button>
+                </noscript>
+            </form>
+        </main>
+    </body>
+</html>

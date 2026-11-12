@@ -32,6 +32,7 @@ RESERVED_PARAMS = frozenset(
         "acr_values",
         "login_hint",
         "claims",
+        "response_mode",
         # Argument names of the Authlib functions that build the request.
         "url",
         "uri",
@@ -85,7 +86,14 @@ def authorization_params(form):
     """
     params = {"scope": requested_scope(form) or DEFAULT_SCOPE}
 
-    for name in ("prompt", "ui_locales", "acr_values", "login_hint", "claims"):
+    for name in (
+        "response_mode",
+        "prompt",
+        "ui_locales",
+        "acr_values",
+        "login_hint",
+        "claims",
+    ):
         if value := form[name].data:
             params[name] = value
 

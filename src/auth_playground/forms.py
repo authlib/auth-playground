@@ -692,6 +692,22 @@ def get_pkce_choices():
     ]
 
 
+def get_response_mode_choices():
+    """Offer the default response mode, and label form_post when not advertised.
+
+    Per OIDC Discovery §3, a server without response_modes_supported supports
+    query and fragment.
+    """
+    advertised = server_metadata().get("response_modes_supported") or [
+        "query",
+        "fragment",
+    ]
+    return [
+        SelectChoice("", _("Default (query)")),
+        *advertised_choices(["form_post"], advertised),
+    ]
+
+
 def get_pkce_default():
     """Return the first advertised PKCE method.
 
@@ -808,6 +824,15 @@ class AuthorizationParamsForm(RequestParamsForm):
         ),
     )
     scopes = scopes_field(default=get_scopes_default)
+    response_mode = SelectField(
+        _("Response mode:"),
+        choices=get_response_mode_choices,
+        default="",
+        description=_(
+            "form_post: the provider posts the response to the playground, "
+            "instead of putting it in the URL."
+        ),
+    )
     prompt = SelectField(
         _("Prompt:"),
         choices=get_prompt_choices,

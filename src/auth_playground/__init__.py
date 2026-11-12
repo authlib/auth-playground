@@ -234,6 +234,9 @@ def create_app():
         else FileSystemCache(os.path.join(tempfile.gettempdir(), "flask_sessions"))
     )
     app.config["SESSION_PERMANENT"] = False
+    # Set explicitly, as browsers have different defaults. The form_post
+    # response mode relies on it.
+    app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
     # Only store the session when a request changes it. Otherwise concurrent
     # requests, such as htmx ones, overwrite each other's changes.
     app.config["SESSION_REFRESH_EACH_REQUEST"] = False

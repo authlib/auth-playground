@@ -16,6 +16,7 @@ from flask import flash
 from flask import g
 from flask import jsonify
 from flask import redirect
+from flask import render_template
 from flask import request
 from flask import session
 from flask import url_for
@@ -63,6 +64,9 @@ bp = Blueprint("oauth", __name__)
 
 # Authorization requests kept while waiting for their callback.
 MAX_PENDING_AUTHORIZATIONS = 5
+
+# Marks the authorization response the relay page posts again.
+RELAYED = "relayed"
 
 
 def get_software_id() -> str:
@@ -620,10 +624,28 @@ def read_id_token(token):
         return None, _("The ID token is not valid: {error}").format(error=exc)
 
 
-@bp.route("/authorize_callback")
+@bp.route("/authorize_callback", methods=["GET", "POST"])
 def authorize_callback():
-    """Handle OAuth callback after user authorization."""
-    pending = pop_authorization_request(request.args.get("state"))
+    """Handle OAuth callback after user authorization.
+
+    With the form_post response mode, the provider posts the response from its
+    own site. The browser does not send the SameSite=Lax session cookie with
+    this request, so the response is relayed once with a POST from this site.
+    """
+    if (
+        request.method == "POST"
+        and not request.form.get(RELAYED)
+        and current_app.config["SESSION_COOKIE_NAME"] not in request.cookies
+    ):
+        page = render_template(
+            "form_post_relay.html",
+            fields=list(request.form.items(multi=True)),
+            relayed=RELAYED,
+        )
+        # The page holds the authorization code.
+        return page, {"Cache-Control": "no-store"}
+
+    pending = pop_authorization_request(request.values.get("state"))
     kwargs = {}
     if code_verifier := pending.get("code_verifier"):
         kwargs["code_verifier"] = code_verifier
