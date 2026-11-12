@@ -316,3 +316,82 @@ def test_refresh_token_error_without_description(test_client, csrf_token):
         )
 
     assert "An error happened during token refresh: invalid_grant" in res.text
+
+
+def sign_in_and_get_refresh_form(iam_server, iam_client, user, testapp):
+    """Sign the user in, then return the refresh form and the tokens."""
+    iam_server.login(user)
+    iam_server.consent(user, iam_client)
+    res = testapp.get("/authorize")
+    res = iam_server.test_client.get(res.location)
+    testapp.get(res.location)
+    with testapp.session_transaction() as sess:
+        token = dict(sess["token"])
+    return testapp.get("/en/tokens/current").forms["refresh-form"], token
+
+
+def refresh_response(token):
+    """Answer the refresh request with ``token``.
+
+    The provider of the tests sends no ID token in refresh responses.
+    """
+    return patch(
+        "authlib.integrations.base_client.sync_app.OAuth2Mixin.fetch_access_token",
+        return_value=token,
+    )
+
+
+def test_refresh_reads_the_new_id_token(iam_server, iam_client, user, testapp):
+    """Test the claims shown are those of the ID token of the refresh response."""
+    form, token = sign_in_and_get_refresh_form(iam_server, iam_client, user, testapp)
+    with testapp.session_transaction() as sess:
+        sess["user"] = {"sub": "old"}
+
+    with refresh_response(token):
+        res = form.submit("refresh").maybe_follow()
+
+    assert "Token successfully refreshed" in res.text
+    assert "The ID token is not valid" not in res.text
+    with testapp.session_transaction() as sess:
+        assert sess["user"]["sub"] == user.user_name
+
+
+def test_refresh_with_an_invalid_id_token(iam_server, iam_client, user, testapp):
+    """Test an invalid ID token in the refresh response shows a warning.
+
+    The new tokens are kept, but the user claims are not trusted anymore.
+    """
+    form, token = sign_in_and_get_refresh_form(iam_server, iam_client, user, testapp)
+    new_token = {**token, "access_token": "new"}
+
+    with (
+        refresh_response(new_token),
+        patch(
+            "auth_playground.oauth_client.PlaygroundOAuth2App.parse_id_token",
+            side_effect=InvalidClaimError("iss"),
+        ),
+    ):
+        res = form.submit("refresh").maybe_follow()
+
+    assert "Token successfully refreshed" in res.text
+    assert "The ID token is not valid:" in res.text
+    with testapp.session_transaction() as sess:
+        assert sess["token"]["access_token"] == "new"
+        assert sess["user"] is None
+
+
+def test_refresh_without_id_token_keeps_the_user(test_client, csrf_token):
+    """Test a refresh response without ID token keeps the claims of the previous one."""
+    with test_client.session_transaction() as sess:
+        sess["token"] = {"access_token": "a", "refresh_token": "r", "id_token": "i"}
+        sess["user"] = {"sub": "testuser"}
+
+    with patch(
+        "authlib.integrations.base_client.sync_app.OAuth2Mixin.fetch_access_token",
+        return_value={"access_token": "b", "token_type": "Bearer"},
+    ):
+        test_client.post("/refresh", data={"csrf_token": csrf_token(test_client)})
+
+    with test_client.session_transaction() as sess:
+        assert sess["user"] == {"sub": "testuser"}
+        assert sess["token"]["id_token"] == "i"
