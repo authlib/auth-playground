@@ -520,7 +520,9 @@ def password():
 def read_id_token(token):
     """Return the claims of the ID token, or flash why it cannot be read.
 
-    The password grant sends no nonce, so the ID token has none to check.
+    No nonce is checked. The password grant sends none. Per OIDC Core §12.2, a
+    refreshed ID token should have none, and Authlib does not compare it with
+    the original ID token.
     """
     try:
         return auth_playground.oauth.default.parse_id_token(token, nonce=None)
@@ -666,6 +668,8 @@ def refresh():
 
         store_token(new_token, "refresh_token", requested_scope=original_scope)
         flash(_("Token successfully refreshed"), "success")
+        if new_token.get("id_token"):
+            session["user"] = read_id_token(new_token)
     except AuthlibBaseError as exc:
         flash(
             _("An error happened during token refresh: {error}").format(
