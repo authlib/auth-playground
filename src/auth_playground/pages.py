@@ -58,6 +58,7 @@ def render_tokens_page(tab, grant=None, grant_form=None):
         refresh_form=RefreshTokenForm(),
         userinfo_form=UserInfoForm(),
         userinfo_endpoint=server_metadata().get("userinfo_endpoint"),
+        userinfo_alg=oauth_config.get("userinfo_signed_response_alg"),
         grant=grant,
         tokens_grant=tokens_grant(),
         public_client=oauth_config.get("token_endpoint_auth_method") == PUBLIC_METHOD,

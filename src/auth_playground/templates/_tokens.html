@@ -208,6 +208,17 @@
                 <li><strong>{% trans %}UserInfo endpoint:{% endtrans %}</strong> {{ session.userinfo.endpoint }}</li>
                 <li><strong>{% trans %}Received at:{% endtrans %}</strong> {{ session.userinfo.received_at|datetimeformat }}</li>
             </ul>
+            {% if session.userinfo.jwt %}
+                <h4>{% trans %}Signed response{% endtrans %}</h4>
+                <p><small>{% trans alg=session.userinfo.header.alg %}Signed with {{ alg }}. Authlib checked the signature, iss, aud and sub.{% endtrans %}</small></p>
+                <div role="group">
+                    <input type="text" value="{{ session.userinfo.jwt }}" readonly aria-label="{% trans %}Signed UserInfo response{% endtrans %}">
+                    <button type="button" class="copy-token-btn secondary">{% trans %}Copy{% endtrans %}</button>
+                </div>
+                <h4>{% trans %}Header{% endtrans %}</h4>
+                <pre class="token-response"><code>{{ session.userinfo.header|tojson(indent=2) }}</code></pre>
+                <h4>{% trans %}Claims{% endtrans %}</h4>
+            {% endif %}
             <pre class="token-response"><code>{{ session.userinfo.claims|tojson(indent=2) }}</code></pre>
         </article>
     {% endif %}

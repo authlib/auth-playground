@@ -290,6 +290,7 @@ def configure_client():
         method,
         client_key=client_form.client_key() if uses_key else None,
         signing_alg=client_form.signing_alg.data if uses_key else None,
+        userinfo_alg=client_form.userinfo_signed_response_alg.data,
     )
     flash(_("OAuth configuration completed successfully"), "success")
     return redirect(url_for("routes.tokens"))

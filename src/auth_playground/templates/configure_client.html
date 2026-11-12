@@ -94,6 +94,7 @@
                     {{ dynamic_registration_form.regenerate_key() }}
                     {{ dynamic_registration_form.jwks_delivery() }}
                     {{ dynamic_registration_form.key_preview() }}
+                    {{ dynamic_registration_form.userinfo_signed_response_alg() }}
                     {{ dynamic_registration_form.initial_access_token() }}
                 {% endcall %}
 
@@ -142,6 +143,7 @@
                 {{ client_form.signing_alg() }}
                 {{ client_form.regenerate_key() }}
                 {{ client_form.key_preview() }}
+                {{ client_form.userinfo_signed_response_alg() }}
                 {{ client_form.save() }}
             {% endcall %}
         </article>

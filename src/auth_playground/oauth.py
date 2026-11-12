@@ -20,6 +20,7 @@ from flask import request
 from flask import session
 from flask import url_for
 from flask_babel import gettext as _
+from joserfc import jws
 from joserfc.errors import JoseError
 
 import auth_playground
@@ -182,6 +183,9 @@ def client_dynamic_registration():
         else:
             registration_data["jwks"] = public_jwks(client_key)
 
+    if userinfo_alg := form.userinfo_signed_response_alg.data:
+        registration_data["userinfo_signed_response_alg"] = userinfo_alg
+
     if g.server_config.specs.oidc_rpinitiated_logout:
         registration_data["post_logout_redirect_uris"] = [
             url_for("oauth.logout_callback", _external=True),
@@ -274,6 +278,7 @@ def client_dynamic_registration():
         auth_method,
         client_key=client_key if uses_key else None,
         signing_alg=signing_alg if uses_key else None,
+        userinfo_alg=registered_userinfo_alg(client_data, userinfo_alg),
     )
 
     if "registration_access_token" in client_data:
@@ -288,6 +293,26 @@ def client_dynamic_registration():
         "success",
     )
     return redirect(url_for("routes.tokens"))
+
+
+def registered_userinfo_alg(client_data, requested):
+    """Return the algorithm the provider registered for the UserInfo response.
+
+    Per RFC 7591 §3.2.1, the response holds every registered setting, and the
+    provider may choose another value or ignore the setting.
+    """
+    alg = client_data.get("userinfo_signed_response_alg")
+    if not isinstance(alg, str) or alg == "none":
+        alg = None
+    if requested and not alg:
+        flash(
+            _(
+                "The provider did not register userinfo_signed_response_alg. "
+                "The UserInfo response will not be signed."
+            ),
+            "warning",
+        )
+    return alg
 
 
 @bp.route("/unregister-client", methods=["POST"])
@@ -771,6 +796,15 @@ def refresh():
     return redirect(url_for("routes.tokens"))
 
 
+def signed_response(response):
+    """Return the JWT of a signed UserInfo response, and its header."""
+    content_type = response.headers.get("Content-Type", "")
+    if content_type.split(";")[0].strip().lower() != "application/jwt":
+        return {}
+    jwt = response.text.strip()
+    return {"jwt": jwt, "header": jws.extract_compact(jwt.encode()).protected}
+
+
 def bearer_token():
     """Return the access token to send to the provider as it is.
 
@@ -809,8 +843,15 @@ def userinfo():
         flash(_("The provider has no UserInfo endpoint."), "error")
         return redirect(url_for("routes.tokens"))
 
+    responses = []
+
+    def keep_response(response, **kwargs):
+        responses.append(response)
+
     try:
-        claims = auth_playground.oauth.default.userinfo(token=bearer_token())
+        claims = auth_playground.oauth.default.userinfo(
+            token=bearer_token(), hooks={"response": keep_response}
+        )
     except AuthlibBaseError as exc:
         error = exc.description or exc.error
     except requests.JSONDecodeError:
@@ -826,6 +867,7 @@ def userinfo():
             "endpoint": endpoint,
             "received_at": int(time.time()),
             "claims": dict(claims),
+            **signed_response(responses[-1]),
         }
         flash(_("User info received"), "success")
         return redirect(url_for("routes.tokens"))

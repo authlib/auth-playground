@@ -139,6 +139,11 @@ def setup_oauth(app):
             PrivateKeyJWT(alg=config["token_endpoint_auth_signing_alg"])
         )
 
+    # Authlib reads the client settings it checks from the register parameters.
+    settings = {}
+    if userinfo_alg := config.get("userinfo_signed_response_alg"):
+        settings["userinfo_signed_response_alg"] = userinfo_alg
+
     registry.register(
         name="default",
         client_id=config["client_id"],
@@ -151,6 +156,7 @@ def setup_oauth(app):
             "token_endpoint_auth_method": config["token_endpoint_auth_method"],
         },
         client_auth_methods=client_auth_methods,
+        **settings,
     )
     if metadata := server_metadata():
         # Reuse the metadata already loaded, instead of fetching it again.
@@ -167,6 +173,7 @@ def setup_oauth_runtime(
     token_endpoint_auth_method,
     client_key=None,
     signing_alg=None,
+    userinfo_alg=None,
 ):
     """Set up OAuth with runtime configuration stored in session.
 
@@ -185,6 +192,8 @@ def setup_oauth_runtime(
             client_key=client_key, token_endpoint_auth_signing_alg=signing_alg
         )
         publish_key(client_key)
+    if userinfo_alg and userinfo_alg != "none":
+        flask_session["oauth_config"]["userinfo_signed_response_alg"] = userinfo_alg
 
     return setup_oauth(app)
 

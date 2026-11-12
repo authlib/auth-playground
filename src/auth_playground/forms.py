@@ -302,6 +302,39 @@ def signing_alg_choices(algs):
     return advertised_choices(algs, advertised)
 
 
+def advertised_userinfo_algs():
+    """Return the algorithms the server can sign the UserInfo response with."""
+    algs = server_metadata().get("userinfo_signing_alg_values_supported") or []
+    if isinstance(algs, str):
+        algs = [algs]
+    return [alg for alg in algs if isinstance(alg, str) and alg != "none"]
+
+
+def userinfo_alg_choices():
+    """Offer an unsigned UserInfo response, or one signed with an advertised algorithm."""
+    return [
+        SelectChoice("", _("JSON, not signed")),
+        *(
+            SelectChoice(alg, _("Signed with {alg}").format(alg=alg))
+            for alg in advertised_userinfo_algs()
+        ),
+    ]
+
+
+def userinfo_alg_field(**kwargs):
+    """Return the field of the userinfo_signed_response_alg client setting."""
+    return SelectField(
+        _("UserInfo response:"),
+        choices=userinfo_alg_choices,
+        default="",
+        description=_(
+            "userinfo_signed_response_alg: the provider signs the response, "
+            "and Authlib checks the signature."
+        ),
+        **kwargs,
+    )
+
+
 def default_signing_alg(algs):
     """Return the first advertised algorithm, or the first algorithm."""
     return preferred_algorithm(algs, advertised_signing_algs(server_metadata()))
@@ -522,6 +555,7 @@ class ClientConfigForm(ClientKeyMixin, BaseForm):
         regenerate_key,
         key_preview,
     ) = client_key_fields(["token_endpoint_auth_method"])
+    userinfo_signed_response_alg = userinfo_alg_field()
     save = SubmitField(_("Complete configuration"))
 
     key_form_name = "manual"
@@ -530,6 +564,7 @@ class ClientConfigForm(ClientKeyMixin, BaseForm):
         meta = {"htmx_endpoint": url_for("routes.configure_client")}
         super().__init__(*args, meta={**meta, **kwargs.pop("meta", {})}, **kwargs)
         show_field(self.client_secret, not self.uses_key())
+        show_field(self.userinfo_signed_response_alg, bool(advertised_userinfo_algs()))
         self.setup_client_key()
 
     def uses_key(self):
@@ -592,6 +627,9 @@ class DynamicRegistrationForm(ClientKeyMixin, BaseForm):
         default="jwks",
         id="registration-jwks_delivery",
     ).triggered_by(["client_type", "auth_method"], on="change")
+    userinfo_signed_response_alg = userinfo_alg_field(
+        id="registration-userinfo_signed_response_alg"
+    )
     grant_types = SelectMultipleField(
         _("Grant types to register:"),
         choices=get_grant_type_choices,
@@ -615,6 +653,7 @@ class DynamicRegistrationForm(ClientKeyMixin, BaseForm):
         meta = {"htmx_endpoint": url_for("oauth.client_dynamic_registration")}
         super().__init__(*args, meta={**meta, **kwargs.pop("meta", {})}, **kwargs)
         show_field(self.jwks_delivery, self.uses_key())
+        show_field(self.userinfo_signed_response_alg, bool(advertised_userinfo_algs()))
         self.setup_client_key()
 
     def uses_key(self):

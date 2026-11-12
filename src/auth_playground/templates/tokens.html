@@ -28,6 +28,9 @@
                 {% call render_form(userinfo_form, url_for('oauth.userinfo'), id="userinfo-form") %}
                     {{ userinfo_form.userinfo() }}
                 {% endcall %}
+                {% if userinfo_alg %}
+                    <p><small>{% trans alg=userinfo_alg %}The client expects a response signed with {{ alg }}.{% endtrans %}</small></p>
+                {% endif %}
             {% endif %}
             {% include "_tokens.html" %}
             {% if not tokens_grant.provider_session %}
