@@ -24,6 +24,11 @@
                     <p><small>{% trans %}Silent refresh — auth_time and acr stay unchanged.{% endtrans %}</small></p>
                 {% endif %}
             {% endif %}
+            {% if userinfo_endpoint and tokens_grant.user and session.token.access_token %}
+                {% call render_form(userinfo_form, url_for('oauth.userinfo'), id="userinfo-form") %}
+                    {{ userinfo_form.userinfo() }}
+                {% endcall %}
+            {% endif %}
             {% include "_tokens.html" %}
             {% if not tokens_grant.provider_session %}
                 {% call render_form(logout_local_form, url_for('oauth.logout_local'), id="forget-tokens-form") %}

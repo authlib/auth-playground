@@ -201,6 +201,17 @@
         </article>
     {% endif %}
 
+    {% if session.userinfo %}
+        <article>
+            <h3>{% trans %}UserInfo response{% endtrans %}</h3>
+            <ul>
+                <li><strong>{% trans %}UserInfo endpoint:{% endtrans %}</strong> {{ session.userinfo.endpoint }}</li>
+                <li><strong>{% trans %}Received at:{% endtrans %}</strong> {{ session.userinfo.received_at|datetimeformat }}</li>
+            </ul>
+            <pre class="token-response"><code>{{ session.userinfo.claims|tojson(indent=2) }}</code></pre>
+        </article>
+    {% endif %}
+
     <div class="grid">
         {% if session.token and session.token.access_token %}
             <article>

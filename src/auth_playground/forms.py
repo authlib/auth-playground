@@ -183,6 +183,12 @@ class RefreshTokenForm(BaseForm):
     refresh = SubmitField(_("Renew tokens"))
 
 
+class UserInfoForm(BaseForm):
+    """Form to call the UserInfo endpoint with the access token."""
+
+    userinfo = SubmitField(_("Get user info"))
+
+
 def is_loopback_address(hostname):
     """Tell whether the hostname is a loopback IP address."""
     try:
