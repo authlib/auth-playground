@@ -7,7 +7,6 @@ from authlib.oauth2.rfc7523 import ClientSecretJWT
 from authlib.oauth2.rfc7523 import PrivateKeyJWT
 from authlib.oidc.discovery import get_well_known_url
 from cachelib.file import FileSystemCache
-from cachelib.simple import SimpleCache
 from flask import Flask
 from flask import abort
 from flask import current_app
@@ -231,10 +230,10 @@ def create_app():
     app.config["NAME"] = os.environ.get("APP_NAME", "Auth Playground")
 
     app.config["SESSION_TYPE"] = "cachelib"
-    app.config["SESSION_CACHELIB"] = (
-        SimpleCache()
-        if app.debug
-        else FileSystemCache(os.path.join(tempfile.gettempdir(), "flask_sessions"))
+    # On disk, so that the workers of a server share the sessions and the
+    # published client keys, and the sessions survive a reload.
+    app.config["SESSION_CACHELIB"] = FileSystemCache(
+        os.path.join(tempfile.gettempdir(), "flask_sessions")
     )
     app.config["SESSION_PERMANENT"] = False
     # Set explicitly, as browsers have different defaults. The form_post
