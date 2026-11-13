@@ -109,8 +109,9 @@ def test_a_grant_type_not_registered_is_marked(unconfigured_testapp):
 
     assert "Password (ROPC) · deprecated · not advertised · not registered" in res.text
     assert (
-        "This client is not registered for the password grant type, "
-        "only for authorization_code, refresh_token." in res.text
+        "This client is not registered for the Password (ROPC) grant type, "
+        "only for <code>authorization_code</code>, <code>refresh_token</code>."
+        in res.text
     )
 
 
@@ -121,3 +122,28 @@ def test_a_manual_client_has_no_registration_warning(unconfigured_testapp):
     res = unconfigured_testapp.get("/en/tokens/request?grant=password")
 
     assert "not registered" not in res.text
+
+
+def test_the_registered_grant_types_show_their_label_and_value(unconfigured_testapp):
+    """Test the registration checkboxes show the label, then the protocol value."""
+    server_session(unconfigured_testapp)
+
+    res = unconfigured_testapp.get("/en/client")
+
+    assert (
+        'JWT bearer (not advertised) <code class="param-name">'
+        "urn:ietf:params:oauth:grant-type:jwt-bearer</code>" in res.text
+    )
+    assert (
+        'Refresh token (not advertised) <code class="param-name">refresh_token</code>'
+        in res.text
+    )
+
+
+def test_the_options_do_not_get_the_wrapper_keys(unconfigured_testapp):
+    """Test the checkboxes do not show the keys meant for the field wrapper."""
+    server_session(unconfigured_testapp)
+
+    res = unconfigured_testapp.get("/en/client")
+
+    assert 'param="grant_types"' not in res.text

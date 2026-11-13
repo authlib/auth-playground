@@ -239,7 +239,7 @@ def test_grant_selector_marks_grants_not_advertised(unconfigured_test_client):
     res = unconfigured_test_client.get("/en/tokens/request?grant=client_credentials")
 
     assert "Client credentials · not advertised" in res.text
-    assert "does not advertise the client_credentials grant type" in res.text
+    assert "does not advertise the Client credentials grant type" in res.text
     assert "for confidential clients" not in res.text
 
 

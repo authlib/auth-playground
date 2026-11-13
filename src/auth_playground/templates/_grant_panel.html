@@ -14,12 +14,13 @@
 
     {% if not grant.advertised %}
         <article class="notice" data-type="warning">
-            {% trans grant_type=grant.value %}The provider does not advertise the {{ grant_type }} grant type. It may reject the request.{% endtrans %}
+            {% trans grant_type=grant.label %}The provider does not advertise the {{ grant_type }} grant type. It may reject the request.{% endtrans %}
         </article>
     {% endif %}
     {% if not grant.registered %}
         <article class="notice" data-type="warning">
-            {% trans grant_type=grant.value, registered=registered_grant_types|join(", ") %}This client is not registered for the {{ grant_type }} grant type, only for {{ registered }}. The provider will likely reject the request.{% endtrans %}
+            {% set registered %}{% for value in registered_grant_types %}<code>{{ value }}</code>{% if not loop.last %}, {% endif %}{% endfor %}{% endset %}
+            {% trans grant_type=grant.label, registered=registered %}This client is not registered for the {{ grant_type }} grant type, only for {{ registered }}. The provider will likely reject the request.{% endtrans %}
             <a href="{{ url_for('routes.configure_client') }}">{% trans %}See the client{% endtrans %}</a>
         </article>
     {% endif %}

@@ -27,6 +27,7 @@ from wtforms import TextAreaField
 from wtforms import ValidationError
 from wtforms.csrf.core import CSRFTokenField
 from wtforms.fields import SelectChoice
+from wtforms.fields import SelectFieldBase
 from wtforms.meta import clean_key
 from wtforms.validators import DataRequired
 from wtforms.validators import InputRequired
@@ -62,6 +63,7 @@ from auth_playground.client_key import publish_key
 from auth_playground.grants import GRANTS
 from auth_playground.grants import JWT_BEARER
 from auth_playground.grants import advertised_grant_types
+from auth_playground.grants import grant_type_label
 from auth_playground.jwt_bearer import DEFAULT_LIFETIME
 from auth_playground.jwt_bearer import FORM_CLAIMS
 from auth_playground.jwt_bearer import KEY_SOURCE
@@ -89,6 +91,9 @@ REGISTRABLE_GRANT_TYPES = (
 
 DEFAULT_REGISTERED_GRANT_TYPES = ["authorization_code", "refresh_token"]
 
+# The render_kw keys that field_wrapper reads, and that are not HTML attributes.
+WRAPPER_DEFAULTS = {"group_with": None, "hidden": False, "param": None}
+
 BARE_FIELDS = (
     HiddenField,
     CSRFTokenField,
@@ -109,13 +114,26 @@ class BaseForm(HtmxFlaskForm):
     class Meta:
         htmx_inline_validation = False
 
+        def render_field(self, field, render_kw):
+            # WTForms gives the render_kw of a choices field to each of its
+            # options, which are rendered without field_wrapper.
+            if isinstance(field, SelectFieldBase._Option) and field.render_kw:
+                field.render_kw = {
+                    key: value
+                    for key, value in field.render_kw.items()
+                    if key not in WRAPPER_DEFAULTS
+                }
+            return super().render_field(field, render_kw)
+
         def field_wrapper(self, field, render_kw):
-            group_with = render_kw.pop("group_with", None)
-            hidden = render_kw.pop("hidden", False)
-            param = render_kw.pop("param", None)
+            wrapper_kw = {
+                key: render_kw.pop(key, default)
+                for key, default in WRAPPER_DEFAULTS.items()
+            }
+            group_with = wrapper_kw["group_with"]
             render_kw = {clean_key(key): value for key, value in render_kw.items()}
             if isinstance(field, BARE_FIELDS):
-                return field.widget(field, hidden=hidden, **render_kw)
+                return field.widget(field, hidden=wrapper_kw["hidden"], **render_kw)
 
             field_id = render_kw.get("id", field.id)
             fieldset = isinstance(field.widget, ListWidget)
@@ -135,8 +153,8 @@ class BaseForm(HtmxFlaskForm):
                     field_id=field_id,
                     fieldset=fieldset,
                     error_id=error_id,
-                    hidden=hidden,
-                    param=param,
+                    hidden=wrapper_kw["hidden"],
+                    param=wrapper_kw["param"],
                     button=field._form[group_with] if group_with else None,
                 )
             )
@@ -284,8 +302,17 @@ def auth_method_default(methods):
 
 
 def get_grant_type_choices():
-    """Label the grant types the server does not advertise."""
-    return advertised_choices(REGISTRABLE_GRANT_TYPES, advertised_grant_types())
+    """Label the grant types with their name and value, and mark the ones not advertised."""
+    advertised = advertised_grant_types()
+    return [
+        SelectChoice(
+            value,
+            Markup('{} <code class="param-name">{}</code>').format(
+                advertised_label(grant_type_label(value), value in advertised), value
+            ),
+        )
+        for value in REGISTRABLE_GRANT_TYPES
+    ]
 
 
 def disable_for_public_client(form, source, target):

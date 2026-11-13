@@ -127,6 +127,16 @@ GRANTS = (
 GRANTS_BY_VALUE = {grant.value: grant for grant in GRANTS}
 GRANTS_BY_NAME = {grant.name: grant for grant in GRANTS}
 
+GRANT_TYPE_LABELS = {
+    **{grant.value: grant.label for grant in GRANTS},
+    "refresh_token": _("Refresh token"),
+}
+
+
+def grant_type_label(value):
+    """Return the label of a grant type, or its value when the playground does not know it."""
+    return GRANT_TYPE_LABELS.get(value, value)
+
 
 def tokens_grant():
     """Return the grant type that obtained the tokens, or else the default one."""
