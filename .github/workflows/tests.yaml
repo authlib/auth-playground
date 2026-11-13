@@ -161,7 +161,7 @@ jobs:
       - name: Build binary
         run: |
           export TZ=UTC
-          uv sync --group release --all-extras --no-dev
+          uv sync --group release --no-dev
           uv run pyinstaller auth-playground.spec
       - name: Test binary
         run: |

@@ -43,6 +43,21 @@ docker build -t auth-playground .
 docker run -p 4000:4000 -e SECRET_KEY="your-secret-key" auth-playground
 ```
 
+The image serves the application with [Granian](https://github.com/emmett-framework/granian).
+Granian reads its settings from `GRANIAN_*` environment variables.
+For example, `GRANIAN_WORKERS=4` starts four worker processes.
+
+## Running in production
+
+The `auth-playground` command uses the Flask development server.
+It is enough for local tests.
+For a public deployment, install the `granian` extra and serve the application with Granian:
+
+```bash
+pip install "auth-playground[granian]"
+granian --interface wsgi --factory --host 0.0.0.0 --port 4000 --env-files .env auth_playground:create_app
+```
+
 ## Configuration
 
 The application is configured using environment variables. Copy the example configuration file:

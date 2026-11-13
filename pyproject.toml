@@ -27,6 +27,11 @@ dependencies = [
     "wtforms>=3.3",
 ]
 
+[project.optional-dependencies]
+granian = [
+    "granian>=2.8.8",
+]
+
 [project.urls]
 repository = "https://github.com/authlib/auth-playground"
 
