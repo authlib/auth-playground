@@ -86,8 +86,9 @@ jobs:
             # (0.2.0.dev1) per PEP 440, in their normalized form.
             prerelease=false
             case "$GITHUB_REF_NAME" in *a[0-9]*|*b[0-9]*|*rc[0-9]*|*dev*) prerelease=true ;; esac
+            # gh refuses --notes-from-tag with --repo. It finds the repository
+            # from the checkout.
             gh release create "$GITHUB_REF_NAME" dist/auth-playground \
-              --repo "$GITHUB_REPOSITORY" \
               --verify-tag \
               --notes-from-tag \
               --prerelease="$prerelease"
