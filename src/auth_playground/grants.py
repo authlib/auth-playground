@@ -3,9 +3,11 @@
 from dataclasses import dataclass
 
 from authlib.oauth2.rfc7523 import JWTBearerGrant
+from flask import current_app
 from flask import session
 from flask_babel import lazy_gettext as _
 
+import auth_playground
 from auth_playground.session import server_metadata
 
 # Per RFC 8414 §2, when the server does not publish grant_types_supported.
@@ -17,6 +19,15 @@ JWT_BEARER = JWTBearerGrant.GRANT_TYPE
 def advertised_grant_types():
     """Return the grant types the server advertises."""
     return server_metadata().get("grant_types_supported", DEFAULT_GRANT_TYPES)
+
+
+def registered_grant_types():
+    """Return the grant types the provider registered for the client.
+
+    They are only known for a client of the dynamic registration, and are
+    ``None`` otherwise.
+    """
+    return auth_playground.get_oauth_config(current_app).get("grant_types")
 
 
 @dataclass(frozen=True)
@@ -46,6 +57,12 @@ class Grant:
     def advertised(self):
         """Tell whether the server advertises this grant type."""
         return self.value in advertised_grant_types()
+
+    @property
+    def registered(self):
+        """Tell whether the client may use this grant type, as far as the playground knows."""
+        grant_types = registered_grant_types()
+        return grant_types is None or self.value in grant_types
 
 
 GRANTS = (

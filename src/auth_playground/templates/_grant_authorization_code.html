@@ -1,37 +1,41 @@
 {% from "_form.html" import render_form %}
 {% call render_form(grant_form, url_for('oauth.authorize'), id="auth-params-form") %}
-    <div class="param-groups">
-        <fieldset>
-            <legend>{% trans %}Request{% endtrans %}</legend>
-            {{ grant_form.pkce() }}
-            {% if grant_form.scopes.choices %}
-                {{ grant_form.scopes() }}
+    <div class="request-layout">
+        <div class="param-groups">
+            <fieldset>
+                <legend>{% trans %}Request{% endtrans %}</legend>
+                {{ grant_form.pkce() }}
+                {% if grant_form.scopes.choices %}
+                    {{ grant_form.scopes() }}
+                {% endif %}
+                {{ grant_form.other_scopes() }}
+                {{ grant_form.response_mode() }}
+            </fieldset>
+            <fieldset>
+                <legend>{% trans %}Authentication{% endtrans %}</legend>
+                {{ grant_form.prompt() }}
+                {{ grant_form.max_age() }}
+                {% if grant_form.ui_locales.choices|length > 1 %}
+                    {{ grant_form.ui_locales() }}
+                {% endif %}
+                {{ grant_form.acr_values() }}
+                {{ grant_form.login_hint() }}
+            </fieldset>
+            <fieldset>
+                <legend>{% trans %}Advanced{% endtrans %}</legend>
+                {{ grant_form.claims() }}
+                {{ grant_form.extra_params() }}
+            </fieldset>
+        </div>
+
+        <aside>
+            {{ grant_form.preview() }}
+
+            {% if session.token and tokens_grant.provider_session %}
+                {{ grant_form.sign_in(label=_("Sign in again")) }}
+            {% else %}
+                {{ grant_form.sign_in() }}
             {% endif %}
-            {{ grant_form.other_scopes() }}
-            {{ grant_form.response_mode() }}
-        </fieldset>
-        <fieldset>
-            <legend>{% trans %}Authentication{% endtrans %}</legend>
-            {{ grant_form.prompt() }}
-            {{ grant_form.max_age() }}
-            {% if grant_form.ui_locales.choices|length > 1 %}
-                {{ grant_form.ui_locales() }}
-            {% endif %}
-            {{ grant_form.acr_values() }}
-            {{ grant_form.login_hint() }}
-        </fieldset>
-        <fieldset>
-            <legend>{% trans %}Advanced{% endtrans %}</legend>
-            {{ grant_form.claims() }}
-            {{ grant_form.extra_params() }}
-        </fieldset>
+        </aside>
     </div>
-
-    {{ grant_form.preview() }}
-
-    {% if session.token and tokens_grant.provider_session %}
-        {{ grant_form.sign_in(label=_("Sign in again")) }}
-    {% else %}
-        {{ grant_form.sign_in() }}
-    {% endif %}
 {% endcall %}

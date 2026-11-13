@@ -120,9 +120,36 @@ header h1 a:hover {
     font-weight: 500;
 }
 
+/* On small screens, the steps stay on one row: the mark above the text. */
 @media (max-width: 768px) {
     .setup-steps ol {
-        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+
+    .setup-steps li > a,
+    .setup-steps li > span {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.25rem;
+        text-align: center;
+    }
+
+    .step-mark {
+        width: 1.75rem;
+        height: 1.75rem;
+        font-size: 0.85rem;
+    }
+
+    .step-text {
+        width: 100%;
+        font-size: 0.85rem;
+    }
+
+    .step-text small {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow-wrap: normal;
     }
 }
 
@@ -135,9 +162,62 @@ header h1 a:hover {
     white-space: nowrap;
 }
 
-/* Center footer content */
-footer p {
+/* Center the page footer, not the footers of the cards. */
+body > footer p {
     text-align: center;
+}
+
+/* Checkbox and radio lists, rendered by WTForms as a ul. */
+fieldset > ul:has(input[type="checkbox"], input[type="radio"]) {
+    padding-left: 0;
+}
+
+fieldset > ul:has(input[type="checkbox"], input[type="radio"]) > li {
+    list-style: none;
+}
+
+/* Label and value pairs. */
+dl.summary {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 0.4rem 1.5rem;
+    margin-bottom: var(--pico-spacing);
+}
+
+dl.summary dt {
+    font-weight: 600;
+}
+
+dl.summary dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+/* Actions in a card footer, next to what they change. */
+article > footer .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--pico-spacing);
+    align-items: center;
+}
+
+article > footer .actions :is(button, [type="submit"], [role="button"]) {
+    width: auto;
+    margin-bottom: 0;
+}
+
+article > footer .actions form {
+    margin-bottom: 0;
+}
+
+article > footer .actions small {
+    color: var(--pico-muted-color);
+}
+
+/* The name of the protocol parameter, after the label of a field. */
+.param-name {
+    margin-left: 0.25rem;
+    font-size: 0.8em;
 }
 
 /* User avatar styling */
@@ -182,6 +262,8 @@ article.notice[data-type="warning"] {
 /* Sub-navigation (tabs) for object sections (Session, Server) */
 nav.subtabs {
     display: flex;
+    /* Blades spreads the items of a nav. Keep the tabs together. */
+    justify-content: flex-start;
     gap: 0.25rem;
     border-bottom: 1px solid var(--pico-muted-border-color);
     margin-bottom: var(--pico-spacing);
@@ -230,6 +312,49 @@ nav.subtabs a[aria-current="page"] {
     grid-column: 1 / -1;
 }
 
+/*
+ * Request forms: the parameters on the left, the request and its button on
+ * the right, visible while scrolling.
+ */
+.request-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 30rem);
+    gap: var(--pico-spacing);
+    align-items: start;
+}
+
+.request-layout .param-groups {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+/* An aside taller than the screen scrolls, so its button stays reachable. */
+.request-layout > aside {
+    position: sticky;
+    top: var(--pico-spacing);
+    max-height: calc(100vh - 2 * var(--pico-spacing));
+    overflow-y: auto;
+}
+
+.request-layout > aside .request-preview pre {
+    font-size: 0.8em;
+}
+
+.request-layout > aside :is(button, [type="submit"]) {
+    width: 100%;
+}
+
+@media (max-width: 1024px) {
+    .request-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .request-layout > aside {
+        position: static;
+        max-height: none;
+        overflow-y: visible;
+    }
+}
+
 .request-preview pre,
 .token-response {
     margin: 0;
@@ -255,4 +380,18 @@ small[id$="-error"] + small {
 
 small[id$="-error"] + small {
     color: var(--pico-muted-color);
+}
+
+/* The response of the provider when it gave no tokens. */
+.rejected-response > header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.75rem;
+    align-items: baseline;
+}
+
+.rejected-response .status {
+    color: var(--pico-del-color);
+    font-family: var(--pico-font-family-monospace);
+    font-weight: 600;
 }

@@ -6,14 +6,17 @@
 {% block content %}
     {% include "_server_tabs.html" %}
 
-    <h2>{% trans %}Server Specifications{% endtrans %}</h2>
+    <hgroup>
+        <h2>{% trans %}Server Specifications{% endtrans %}</h2>
+        <p>{% trans %}Detected from the server metadata. A provider can support a specification without advertising it.{% endtrans %}</p>
+    </hgroup>
 
     {% if supported_specs %}
         <article>
-            <header><h3>{% trans count=supported_specs|length %}Supported specifications ({{ count }}){% endtrans %}</h3></header>
+            <header><h3>{% trans count=supported_specs|length %}Advertised in the metadata ({{ count }}){% endtrans %}</h3></header>
             <ul>
                 {% for spec_id, spec_name, spec_url in supported_specs %}
-                    <li><code>{{ spec_id }}</code>: <a href="{{ spec_url }}" target="_blank" rel="noopener noreferrer">{{ spec_name }}</a></li>
+                    <li><a href="{{ spec_url }}" target="_blank" rel="noopener noreferrer">{{ spec_name }}</a></li>
                 {% endfor %}
             </ul>
         </article>
@@ -21,10 +24,10 @@
 
     {% if unsupported_specs %}
         <article>
-            <header><h3>{% trans count=unsupported_specs|length %}Unsupported specifications ({{ count }}){% endtrans %}</h3></header>
+            <header><h3>{% trans count=unsupported_specs|length %}Not advertised ({{ count }}){% endtrans %}</h3></header>
             <ul>
                 {% for spec_id, spec_name, spec_url in unsupported_specs %}
-                    <li><code>{{ spec_id }}</code>: <a href="{{ spec_url }}" target="_blank" rel="noopener noreferrer">{{ spec_name }}</a></li>
+                    <li><a href="{{ spec_url }}" target="_blank" rel="noopener noreferrer">{{ spec_name }}</a></li>
                 {% endfor %}
             </ul>
         </article>
@@ -32,10 +35,10 @@
 
     {% if unknown_specs %}
         <article>
-            <header><h3>{% trans count=unknown_specs|length %}Unknown specifications ({{ count }}){% endtrans %}</h3></header>
+            <header><h3>{% trans count=unknown_specs|length %}Not detectable from the metadata ({{ count }}){% endtrans %}</h3></header>
             <ul>
                 {% for spec_id, spec_name, spec_url in unknown_specs %}
-                    <li><code>{{ spec_id }}</code>: <a href="{{ spec_url }}" target="_blank" rel="noopener noreferrer">{{ spec_name }}</a></li>
+                    <li><a href="{{ spec_url }}" target="_blank" rel="noopener noreferrer">{{ spec_name }}</a></li>
                 {% endfor %}
             </ul>
         </article>

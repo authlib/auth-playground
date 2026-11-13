@@ -254,6 +254,7 @@ def test_an_invalid_id_token_rejects_the_tokens(secret_client):
         res, _fetch = request_tokens(
             secret_client, token={**TOKEN, "id_token": "i"}, subject="jane"
         )
+    res = res.follow()
 
     assert "The tokens are not kept. The ID token is not valid:" in res.text
     assert "jwt-bearer-form" in res.forms
@@ -278,7 +279,7 @@ def test_a_refused_request_is_shown(secret_client):
     form = jwt_bearer_form(secret_client)
     form["subject"] = "jane"
     with patch(FETCH, side_effect=requests.ConnectionError("Connection refused")):
-        res = form.submit("request_tokens")
+        res = form.submit("request_tokens").follow()
 
     assert "The token request failed: Connection refused" in res.text
     assert res.forms["jwt-bearer-form"]["subject"].value == "jane"

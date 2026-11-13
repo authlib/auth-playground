@@ -2,10 +2,13 @@
 {% macro errors() -%}
     {%- if error_id %}<small id="{{ error_id }}">{{ field.errors|join(" ") }}</small>{% endif -%}
 {%- endmacro %}
+{% macro label_text() -%}
+    {{ field.label.text }}{% if param %} <code class="param-name">{{ param }}</code>{% endif %}
+{%- endmacro %}
 <div id="wrap-{{ field_id }}"{% if hidden %} hidden{% endif %}>
     {% if fieldset %}
         <fieldset{% if error_id %} aria-invalid="true" aria-describedby="{{ error_id }}"{% endif %}>
-            <legend>{{ field.label.text }}</legend>
+            <legend>{{ label_text() }}</legend>
             {% if field.description %}
                 <small>{{ field.description }}</small>
             {% endif %}
@@ -14,7 +17,7 @@
         {{ errors() }}
     {% elif button %}
         <label for="{{ field_id }}">
-            {{ field.label.text }}
+            {{ label_text() }}
             {% if field.description %}
                 <small>{{ field.description }}</small>
             {% endif %}
@@ -26,7 +29,7 @@
         {{ errors() }}
     {% else %}
         <label for="{{ field_id }}">
-            {{ field.label.text }}
+            {{ label_text() }}
             {{ field.widget(field, **render_kw) }}
             {{ errors() }}
             {% if field.description %}

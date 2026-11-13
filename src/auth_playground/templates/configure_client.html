@@ -32,43 +32,82 @@
 
 {% block title %}{% trans %}Configure OAuth Client{% endtrans %}{% endblock %}
 
+{% macro client_summary(oauth_config, registered) %}
+    <dl class="summary">
+        <dt>{% trans %}Client ID:{% endtrans %}</dt>
+        <dd><code>{{ oauth_config.client_id }}</code></dd>
+        <dt>{% trans %}Type:{% endtrans %}</dt>
+        <dd>{% if oauth_config.token_endpoint_auth_method == "none" %}{% trans %}Public{% endtrans %}{% else %}{% trans %}Confidential{% endtrans %}{% endif %}</dd>
+        <dt>{% trans %}Token endpoint authentication:{% endtrans %}</dt>
+        <dd><code>{{ oauth_config.token_endpoint_auth_method }}</code></dd>
+        {% if oauth_config.grant_types %}
+            <dt>{% trans %}Grant types:{% endtrans %}</dt>
+            <dd>
+                {% for grant_type in oauth_config.grant_types %}
+                    <code>{{ grant_type }}</code>
+                {% endfor %}
+            </dd>
+        {% endif %}
+        <dt>{% trans %}UserInfo response:{% endtrans %}</dt>
+        <dd>
+            {% if oauth_config.userinfo_signed_response_alg %}
+                {% trans alg=oauth_config.userinfo_signed_response_alg %}Signed with {{ alg }}{% endtrans %}
+            {% else %}
+                {% trans %}JSON, not signed{% endtrans %}
+            {% endif %}
+        </dd>
+        {% if registered %}
+            <dt>{% trans %}Registration:{% endtrans %}</dt>
+            <dd>{% trans %}Dynamic (RFC 7591), managed with RFC 7592{% endtrans %}</dd>
+        {% endif %}
+    </dl>
+{% endmacro %}
+
 {% block content %}
     {% if locked %}
         <article>
             <header>
                 <h2>{% trans %}Client{% endtrans %}</h2>
             </header>
+            {{ client_summary(oauth_config, registered=false) }}
             <p>{% trans %}This client is set via environment variables and cannot be changed.{% endtrans %}</p>
-            <p>
-                <strong>{% trans %}Client ID:{% endtrans %}</strong>
-                <code>{{ oauth_config.client_id }}</code>
-            </p>
         </article>
         {% if client_key %}
             {{ client_key_card(client_key, from_env=true) }}
         {% endif %}
-    {% else %}
-        {% if g.server_config and g.server_config.registration_access_token %}
-            <article>
-                <header>
-                    <h3>{% trans %}Registered client{% endtrans %}</h3>
-                </header>
-                <p>{% trans %}This client was dynamically registered (RFC 7591). You can remove it from the server (RFC 7592).{% endtrans %}</p>
-                {% call render_form(unregister_form, url_for('oauth.unregister_client'), id="unregister-form") %}
-                    {{ unregister_form.unregister() }}
-                {% endcall %}
-            </article>
-        {% endif %}
+    {% elif configured %}
+        {% set registered = g.server_config.registration_access_token and g.server_config.registration_client_uri %}
+        <article>
+            <header>
+                <h2>{% trans %}Client{% endtrans %}</h2>
+            </header>
+            {{ client_summary(oauth_config, registered=registered) }}
+            {% if registered %}
+                <p><small>{% trans %}Change client forgets this client and its tokens here, and keeps it at the provider. Unregister client also deletes it at the provider.{% endtrans %}</small></p>
+            {% else %}
+                <p><small>{% trans %}Change client forgets this client and its tokens.{% endtrans %}</small></p>
+            {% endif %}
+            <footer>
+                <div class="actions">
+                    {% call render_form(change_form, url_for('routes.change_client'), id="change-client-form") %}
+                        {{ change_form.change() }}
+                    {% endcall %}
+                    {% if registered %}
+                        {% call render_form(unregister_form, url_for('oauth.unregister_client'), id="unregister-form") %}
+                            {{ unregister_form.unregister(class="secondary outline") }}
+                        {% endcall %}
+                    {% endif %}
+                </div>
+            </footer>
+        </article>
         {% if client_key %}
             {{ client_key_card(client_key, from_env=false) }}
         {% endif %}
-
+    {% else %}
         <h2>{% trans %}Choose a configuration method{% endtrans %}</h2>
 
         <p>
-            {% trans display_name=g.server_config.display_name %}The {{ display_name }} configuration has been successfully loaded.
-                Now register your client at the {{ display_name }}.
-                Select one of the following options:{% endtrans %}
+            {% trans display_name=g.server_config.display_name %}Register the client of the playground at the {{ display_name }}, in one of these ways:{% endtrans %}
         </p>
 
         {% if g.server_config and g.server_config.specs and g.server_config.specs.oauth_2_dynamic_client_registration %}

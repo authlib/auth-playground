@@ -1,4 +1,5 @@
 import importlib.metadata
+import json
 import time
 import uuid
 from urllib.parse import urlencode
@@ -56,6 +57,9 @@ from auth_playground.grants import tokens_grant
 from auth_playground.jwt_bearer import assertion_subject
 from auth_playground.jwt_bearer import pasted_assertion
 from auth_playground.jwt_bearer import sign_assertion
+from auth_playground.logout import logout_params
+from auth_playground.pages import GRANT_FORM_DATA
+from auth_playground.pages import REJECTED_RESPONSE
 from auth_playground.pages import render_tokens_page
 from auth_playground.session import server_metadata
 from auth_playground.token_request import extra_token_params
@@ -67,6 +71,9 @@ MAX_PENDING_AUTHORIZATIONS = 5
 
 # Marks the authorization response the relay page posts again.
 RELAYED = "relayed"
+
+# The longest response body kept to show it to the user.
+MAX_SHOWN_BODY = 10_000
 
 
 def get_software_id() -> str:
@@ -124,7 +131,15 @@ def forget_tokens():
 def clear_user_session():
     """Forget the user, the tokens and the pending authorization requests."""
     forget_tokens()
-    session.pop("authorization_requests", None)
+    for key in ("authorization_requests", REJECTED_RESPONSE, GRANT_FORM_DATA):
+        session.pop(key, None)
+
+
+def forget_registered_client():
+    """Forget the client, its tokens, and how to manage its registration."""
+    auth_playground.forget_client()
+    g.server_config.registration_access_token = None
+    g.server_config.registration_client_uri = None
 
 
 @bp.route("/client/dynamic-registration", methods=["POST"])
@@ -283,6 +298,7 @@ def client_dynamic_registration():
         client_key=client_key if uses_key else None,
         signing_alg=signing_alg if uses_key else None,
         userinfo_alg=registered_userinfo_alg(client_data, userinfo_alg),
+        grant_types=response_grant_types(client_data),
     )
 
     if "registration_access_token" in client_data:
@@ -297,6 +313,19 @@ def client_dynamic_registration():
         "success",
     )
     return redirect(url_for("routes.tokens"))
+
+
+def response_grant_types(client_data):
+    """Return the grant types the provider registered, or ``None`` when it does not say.
+
+    Per RFC 7591 §3.2.1, the response holds every registered setting.
+    """
+    grant_types = client_data.get("grant_types")
+    if not isinstance(grant_types, list) or not grant_types:
+        return None
+    if not all(isinstance(grant_type, str) for grant_type in grant_types):
+        return None
+    return grant_types
 
 
 def registered_userinfo_alg(client_data, requested):
@@ -354,11 +383,7 @@ def unregister_client():
             flash(_("Client unregistration failed"), "error")
         return redirect(url_for("routes.configure_client"))
 
-    auth_playground.forget_client()
-
-    g.server_config.registration_access_token = None
-    g.server_config.registration_client_uri = None
-
+    forget_registered_client()
     flash(_("Client successfully unregistered"), "success")
     return redirect(url_for("routes.configure_client"))
 
@@ -478,19 +503,76 @@ def token_request_error(exc):
     return str(exc)
 
 
+def response_hooks(responses):
+    """Return the requests hooks that append the responses to ``responses``."""
+
+    def keep_response(response, **kwargs):
+        responses.append(response)
+
+    return {"response": keep_response}
+
+
+def keep_rejected_response(responses):
+    """Keep the last response of the provider, to show it on the next page.
+
+    A successful response with a JSON object holds tokens. The request then
+    failed after it, for instance on the ID token, and the response is not kept.
+    """
+    if not responses:
+        return
+
+    response = responses[-1]
+    try:
+        data = response.json()
+    except ValueError:
+        body = response.text
+    else:
+        if response.ok and isinstance(data, dict):
+            return
+        body = json.dumps(data, indent=2, ensure_ascii=False)
+    session[REJECTED_RESPONSE] = {
+        "kind": "token",
+        "request": f"{response.request.method} {response.request.url}",
+        "status": " ".join(
+            str(part) for part in (response.status_code, response.reason) if part
+        ),
+        "body": body[:MAX_SHOWN_BODY],
+    }
+
+
+def keep_authorization_error():
+    """Keep the error the provider sent back to the callback, to show it."""
+    error = {
+        name: request.values[name]
+        for name in ("error", "error_description", "error_uri", "state")
+        if name in request.values
+    }
+    session[REJECTED_RESPONSE] = {
+        "kind": "authorization",
+        "request": f"{request.method} {request.base_url}",
+        "status": "",
+        "body": json.dumps(error, indent=2, ensure_ascii=False),
+    }
+
+
 def fetch_tokens(grant_type, form=None, **params):
-    """Request tokens at the token endpoint, or flash why it failed."""
+    """Request tokens at the token endpoint, or flash why it failed.
+
+    The response of a failed request is kept, to show it on the next page.
+    """
     if not server_metadata().get("token_endpoint"):
         flash(_("The provider has no token endpoint."), "error")
         return None
 
     if form is not None:
         params["body"] = urlencode(extra_token_params(form))
+    responses = []
     try:
         return auth_playground.oauth.default.fetch_access_token(
-            grant_type=grant_type, **params
+            grant_type=grant_type, hooks=response_hooks(responses), **params
         )
     except (AuthlibBaseError, requests.RequestException, ValueError) as exc:
+        keep_rejected_response(responses)
         flash(
             _("The token request failed: {error}").format(
                 error=token_request_error(exc)
@@ -498,6 +580,24 @@ def fetch_tokens(grant_type, form=None, **params):
             "error",
         )
         return None
+
+
+def retry_grant_form(grant, form):
+    """Go back to the form of the grant type called ``grant``.
+
+    The form shows again what the user entered, except the secrets. A redirect
+    keeps the browser from sending them again on a reload.
+    """
+    skipped = {*form.secret_fields, form.meta.csrf_field_name}
+    session[GRANT_FORM_DATA] = {
+        "grant": grant,
+        "data": [
+            (name, value)
+            for name, value in request.form.items(multi=True)
+            if name not in skipped
+        ],
+    }
+    return redirect(url_for("routes.tokens", tab="request", grant=grant))
 
 
 def render_grant_form(grant, form):
@@ -519,7 +619,7 @@ def client_credentials():
     # An empty scope keeps Authlib from sending the default scope.
     token = fetch_tokens("client_credentials", form, scope=scope)
     if token is None:
-        return render_grant_form("client_credentials", form)
+        return retry_grant_form("client_credentials", form)
 
     forget_tokens()
     store_token(token, "client_credentials", requested_scope=scope or None)
@@ -544,12 +644,12 @@ def password():
         scope=scope,
     )
     if token is None:
-        return render_grant_form("password", form)
+        return retry_grant_form("password", form)
 
     claims, reason = read_id_token(token)
     if reason:
         flash(_("The tokens are not kept. {reason}").format(reason=reason), "error")
-        return render_grant_form("password", form)
+        return retry_grant_form("password", form)
 
     forget_tokens()
     store_token(token, "password", requested_scope=scope or None)
@@ -580,12 +680,12 @@ def jwt_bearer():
     scope = requested_scope(form)
     token = fetch_tokens(JWT_BEARER, form, assertion=assertion, scope=scope)
     if token is None:
-        return render_grant_form("jwt_bearer", form)
+        return retry_grant_form("jwt_bearer", form)
 
     claims, reason = read_id_token(token)
     if reason:
         flash(_("The tokens are not kept. {reason}").format(reason=reason), "error")
-        return render_grant_form("jwt_bearer", form)
+        return retry_grant_form("jwt_bearer", form)
 
     forget_tokens()
     store_token(token, JWT_BEARER, requested_scope=scope or None)
@@ -650,8 +750,11 @@ def authorize_callback():
     if code_verifier := pending.get("code_verifier"):
         kwargs["code_verifier"] = code_verifier
 
+    responses = []
     try:
-        token = auth_playground.oauth.default.authorize_access_token(**kwargs)
+        token = auth_playground.oauth.default.authorize_access_token(
+            hooks=response_hooks(responses), **kwargs
+        )
     except JoseError as exc:
         flash(_("The ID token is not valid: {error}").format(error=exc), "error")
         return redirect(url_for("routes.tokens"))
@@ -665,6 +768,10 @@ def authorize_callback():
         ValueError,
         KeyError,
     ) as exc:
+        if "error" in request.values:
+            keep_authorization_error()
+        else:
+            keep_rejected_response(responses)
         flash(
             _("An error happened during login: {error}").format(
                 error=token_request_error(exc)
@@ -722,16 +829,7 @@ def logout():
     if request.method == "POST":
         form = LogoutParamsForm()
         if form.validate_on_submit():
-            if form.id_token_hint.data:
-                kwargs["id_token_hint"] = form.id_token_hint.data
-            if form.client_id.data:
-                kwargs["client_id"] = form.client_id.data
-            if form.post_logout_redirect_uri.data:
-                kwargs["post_logout_redirect_uri"] = form.post_logout_redirect_uri.data
-            if form.logout_hint.data:
-                kwargs["logout_hint"] = form.logout_hint.data
-            if form.ui_locales.data:
-                kwargs["ui_locales"] = form.ui_locales.data
+            kwargs = logout_params(form)
     else:
         id_token = session.get("token", {}).get("id_token")
         oauth_config = auth_playground.get_oauth_config(current_app)
@@ -866,13 +964,9 @@ def userinfo():
         return redirect(url_for("routes.tokens"))
 
     responses = []
-
-    def keep_response(response, **kwargs):
-        responses.append(response)
-
     try:
         claims = auth_playground.oauth.default.userinfo(
-            token=bearer_token(), hooks={"response": keep_response}
+            token=bearer_token(), hooks=response_hooks(responses)
         )
     except AuthlibBaseError as exc:
         error = exc.description or exc.error

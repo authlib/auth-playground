@@ -17,6 +17,12 @@
             {% trans grant_type=grant.value %}The provider does not advertise the {{ grant_type }} grant type. It may reject the request.{% endtrans %}
         </article>
     {% endif %}
+    {% if not grant.registered %}
+        <article class="notice" data-type="warning">
+            {% trans grant_type=grant.value, registered=registered_grant_types|join(", ") %}This client is not registered for the {{ grant_type }} grant type, only for {{ registered }}. The provider will likely reject the request.{% endtrans %}
+            <a href="{{ url_for('routes.configure_client') }}">{% trans %}See the client{% endtrans %}</a>
+        </article>
+    {% endif %}
     {% if grant.deprecated %}
         <article class="notice" data-type="warning">
             {% trans %}The OAuth 2.0 Security Best Current Practice (RFC 9700) advises against this grant type, and OAuth 2.1 removes it. Use it only to test a provider.{% endtrans %}

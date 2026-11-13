@@ -50,7 +50,7 @@ def test_userinfo_rejects_another_sub(iam_server, iam_client, user, testapp):
     res = get_userinfo(testapp)
 
     assert "The UserInfo sub does not match the ID token sub." in res.text
-    assert "UserInfo response" not in res.text
+    assert "Received at:" not in res.text
     with testapp.session_transaction() as sess:
         assert "userinfo" not in sess
 
@@ -96,7 +96,7 @@ def test_new_tokens_forget_the_userinfo_response(iam_server, iam_client, user, t
     res = res.forms["refresh-form"].submit("refresh").maybe_follow()
 
     assert "Token successfully refreshed" in res.text
-    assert "UserInfo response" not in res.text
+    assert "Received at:" not in res.text
     with testapp.session_transaction() as sess:
         assert "userinfo" not in sess
 

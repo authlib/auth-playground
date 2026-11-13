@@ -1,26 +1,34 @@
+{% from "_form.html" import render_form %}
 <section>
     {% if session.token_info %}
         <article>
             <h3>{% trans %}How these tokens were obtained{% endtrans %}</h3>
-            <ul>
-                <li><strong>{% trans %}Grant type:{% endtrans %}</strong> <code>{{ session.token_info.grant_type }}</code></li>
+            <dl class="summary">
+                <dt>{% trans %}Grant type:{% endtrans %}</dt>
+                <dd><code>{{ session.token_info.grant_type }}</code></dd>
                 {% if session.token_info.grant and session.token_info.grant != session.token_info.grant_type %}
-                    <li><strong>{% trans %}First obtained with:{% endtrans %}</strong> <code>{{ session.token_info.grant }}</code></li>
+                    <dt>{% trans %}First obtained with:{% endtrans %}</dt>
+                    <dd><code>{{ session.token_info.grant }}</code></dd>
                 {% endif %}
                 {% if session.token_info.client_auth %}
-                    <li><strong>{% trans %}Client authentication:{% endtrans %}</strong> <code>{{ session.token_info.client_auth }}</code></li>
+                    <dt>{% trans %}Client authentication:{% endtrans %}</dt>
+                    <dd><code>{{ session.token_info.client_auth }}</code></dd>
                 {% endif %}
                 {% if session.token_info.pkce %}
-                    <li><strong>{% trans %}PKCE:{% endtrans %}</strong> <code>{{ session.token_info.pkce }}</code></li>
+                    <dt>{% trans %}PKCE:{% endtrans %}</dt>
+                    <dd><code>{{ session.token_info.pkce }}</code></dd>
                 {% endif %}
                 {% if session.token_info.requested_scope %}
-                    <li><strong>{% trans %}Requested scope:{% endtrans %}</strong> {{ session.token_info.requested_scope }}</li>
+                    <dt>{% trans %}Requested scope:{% endtrans %}</dt>
+                    <dd>{{ session.token_info.requested_scope }}</dd>
                 {% endif %}
                 {% if session.token_info.token_endpoint %}
-                    <li><strong>{% trans %}Token endpoint:{% endtrans %}</strong> {{ session.token_info.token_endpoint }}</li>
+                    <dt>{% trans %}Token endpoint:{% endtrans %}</dt>
+                    <dd>{{ session.token_info.token_endpoint }}</dd>
                 {% endif %}
-                <li><strong>{% trans %}Obtained at:{% endtrans %}</strong> {{ session.token_info.obtained_at|datetimeformat }}</li>
-            </ul>
+                <dt>{% trans %}Obtained at:{% endtrans %}</dt>
+                <dd>{{ session.token_info.obtained_at|datetimeformat }}</dd>
+            </dl>
             {% if not tokens_grant.user %}
                 <p><small>{% trans %}These tokens are not tied to a user, so there are no user claims to show.{% endtrans %}</small></p>
             {% endif %}
@@ -44,105 +52,93 @@
                         <img src="{{ session.user.picture }}" alt="User avatar" class="user-avatar">
                     {% endif %}
 
-                    <ul>
+                    <dl class="summary">
                         {% if session.user.sub %}
-                            <li><strong data-tooltip="sub">{% trans %}User name:{% endtrans %}</strong> <code>{{ session.user.sub }}</code></li>
+                            <dt data-tooltip="sub">{% trans %}User name:{% endtrans %}</dt>
+                            <dd><code>{{ session.user.sub }}</code></dd>
                         {% endif %}
-
                         {% if session.user.preferred_username %}
-                            <li><strong data-tooltip="preferred_username">{% trans %}Display name:{% endtrans %}</strong> {{ session.user.preferred_username }}</li>
+                            <dt data-tooltip="preferred_username">{% trans %}Display name:{% endtrans %}</dt>
+                            <dd>{{ session.user.preferred_username }}</dd>
                         {% endif %}
-
                         {% if session.user.name %}
-                            <li><strong data-tooltip="name">{% trans %}Full name:{% endtrans %}</strong> {{ session.user.name }}</li>
+                            <dt data-tooltip="name">{% trans %}Full name:{% endtrans %}</dt>
+                            <dd>{{ session.user.name }}</dd>
                         {% endif %}
-
                         {% if session.user.given_name %}
-                            <li><strong data-tooltip="given_name">{% trans %}Given name:{% endtrans %}</strong> {{ session.user.given_name }}</li>
+                            <dt data-tooltip="given_name">{% trans %}Given name:{% endtrans %}</dt>
+                            <dd>{{ session.user.given_name }}</dd>
                         {% endif %}
-
                         {% if session.user.family_name %}
-                            <li><strong data-tooltip="family_name">{% trans %}Family name:{% endtrans %}</strong> {{ session.user.family_name }}</li>
+                            <dt data-tooltip="family_name">{% trans %}Family name:{% endtrans %}</dt>
+                            <dd>{{ session.user.family_name }}</dd>
                         {% endif %}
-
                         {% if session.user.email %}
-                            <li><strong data-tooltip="email">{% trans %}Email:{% endtrans %}</strong> <a href="mailto:{{ session.user.email }}">{{ session.user.email }}</a></li>
+                            <dt data-tooltip="email">{% trans %}Email:{% endtrans %}</dt>
+                            <dd><a href="mailto:{{ session.user.email }}">{{ session.user.email }}</a></dd>
                         {% endif %}
-
                         {% if session.user.email_verified is defined %}
-                            <li><strong data-tooltip="email_verified">{% trans %}Email verified:{% endtrans %}</strong> {{ session.user.email_verified }}</li>
+                            <dt data-tooltip="email_verified">{% trans %}Email verified:{% endtrans %}</dt>
+                            <dd><code>{{ session.user.email_verified|tojson }}</code></dd>
                         {% endif %}
-
                         {% if session.user.phone_number %}
-                            <li><strong data-tooltip="phone_number">{% trans %}Phone:{% endtrans %}</strong> <a href="tel:{{ session.user.phone_number }}">{{ session.user.phone_number }}</a></li>
+                            <dt data-tooltip="phone_number">{% trans %}Phone:{% endtrans %}</dt>
+                            <dd><a href="tel:{{ session.user.phone_number }}">{{ session.user.phone_number }}</a></dd>
                         {% endif %}
-
                         {% if session.user.address %}
-                            <li>
-                                <strong data-tooltip="address">{% trans %}Address:{% endtrans %}</strong>
-                                <ul>
-                                    {% if session.user.address.get("formatted") %}
-                                        <li>{{ session.user.address["formatted"] }}</li>
-                                    {% else %}
-                                        {% if session.user.address.get("street_address") %}
-                                            <li>{{ session.user.address["street_address"] }}</li>
-                                        {% endif %}
-                                        {% if session.user.address.get("postal_code") %}
-                                            <li>{{ session.user.address["postal_code"] }}</li>
-                                        {% endif %}
-                                        {% if session.user.address.get("locality") %}
-                                            <li>{{ session.user.address["locality"] }}</li>
-                                        {% endif %}
-                                        {% if session.user.address.get("region") %}
-                                            <li>{{ session.user.address["region"] }}</li>
-                                        {% endif %}
-                                    {% endif %}
-                                </ul>
-                            </li>
+                            <dt data-tooltip="address">{% trans %}Address:{% endtrans %}</dt>
+                            <dd>
+                                {% if session.user.address.get("formatted") %}
+                                    {{ session.user.address["formatted"] }}
+                                {% else %}
+                                    {% for part in ("street_address", "postal_code", "locality", "region") if session.user.address.get(part) %}
+                                        {{ session.user.address[part] }}{% if not loop.last %}<br>{% endif %}
+                                    {% endfor %}
+                                {% endif %}
+                            </dd>
                         {% endif %}
-
                         {% if session.user.locale %}
-                            <li><strong data-tooltip="locale">{% trans %}Locale:{% endtrans %}</strong> {{ session.user.locale }}</li>
+                            <dt data-tooltip="locale">{% trans %}Locale:{% endtrans %}</dt>
+                            <dd>{{ session.user.locale }}</dd>
                         {% endif %}
-
                         {% if session.user.zoneinfo %}
-                            <li><strong data-tooltip="zoneinfo">{% trans %}Timezone:{% endtrans %}</strong> {{ session.user.zoneinfo }}</li>
+                            <dt data-tooltip="zoneinfo">{% trans %}Timezone:{% endtrans %}</dt>
+                            <dd>{{ session.user.zoneinfo }}</dd>
                         {% endif %}
-
                         {% if session.user.birthdate %}
-                            <li><strong data-tooltip="birthdate">{% trans %}Birthdate:{% endtrans %}</strong> {{ session.user.birthdate }}</li>
+                            <dt data-tooltip="birthdate">{% trans %}Birthdate:{% endtrans %}</dt>
+                            <dd>{{ session.user.birthdate }}</dd>
                         {% endif %}
-
                         {% if session.user.gender %}
-                            <li><strong data-tooltip="gender">{% trans %}Gender:{% endtrans %}</strong> {{ session.user.gender }}</li>
+                            <dt data-tooltip="gender">{% trans %}Gender:{% endtrans %}</dt>
+                            <dd>{{ session.user.gender }}</dd>
                         {% endif %}
-
                         {% if session.user.website %}
-                            <li><strong data-tooltip="website">{% trans %}Website:{% endtrans %}</strong> <a href="{{ session.user.website }}" target="_blank">{{ session.user.website }}</a></li>
+                            <dt data-tooltip="website">{% trans %}Website:{% endtrans %}</dt>
+                            <dd><a href="{{ session.user.website }}" target="_blank" rel="noopener noreferrer">{{ session.user.website }}</a></dd>
                         {% endif %}
-
                         {% if session.user.groups %}
-                            <li>
-                                <strong data-tooltip="groups">{% trans %}Groups:{% endtrans %}</strong>
+                            <dt data-tooltip="groups">{% trans %}Groups:{% endtrans %}</dt>
+                            <dd>
                                 {% for group in session.user.groups %}
                                     <kbd>{{ group }}</kbd>{% if not loop.last %}, {% endif %}
                                 {% endfor %}
-                            </li>
+                            </dd>
                         {% endif %}
-                    </ul>
+                    </dl>
                 </div>
 
                 <div>
                     <h4>{% trans %}Token metadata{% endtrans %}</h4>
 
-                    <ul>
+                    <dl class="summary">
                         {% if session.user.iss %}
-                            <li><strong data-tooltip="iss">{% trans %}Issuer:{% endtrans %}</strong> <code>{{ session.user.iss }}</code></li>
+                            <dt data-tooltip="iss">{% trans %}Issuer:{% endtrans %}</dt>
+                            <dd><code>{{ session.user.iss }}</code></dd>
                         {% endif %}
-
                         {% if session.user.aud %}
-                            <li>
-                                <strong data-tooltip="aud">{% trans %}Audience:{% endtrans %}</strong>
+                            <dt data-tooltip="aud">{% trans %}Audience:{% endtrans %}</dt>
+                            <dd>
                                 {% if session.user.aud is string %}
                                     <code>{{ session.user.aud }}</code>
                                 {% else %}
@@ -150,76 +146,94 @@
                                         <code>{{ aud_item }}</code>{% if not loop.last %}, {% endif %}
                                     {% endfor %}
                                 {% endif %}
-                            </li>
+                            </dd>
                         {% endif %}
-
                         {% if session.user.auth_time %}
-                            <li><strong data-tooltip="auth_time">{% trans %}Auth time:{% endtrans %}</strong> <mark>{{ session.user.auth_time|datetimeformat }}</mark></li>
+                            <dt data-tooltip="auth_time">{% trans %}Auth time:{% endtrans %}</dt>
+                            <dd><mark>{{ session.user.auth_time|datetimeformat }}</mark></dd>
                         {% endif %}
-
                         {% if session.user.iat %}
-                            <li><strong data-tooltip="iat">{% trans %}Issued at:{% endtrans %}</strong> {{ session.user.iat|datetimeformat }}</li>
+                            <dt data-tooltip="iat">{% trans %}Issued at:{% endtrans %}</dt>
+                            <dd>{{ session.user.iat|datetimeformat }}</dd>
                         {% endif %}
-
                         {% if session.user.exp %}
-                            <li><strong data-tooltip="exp">{% trans %}Expires at:{% endtrans %}</strong> {{ session.user.exp|datetimeformat }}</li>
+                            <dt data-tooltip="exp">{% trans %}Expires at:{% endtrans %}</dt>
+                            <dd>{{ session.user.exp|datetimeformat }}</dd>
                         {% endif %}
-
                         {% if session.user.nonce %}
-                            <li><strong data-tooltip="nonce">{% trans %}Nonce:{% endtrans %}</strong> <code>{{ session.user.nonce }}</code></li>
+                            <dt data-tooltip="nonce">{% trans %}Nonce:{% endtrans %}</dt>
+                            <dd><code>{{ session.user.nonce }}</code></dd>
                         {% endif %}
-
                         {% if session.user.at_hash %}
-                            <li><strong data-tooltip="at_hash">{% trans %}Access token hash:{% endtrans %}</strong> <code>{{ session.user.at_hash }}</code></li>
+                            <dt data-tooltip="at_hash">{% trans %}Access token hash:{% endtrans %}</dt>
+                            <dd><code>{{ session.user.at_hash }}</code></dd>
                         {% endif %}
-
                         {% if session.user.c_hash %}
-                            <li><strong data-tooltip="c_hash">{% trans %}Code hash:{% endtrans %}</strong> <code>{{ session.user.c_hash }}</code></li>
+                            <dt data-tooltip="c_hash">{% trans %}Code hash:{% endtrans %}</dt>
+                            <dd><code>{{ session.user.c_hash }}</code></dd>
                         {% endif %}
-
                         {% if session.user.acr %}
-                            <li><strong data-tooltip="acr">{% trans %}Auth context class:{% endtrans %}</strong> <mark><code>{{ session.user.acr }}</code></mark></li>
+                            <dt data-tooltip="acr">{% trans %}Auth context class:{% endtrans %}</dt>
+                            <dd><mark><code>{{ session.user.acr }}</code></mark></dd>
                         {% endif %}
-
                         {% if session.user.amr %}
-                            <li>
-                                <strong data-tooltip="amr">{% trans %}Auth methods:{% endtrans %}</strong>
+                            <dt data-tooltip="amr">{% trans %}Auth methods:{% endtrans %}</dt>
+                            <dd>
                                 <mark>
                                     {% for method in session.user.amr %}
                                         <code>{{ method }}</code>{% if not loop.last %}, {% endif %}
                                     {% endfor %}
                                 </mark>
-                            </li>
+                            </dd>
                         {% endif %}
-
                         {% if session.user.azp %}
-                            <li><strong data-tooltip="azp">{% trans %}Authorized party:{% endtrans %}</strong> <code>{{ session.user.azp }}</code></li>
+                            <dt data-tooltip="azp">{% trans %}Authorized party:{% endtrans %}</dt>
+                            <dd><code>{{ session.user.azp }}</code></dd>
                         {% endif %}
-                    </ul>
+                    </dl>
+                    {% if session.user.auth_time or session.user.acr or session.user.amr %}
+                        <p><small>{% trans %}<mark>Highlighted</mark>: changes when you sign in again.{% endtrans %}</small></p>
+                    {% endif %}
                 </div>
             </div>
         </article>
     {% endif %}
 
-    {% if session.userinfo %}
+    {% if userinfo_endpoint and tokens_grant.user and session.token.access_token %}
         <article>
-            <h3>{% trans %}UserInfo response{% endtrans %}</h3>
-            <ul>
-                <li><strong>{% trans %}UserInfo endpoint:{% endtrans %}</strong> {{ session.userinfo.endpoint }}</li>
-                <li><strong>{% trans %}Received at:{% endtrans %}</strong> {{ session.userinfo.received_at|datetimeformat }}</li>
-            </ul>
-            {% if session.userinfo.jwt %}
-                <h4>{% trans %}Signed response{% endtrans %}</h4>
-                <p><small>{% trans alg=session.userinfo.header.alg %}Signed with {{ alg }}. Authlib checked the signature, iss, aud and sub.{% endtrans %}</small></p>
-                <div role="group">
-                    <input type="text" value="{{ session.userinfo.jwt }}" readonly aria-label="{% trans %}Signed UserInfo response{% endtrans %}">
-                    <button type="button" class="copy-token-btn secondary">{% trans %}Copy{% endtrans %}</button>
-                </div>
-                <h4>{% trans %}Header{% endtrans %}</h4>
-                <pre class="token-response"><code>{{ session.userinfo.header|tojson(indent=2) }}</code></pre>
-                <h4>{% trans %}Claims{% endtrans %}</h4>
+            <header><h3>{% trans %}UserInfo response{% endtrans %}</h3></header>
+            {% if userinfo_alg %}
+                <p><small>{% trans alg=userinfo_alg %}The client expects a response signed with {{ alg }}.{% endtrans %}</small></p>
             {% endif %}
-            <pre class="token-response"><code>{{ session.userinfo.claims|tojson(indent=2) }}</code></pre>
+            {% if session.userinfo %}
+                <dl class="summary">
+                    <dt>{% trans %}UserInfo endpoint:{% endtrans %}</dt>
+                    <dd>{{ session.userinfo.endpoint }}</dd>
+                    <dt>{% trans %}Received at:{% endtrans %}</dt>
+                    <dd>{{ session.userinfo.received_at|datetimeformat }}</dd>
+                </dl>
+                {% if session.userinfo.jwt %}
+                    <h4>{% trans %}Signed response{% endtrans %}</h4>
+                    <p><small>{% trans alg=session.userinfo.header.alg %}Signed with {{ alg }}. Authlib checked the signature, iss, aud and sub.{% endtrans %}</small></p>
+                    <div role="group">
+                        <input type="text" value="{{ session.userinfo.jwt }}" readonly aria-label="{% trans %}Signed UserInfo response{% endtrans %}">
+                        <button type="button" class="copy-token-btn secondary">{% trans %}Copy{% endtrans %}</button>
+                    </div>
+                    <h4>{% trans %}Header{% endtrans %}</h4>
+                    <pre class="token-response"><code>{{ session.userinfo.header|tojson(indent=2) }}</code></pre>
+                    <h4>{% trans %}Claims{% endtrans %}</h4>
+                {% endif %}
+                <pre class="token-response"><code>{{ session.userinfo.claims|tojson(indent=2) }}</code></pre>
+            {% else %}
+                <p>{% trans %}The playground sends the access token to the UserInfo endpoint, which returns the claims of the user.{% endtrans %}</p>
+            {% endif %}
+            <footer>
+                <div class="actions">
+                    {% call render_form(userinfo_form, url_for('oauth.userinfo'), id="userinfo-form") %}
+                        {{ userinfo_form.userinfo() }}
+                    {% endcall %}
+                </div>
+            </footer>
         </article>
     {% endif %}
 
@@ -236,20 +250,24 @@
                     <input type="text" value="{{ session.token.access_token }}" readonly aria-label="Access Token">
                     <button type="button" class="copy-token-btn secondary">{% trans %}Copy{% endtrans %}</button>
                 </div>
-                <ul>
+                <dl class="summary">
                     {% if session.token.token_type %}
-                        <li><strong>{% trans %}Token type:{% endtrans %}</strong> {{ session.token.token_type }}</li>
+                        <dt>{% trans %}Token type:{% endtrans %}</dt>
+                        <dd>{{ session.token.token_type }}</dd>
                     {% endif %}
                     {% if session.token.expires_in %}
-                        <li><strong>{% trans %}Expires in:{% endtrans %}</strong> {% trans seconds=session.token.expires_in %}{{ seconds }} seconds{% endtrans %}</li>
+                        <dt>{% trans %}Expires in:{% endtrans %}</dt>
+                        <dd>{% trans seconds=session.token.expires_in %}{{ seconds }} seconds{% endtrans %}</dd>
                     {% endif %}
                     {% if session.token.expires_at %}
-                        <li><strong>{% trans %}Expires at:{% endtrans %}</strong> {{ session.token.expires_at|datetimeformat }}</li>
+                        <dt>{% trans %}Expires at:{% endtrans %}</dt>
+                        <dd>{{ session.token.expires_at|datetimeformat }}</dd>
                     {% endif %}
                     {% if session.token.scope %}
-                        <li><strong>{% trans %}Scope:{% endtrans %}</strong> {{ session.token.scope }}</li>
+                        <dt>{% trans %}Scope:{% endtrans %}</dt>
+                        <dd>{{ session.token.scope }}</dd>
                     {% endif %}
-                </ul>
+                </dl>
             </article>
         {% endif %}
 
@@ -261,6 +279,16 @@
                     <input type="text" value="{{ session.token.refresh_token }}" readonly aria-label="Refresh Token">
                     <button type="button" class="copy-token-btn secondary">{% trans %}Copy{% endtrans %}</button>
                 </div>
+                <footer>
+                    <div class="actions">
+                        {% call render_form(refresh_form, url_for('oauth.refresh'), id="refresh-form") %}
+                            {{ refresh_form.refresh() }}
+                        {% endcall %}
+                        {% if tokens_grant.provider_session %}
+                            <small>{% trans %}auth_time and acr stay the same.{% endtrans %}</small>
+                        {% endif %}
+                    </div>
+                </footer>
             </article>
         {% endif %}
     </div>

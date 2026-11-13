@@ -8,6 +8,8 @@ import requests
 from authlib.integrations.base_client import OAuthError
 from joserfc.errors import InvalidClaimError
 
+from tests.fake_provider import server_session
+
 
 def test_index_shows_signin_when_unauthenticated(iam_server, test_client):
     """Test that unauthenticated users see signin button."""
@@ -528,3 +530,38 @@ def test_refresh_without_id_token_keeps_the_user(test_client, csrf_token):
     with test_client.session_transaction() as sess:
         assert sess["user"] == {"sub": "testuser"}
         assert sess["token"]["id_token"] == "i"
+
+
+def test_logout_preview_updates_with_htmx(unconfigured_test_client, csrf_token):
+    """Test the preview shows the logout request, with a state for the redirect."""
+    server_session(unconfigured_test_client, {"client_id": "c", "client_secret": "s"})
+    with unconfigured_test_client.session_transaction() as sess:
+        sess["server_metadata"] = {
+            **sess["server_metadata"],
+            "end_session_endpoint": "https://test.example.com/oauth/end_session",
+        }
+
+    res = unconfigured_test_client.post(
+        "/logout",
+        data={
+            "csrf_token": csrf_token(unconfigured_test_client),
+            "client_id": "c",
+            "post_logout_redirect_uri": "https://playground.example/logout_callback",
+            "logout_hint": "jane",
+        },
+        headers={
+            "HX-Request": "true",
+            "HX-Source": "article#preview",
+            "HX-Target": "article#preview",
+        },
+    )
+
+    assert res.status_code == 200
+    assert "<html" not in res.text
+    assert "GET https://test.example.com/oauth/end_session" in res.text
+    assert (
+        "?post_logout_redirect_uri=https://playground.example/logout_callback\n"
+        "  &amp;state=[generated]\n"
+        "  &amp;client_id=c\n"
+        "  &amp;logout_hint=jane" in res.text
+    )

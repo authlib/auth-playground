@@ -15,12 +15,14 @@ from auth_playground.client_auth import KEY_METHOD
 from auth_playground.client_auth import SECRET_METHODS
 from auth_playground.client_key import key_summary
 from auth_playground.decorators import server_config_needed
+from auth_playground.forms import ChangeClientForm
 from auth_playground.forms import ChangeServerForm
 from auth_playground.forms import ClientConfigForm
 from auth_playground.forms import DynamicRegistrationForm
 from auth_playground.forms import ServerConfigForm
 from auth_playground.forms import UnregisterClientForm
 from auth_playground.grants import tokens_grant
+from auth_playground.oauth import forget_registered_client
 from auth_playground.pages import render_tokens_page
 from auth_playground.session import ServerConfig
 
@@ -266,17 +268,23 @@ def configure_client():
             client_key=current_client_key(),
         )
 
-    client_form = ClientConfigForm()
-    # The other forms post elsewhere: they must not read this form's data.
-    dynamic_registration_form = DynamicRegistrationForm(formdata=None)
-    unregister_form = UnregisterClientForm(formdata=None)
+    if auth_playground.is_client_configured() and request.method == "GET":
+        return render_template(
+            "configure_client.html",
+            configured=True,
+            oauth_config=auth_playground.get_oauth_config(current_app),
+            change_form=ChangeClientForm(),
+            unregister_form=UnregisterClientForm(),
+            client_key=current_client_key(),
+        )
 
+    client_form = ClientConfigForm()
     if not client_form.validate_on_submit():
         return render_template(
             "configure_client.html",
             client_form=client_form,
-            dynamic_registration_form=dynamic_registration_form,
-            unregister_form=unregister_form,
+            # It posts elsewhere: it must not read the data of the client form.
+            dynamic_registration_form=DynamicRegistrationForm(formdata=None),
             client_key=current_client_key(),
         )
 
@@ -294,6 +302,23 @@ def configure_client():
     )
     flash(_("OAuth configuration completed successfully"), "success")
     return redirect(url_for("routes.tokens"))
+
+
+@bp.route("/client/change", methods=["POST"])
+@server_config_needed(client_needed=False)
+def change_client():
+    """Forget the client and its tokens. A registered client stays at the provider."""
+    if auth_playground.is_oauth_client_from_env(current_app):
+        return redirect(url_for("routes.configure_client"))
+
+    form = ChangeClientForm()
+    if not form.validate_on_submit():
+        flash(_("Invalid request"), "error")
+        return redirect(url_for("routes.configure_client"))
+
+    forget_registered_client()
+    flash(_("You can now configure another client"), "info")
+    return redirect(url_for("routes.configure_client"))
 
 
 TOKENS_TABS = ("request", "current", "logout")

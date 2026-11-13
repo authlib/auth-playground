@@ -73,6 +73,7 @@ from auth_playground.jwt_bearer import build_assertion_preview
 from auth_playground.jwt_bearer import claims_object
 from auth_playground.jwt_bearer import jwt_bearer_preview
 from auth_playground.jwt_bearer import pasted_assertion
+from auth_playground.logout import logout_preview
 from auth_playground.session import server_metadata
 from auth_playground.token_request import TOKEN_RESERVED_PARAMS
 from auth_playground.token_request import client_credentials_preview
@@ -101,7 +102,8 @@ class BaseForm(HtmxFlaskForm):
 
     Hidden fields and buttons are rendered bare. A field can declare
     ``render_kw={"group_with": "<button name>"}`` to render that button
-    next to its input.
+    next to its input, and ``render_kw={"param": "<name>"}`` to show the
+    protocol parameter it sets after its label.
     """
 
     class Meta:
@@ -110,6 +112,7 @@ class BaseForm(HtmxFlaskForm):
         def field_wrapper(self, field, render_kw):
             group_with = render_kw.pop("group_with", None)
             hidden = render_kw.pop("hidden", False)
+            param = render_kw.pop("param", None)
             render_kw = {clean_key(key): value for key, value in render_kw.items()}
             if isinstance(field, BARE_FIELDS):
                 return field.widget(field, hidden=hidden, **render_kw)
@@ -133,6 +136,7 @@ class BaseForm(HtmxFlaskForm):
                     fieldset=fieldset,
                     error_id=error_id,
                     hidden=hidden,
+                    param=param,
                     button=field._form[group_with] if group_with else None,
                 )
             )
@@ -195,13 +199,13 @@ def get_ui_locales_choices():
 class RefreshTokenForm(BaseForm):
     """Form to refresh access token using refresh token."""
 
-    refresh = SubmitField(_("Renew tokens"))
+    refresh = SubmitField(_("Renew tokens"), render_kw={"class": "secondary"})
 
 
 class UserInfoForm(BaseForm):
     """Form to call the UserInfo endpoint with the access token."""
 
-    userinfo = SubmitField(_("Get user info"))
+    userinfo = SubmitField(_("Get user info"), render_kw={"class": "secondary"})
 
 
 def is_loopback_address(hostname):
@@ -327,10 +331,8 @@ def userinfo_alg_field(**kwargs):
         _("UserInfo response:"),
         choices=userinfo_alg_choices,
         default="",
-        description=_(
-            "userinfo_signed_response_alg: the provider signs the response, "
-            "and Authlib checks the signature."
-        ),
+        description=_("A signed response is a JWT, and Authlib checks its signature."),
+        render_kw={"param": "userinfo_signed_response_alg"},
         **kwargs,
     )
 
@@ -425,6 +427,7 @@ def client_key_fields(method_sources, id_prefix="", registration=False):
             choices=[],
             id=f"{id_prefix}signing_alg",
             description=_("From token_endpoint_auth_signing_alg_values_supported."),
+            render_kw={"param": "token_endpoint_auth_signing_alg"},
         ).triggered_by([*source_sources, "private_key"], on="change"),
         ButtonField(
             _("Generate another key"),
@@ -534,18 +537,19 @@ class ClientConfigForm(ClientKeyMixin, BaseForm):
                 message=_("Client ID must be between 1 and 255 characters"),
             ),
         ],
-        render_kw={"placeholder": "auth-playground-client"},
+        render_kw={"placeholder": "auth-playground-client", "param": "client_id"},
     )
     token_endpoint_auth_method = SelectField(
         _("Token endpoint authentication:"),
         choices=lambda: auth_method_choices(METHODS),
         default=lambda: auth_method_default(METHODS),
         description=_("How the client proves its identity to the token endpoint."),
+        render_kw={"param": "token_endpoint_auth_method"},
     )
     client_secret = PasswordField(
         _("Client secret:"),
         description=_("Leave empty for a public client."),
-        render_kw={"placeholder": "******************"},
+        render_kw={"param": "client_secret"},
     ).triggered_by("token_endpoint_auth_method", on="change")
     (
         key_source,
@@ -601,6 +605,7 @@ class DynamicRegistrationForm(ClientKeyMixin, BaseForm):
         choices=lambda: auth_method_choices(CONFIDENTIAL_METHODS),
         default=lambda: auth_method_default(CONFIDENTIAL_METHODS),
         description=_("A public client uses none."),
+        render_kw={"param": "token_endpoint_auth_method"},
     ).triggered_by("client_type", disable_for_public_client, on="change")
     (
         key_source,
@@ -636,6 +641,7 @@ class DynamicRegistrationForm(ClientKeyMixin, BaseForm):
         default=DEFAULT_REGISTERED_GRANT_TYPES,
         widget=ListWidget(prefix_label=False),
         option_widget=CheckboxInput(),
+        render_kw={"param": "grant_types"},
     )
     initial_access_token = StringField(
         _("Initial access token:"),
@@ -681,7 +687,13 @@ class UnregisterClientForm(BaseForm):
 class LogoutLocalForm(BaseForm):
     """Form to trigger local logout with CSRF protection."""
 
-    logout = SubmitField(_("Log out"), render_kw={"class": "secondary"})
+    logout = SubmitField(_("Log out here"), render_kw={"class": "secondary"})
+
+
+class ChangeClientForm(BaseForm):
+    """Form to forget the client, and configure another one."""
+
+    change = SubmitField(_("Change client"), render_kw={"class": "secondary"})
 
 
 def get_pkce_choices():
@@ -761,9 +773,10 @@ def scopes_field(default=None):
         _("Scopes:"),
         choices=get_scopes_choices,
         default=default,
-        description=_("Select the scopes to request from the authorization server"),
+        description=_("Select the scopes to request from the authorization server."),
         widget=ListWidget(prefix_label=False),
         option_widget=CheckboxInput(),
+        render_kw={"param": "scope"},
     )
 
 
@@ -781,6 +794,8 @@ class RequestParamsForm(BaseForm):
 
     endpoint = None
     reserved_params = RESERVED_PARAMS
+    # Not kept when the form is shown again after a failed request.
+    secret_fields = ()
 
     class Meta:
         htmx_inline_validation = True
@@ -788,6 +803,7 @@ class RequestParamsForm(BaseForm):
     other_scopes = StringField(
         _("Other scopes:"),
         description=_("Space-separated, sent as they are."),
+        render_kw={"param": "scope"},
     )
     extra_params = TextAreaField(
         _("Extra parameters:"),
@@ -822,6 +838,7 @@ class AuthorizationParamsForm(RequestParamsForm):
         description=_(
             "Sends a code_challenge here, and the code_verifier with the token request."
         ),
+        render_kw={"param": "code_challenge_method"},
     )
     scopes = scopes_field(default=get_scopes_default)
     response_mode = SelectField(
@@ -832,17 +849,20 @@ class AuthorizationParamsForm(RequestParamsForm):
             "form_post: the provider posts the response to the playground, "
             "instead of putting it in the URL."
         ),
+        render_kw={"param": "response_mode"},
     )
     prompt = SelectField(
         _("Prompt:"),
         choices=get_prompt_choices,
-        description=_("Control the authentication UI behavior"),
+        description=_("What the provider shows to the user."),
+        render_kw={"param": "prompt"},
     )
     ui_locales = SelectField(
-        _("UI Locale:"),
+        _("UI locales:"),
         choices=get_ui_locales_choices,
         default="",
-        description=_("Preferred language for the authentication UI"),
+        description=_("Preferred language for the authentication UI."),
+        render_kw={"param": "ui_locales"},
     )
     max_age = IntegerField(
         _("Max age (seconds):"),
@@ -850,23 +870,26 @@ class AuthorizationParamsForm(RequestParamsForm):
         description=_(
             "Maximum authentication age. 0 forces re-authentication and refreshes auth_time."
         ),
-        render_kw={"placeholder": "0"},
+        render_kw={"param": "max_age"},
     )
     acr_values = StringField(
         _("ACR values:"),
         description=_(
             "Requested authentication context classes, space-separated (step-up authentication)."
         ),
+        render_kw={"param": "acr_values"},
     )
     login_hint = StringField(
         _("Login hint:"),
         description=_("Identifier to pre-fill on the provider's login screen."),
+        render_kw={"param": "login_hint"},
     )
     claims = TextAreaField(
         _("Claims (JSON):"),
         description=_(
             "Specific claims to request, as an OIDC claims JSON object (advanced)."
         ),
+        render_kw={"param": "claims"},
     )
     preview = RequestPreviewField(
         _("Authorization request"), build=authorization_preview, wrapper=False
@@ -904,17 +927,18 @@ class PasswordForm(RequestParamsForm):
 
     endpoint = "oauth.password"
     reserved_params = TOKEN_RESERVED_PARAMS | {"username", "password"}
+    secret_fields = ("password",)
 
     username = StringField(
         _("Username:"),
         validators=[InputRequired()],
-        render_kw={"autocomplete": "off"},
+        render_kw={"autocomplete": "off", "param": "username"},
     )
     password = PasswordField(
         _("Password:"),
         validators=[InputRequired()],
         # Browsers ignore "off" on password fields.
-        render_kw={"autocomplete": "new-password"},
+        render_kw={"autocomplete": "new-password", "param": "password"},
     )
     scopes = scopes_field(default=get_scopes_default)
     preview = RequestPreviewField(
@@ -1015,7 +1039,12 @@ class JwtBearerForm(RequestParamsForm):
             "Sent as is. The playground only decodes it, it does not check "
             "the signature."
         ),
-        render_kw={"rows": 5, "autocomplete": "off", "spellcheck": "false"},
+        render_kw={
+            "rows": 5,
+            "autocomplete": "off",
+            "spellcheck": "false",
+            "param": "assertion",
+        },
     ).triggered_by("source", on="change")
     subject = StringField(
         _("Subject (sub):"),
@@ -1114,17 +1143,15 @@ class JwtBearerForm(RequestParamsForm):
 
 
 def grant_label(grant):
-    """Mark the label of a deprecated grant type, or one the server does not advertise."""
-    marks = []
+    """Mark the label of a grant type that is deprecated, not advertised or not registered."""
+    marks = [grant.label]
     if grant.deprecated:
         marks.append(_("deprecated"))
     if not grant.advertised:
         marks.append(_("not advertised"))
-    if not marks:
-        return grant.label
-    return _("{label} ({marks})").format(
-        label=grant.label, marks=", ".join(str(mark) for mark in marks)
-    )
+    if not grant.registered:
+        marks.append(_("not registered"))
+    return " · ".join(str(mark) for mark in marks)
 
 
 def get_grant_choices():
@@ -1148,25 +1175,44 @@ class GrantForm(BaseForm):
 class LogoutParamsForm(BaseForm):
     """Form to customize RP-Initiated Logout parameters."""
 
+    class Meta:
+        htmx_inline_validation = True
+
     id_token_hint = StringField(
-        _("ID Token Hint:"),
-        description=_("ID Token previously issued, used to identify the user session"),
+        _("ID token hint:"),
+        description=_(
+            "The ID token from the sign-in. It tells the provider which session to end."
+        ),
+        render_kw={"param": "id_token_hint"},
     )
     client_id = StringField(
         _("Client ID:"),
-        description=_("OAuth client identifier"),
+        description=_("The ID of the client."),
+        render_kw={"param": "client_id"},
     )
     post_logout_redirect_uri = StringField(
-        _("Post-Logout Redirect URI:"),
-        description=_("URI to redirect to after logout"),
+        _("Post-logout redirect URI:"),
+        description=_("Where the provider sends the browser after the logout."),
+        render_kw={"param": "post_logout_redirect_uri"},
     )
     logout_hint = StringField(
-        _("Logout Hint:"),
-        description=_("Hint about the user to log out"),
+        _("Logout hint:"),
+        description=_("Which user to log out, when the ID token hint is empty."),
+        render_kw={"param": "logout_hint"},
     )
     ui_locales = SelectField(
-        _("UI Locale:"),
+        _("UI locales:"),
         choices=get_ui_locales_choices,
-        description=_("Preferred language for the logout UI"),
+        description=_("Preferred language for the logout UI."),
+        render_kw={"param": "ui_locales"},
     )
-    server_logout = ButtonField(_("Server log out"), render_kw={"class": "contrast"})
+    preview = RequestPreviewField(
+        _("Logout request"), build=logout_preview, wrapper=False
+    ).triggered_by("*")
+    server_logout = ButtonField(
+        _("Log out at the provider"), render_kw={"class": "primary"}
+    )
+
+    def __init__(self, *args, **kwargs):
+        meta = {"htmx_endpoint": url_for("oauth.logout")}
+        super().__init__(*args, meta={**meta, **kwargs.pop("meta", {})}, **kwargs)

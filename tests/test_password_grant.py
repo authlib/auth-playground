@@ -69,7 +69,7 @@ def test_password_grant_shows_a_wrong_password(
     """Test the error of the provider is shown, without the password."""
     res = request_tokens(
         testapp, username=password_user.user_name, password="wrong password"
-    )
+    ).follow()
 
     assert "The token request failed:" in res.text
     form = res.forms["password-form"]
@@ -101,7 +101,7 @@ def test_password_grant_rejects_an_id_token_it_cannot_validate(testapp, error, m
             side_effect=error,
         ),
     ):
-        res = request_tokens(testapp, username="jane", password=PASSWORD)
+        res = request_tokens(testapp, username="jane", password=PASSWORD).follow()
 
     assert "The tokens are not kept." in res.text
     assert message in res.text
@@ -169,7 +169,7 @@ def test_password_grant_is_marked_deprecated(unconfigured_test_client):
     server_session(unconfigured_test_client, {"client_id": "c", "client_secret": "s"})
     res = unconfigured_test_client.get("/en/tokens/request?grant=password")
 
-    assert "Password (ROPC) (deprecated, not advertised)" in res.text
+    assert "Password (ROPC) · deprecated · not advertised" in res.text
     assert "advises against this grant type" in res.text
 
 
@@ -196,3 +196,21 @@ def test_password_preview_updates_with_htmx(unconfigured_test_client, csrf_token
     assert "&amp;username=jane" in res.text
     assert "&amp;password=[hidden]" in res.text
     assert PASSWORD not in res.text
+
+
+def test_a_refused_request_shows_the_response(
+    iam_server, iam_client, password_user, testapp
+):
+    """Test the error response of the token endpoint is shown after a redirect."""
+    res = request_tokens(testapp, username=password_user.user_name, password="wrong")
+
+    assert res.status_int == 302
+    assert res.location.endswith("/en/tokens/request?grant=password")
+    res = res.follow()
+    assert "Response of the token endpoint" in res.text
+    assert f"POST {iam_server.url}oauth/token" in res.text
+    assert "400 BAD REQUEST" in res.text.upper()
+    assert "&#34;error&#34;: &#34;invalid_request&#34;" in res.text
+
+    res = testapp.get(res.request.url)
+    assert "Response of the token endpoint" not in res.text

@@ -62,7 +62,9 @@ def test_client_credentials_sends_scope_and_extra_params(testapp):
             extra_params="resource=https://a.example\nresource=https://b.example",
         )
 
-    assert fetch.call_args.kwargs == {
+    kwargs = fetch.call_args.kwargs
+    assert kwargs.pop("hooks")
+    assert kwargs == {
         "grant_type": "client_credentials",
         "scope": "api:read api:write",
         "body": "resource=https%3A%2F%2Fa.example&resource=https%3A%2F%2Fb.example",
@@ -75,7 +77,7 @@ def test_client_credentials_shows_the_provider_error(testapp):
         "auth_playground.oauth_client.PlaygroundOAuth2App.fetch_access_token",
         side_effect=OAuthError(error="unauthorized_client", description="Nope"),
     ):
-        res = request_tokens(testapp, other_scopes="api:read")
+        res = request_tokens(testapp, other_scopes="api:read").follow()
 
     assert "The token request failed: Nope" in res.text
     assert res.forms["client-credentials-form"]["other_scopes"].value == "api:read"
@@ -94,7 +96,7 @@ def test_client_credentials_shows_request_errors(testapp, error, message):
         "auth_playground.oauth_client.PlaygroundOAuth2App.fetch_access_token",
         side_effect=error,
     ):
-        res = request_tokens(testapp)
+        res = request_tokens(testapp).follow()
 
     assert f"The token request failed: {message}" in res.text
     assert "client-credentials-form" in res.forms
@@ -236,7 +238,7 @@ def test_grant_selector_marks_grants_not_advertised(unconfigured_test_client):
     server_session(unconfigured_test_client, {"client_id": "c", "client_secret": "s"})
     res = unconfigured_test_client.get("/en/tokens/request?grant=client_credentials")
 
-    assert "Client credentials (not advertised)" in res.text
+    assert "Client credentials · not advertised" in res.text
     assert "does not advertise the client_credentials grant type" in res.text
     assert "for confidential clients" not in res.text
 
@@ -303,7 +305,7 @@ def test_client_credentials_needs_a_token_endpoint(unconfigured_testapp):
     with unconfigured_testapp.session_transaction() as sess:
         sess["server_metadata"] = {**sess["server_metadata"], "token_endpoint": None}
 
-    res = request_tokens(unconfigured_testapp)
+    res = request_tokens(unconfigured_testapp).follow()
 
     assert "The provider has no token endpoint." in res.text
 
@@ -317,7 +319,7 @@ def test_client_credentials_shows_http_errors(testapp):
         "auth_playground.oauth_client.PlaygroundOAuth2App.fetch_access_token",
         side_effect=error,
     ):
-        res = request_tokens(testapp)
+        res = request_tokens(testapp).follow()
 
     assert "The token request failed: 502 Server Error: Bad Gateway" in res.text
 

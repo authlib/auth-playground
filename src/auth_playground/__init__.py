@@ -174,6 +174,7 @@ def setup_oauth_runtime(
     client_key=None,
     signing_alg=None,
     userinfo_alg=None,
+    grant_types=None,
 ):
     """Set up OAuth with runtime configuration stored in session.
 
@@ -194,6 +195,8 @@ def setup_oauth_runtime(
         publish_key(client_key)
     if userinfo_alg and userinfo_alg != "none":
         flask_session["oauth_config"]["userinfo_signed_response_alg"] = userinfo_alg
+    if grant_types:
+        flask_session["oauth_config"]["grant_types"] = grant_types
 
     return setup_oauth(app)
 
