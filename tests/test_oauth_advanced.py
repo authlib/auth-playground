@@ -282,7 +282,7 @@ def test_dynamic_registration_with_rp_initiated_logout(unconfigured_testapp):
     assert payload["post_logout_redirect_uris"] == [
         "http://client.test/logout_callback"
     ]
-    assert "Client successfully registered!" in res.text
+    assert "Choose a grant type" in res.text
     with unconfigured_testapp.session_transaction() as sess:
         assert sess["oauth_config"]["client_id"] == "new-client-id"
         assert sess.get("registration_access_token") is None
@@ -400,7 +400,7 @@ def test_authorize_callback_checks_the_id_token_without_openid(testapp):
     res, parse = callback_without_openid(testapp, return_value={"sub": "jane"})
 
     assert parse.call_args.kwargs == {"nonce": None}
-    assert "You have been successfully logged in." in res.text
+    assert "Signed in as" in res.text
     with testapp.session_transaction() as sess:
         assert sess["user"] == {"sub": "jane"}
         assert sess["token"]["access_token"] == "a"

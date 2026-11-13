@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-13 12:08+0100\n"
+"POT-Creation-Date: 2026-11-13 12:38+0100\n"
 "PO-Revision-Date: 2025-10-28 17:51+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: fr\n"
@@ -61,7 +61,7 @@ msgstr "Ce n'est pas une clé RSA, EC ou Ed25519 au format PEM."
 msgid "The server metadata has no issuer."
 msgstr "Les métadonnées du serveur n'ont pas de champ issuer."
 
-#: src/auth_playground/endpoints.py:94
+#: src/auth_playground/endpoints.py:93
 #, python-brace-format
 msgid ""
 "The issuer of the server metadata is {issuer}, not the URL you entered. A"
@@ -70,15 +70,15 @@ msgstr ""
 "L'issuer des métadonnées du serveur est {issuer}, et non l'URL saisie. Un"
 " serveur ne doit pas utiliser l'issuer d'un autre."
 
-#: src/auth_playground/endpoints.py:100
+#: src/auth_playground/endpoints.py:97
 msgid "Cannot connect to the server. Please check the URL."
 msgstr "Impossible de se connecter au serveur. Veuillez vérifier l'URL."
 
-#: src/auth_playground/endpoints.py:102
+#: src/auth_playground/endpoints.py:99
 msgid "Connection timeout. The server is not responding."
 msgstr "Délai de connexion dépassé. Le serveur ne répond pas."
 
-#: src/auth_playground/endpoints.py:107
+#: src/auth_playground/endpoints.py:103
 msgid ""
 "This server does not support OIDC Discovery or OAuth 2.0 Authorization "
 "Server Metadata"
@@ -86,47 +86,39 @@ msgstr ""
 "Ce serveur ne prend pas en charge OIDC Discovery ou les métadonnées du "
 "serveur d'autorisation OAuth 2.0"
 
-#: src/auth_playground/endpoints.py:113
+#: src/auth_playground/endpoints.py:105
 #, python-brace-format
 msgid "Server returned an error: HTTP {status_code}"
 msgstr "Le serveur a renvoyé une erreur : HTTP {status_code}"
 
-#: src/auth_playground/endpoints.py:119
+#: src/auth_playground/endpoints.py:109
 msgid "Invalid response from server"
 msgstr "Réponse invalide du serveur"
 
-#: src/auth_playground/endpoints.py:121
+#: src/auth_playground/endpoints.py:111
 msgid "Failed to connect to the server. Please check the URL."
 msgstr "Échec de connexion au serveur. Veuillez vérifier l'URL."
 
-#: src/auth_playground/endpoints.py:124
+#: src/auth_playground/endpoints.py:113
 msgid "Cannot load the server metadata."
 msgstr "Impossible de charger les métadonnées du serveur."
 
-#: src/auth_playground/endpoints.py:240
-msgid "Server metadata successfully loaded"
-msgstr "Métadonnées du serveur chargées avec succès"
+#: src/auth_playground/endpoints.py:195
+msgid "A provider is already set. Change it to use another one."
+msgstr "Un fournisseur est déjà configuré. Changez-le pour en utiliser un autre."
 
-#: src/auth_playground/endpoints.py:261 src/auth_playground/endpoints.py:368
-#: src/auth_playground/oauth.py:162 src/auth_playground/oauth.py:359
-#: src/auth_playground/oauth.py:603 src/auth_playground/oauth.py:807
-#: src/auth_playground/oauth.py:883 src/auth_playground/oauth.py:947
+#: src/auth_playground/endpoints.py:243 src/auth_playground/endpoints.py:342
+#: src/auth_playground/oauth.py:164 src/auth_playground/oauth.py:352
+#: src/auth_playground/oauth.py:604 src/auth_playground/oauth.py:802
+#: src/auth_playground/oauth.py:878 src/auth_playground/oauth.py:942
 msgid "Invalid request"
 msgstr "Requête invalide"
 
-#: src/auth_playground/endpoints.py:268
-msgid "You can now configure a different identity provider"
-msgstr "Vous pouvez maintenant configurer un fournisseur d'identité différent"
+#: src/auth_playground/endpoints.py:311 src/auth_playground/oauth.py:153
+msgid "A client is already set. Change it to use another one."
+msgstr "Un client est déjà configuré. Changez-le pour en utiliser un autre."
 
-#: src/auth_playground/endpoints.py:355
-msgid "OAuth configuration completed successfully"
-msgstr "Configuration OAuth terminée avec succès"
-
-#: src/auth_playground/endpoints.py:372
-msgid "You can now configure another client"
-msgstr "Vous pouvez maintenant configurer un autre client"
-
-#: src/auth_playground/endpoints.py:418
+#: src/auth_playground/endpoints.py:391
 msgid "No server configured"
 msgstr "Aucun serveur configuré"
 
@@ -516,7 +508,7 @@ msgstr "Requête de jetons"
 
 #: src/auth_playground/forms.py:948 src/auth_playground/forms.py:973
 #: src/auth_playground/forms.py:1112
-#: src/auth_playground/templates/request.html:4
+#: src/auth_playground/templates/request.html:5
 msgid "Request tokens"
 msgstr "Demander des jetons"
 
@@ -702,15 +694,11 @@ msgstr "Requête de déconnexion"
 msgid "Log out at the provider"
 msgstr "Se déconnecter chez le fournisseur"
 
-#: src/auth_playground/grants.py:33
+#: src/auth_playground/grants.py:39
 msgid "Redirect"
 msgstr "Redirection"
 
-#: src/auth_playground/grants.py:34
-msgid "Direct"
-msgstr "Direct"
-
-#: src/auth_playground/grants.py:40
+#: src/auth_playground/grants.py:41
 msgid ""
 "The user signs in at the provider, which sends them back to the "
 "playground."
@@ -719,6 +707,10 @@ msgstr ""
 "playground."
 
 #: src/auth_playground/grants.py:46
+msgid "Direct"
+msgstr "Direct"
+
+#: src/auth_playground/grants.py:48
 msgid ""
 "The playground calls the token endpoint itself, without a browser "
 "redirection."
@@ -726,23 +718,23 @@ msgstr ""
 "Le playground appelle lui-même l'endpoint de jetons, sans redirection du "
 "navigateur."
 
-#: src/auth_playground/grants.py:92
+#: src/auth_playground/grants.py:94
 msgid "Deprecated"
 msgstr "Déconseillé"
 
-#: src/auth_playground/grants.py:94
+#: src/auth_playground/grants.py:96
 msgid "Not advertised"
 msgstr "Non annoncé"
 
-#: src/auth_playground/grants.py:96
+#: src/auth_playground/grants.py:98
 msgid "Not registered"
 msgstr "Non enregistré"
 
-#: src/auth_playground/grants.py:103
+#: src/auth_playground/grants.py:105
 msgid "Authorization code"
 msgstr "Code d'autorisation"
 
-#: src/auth_playground/grants.py:106
+#: src/auth_playground/grants.py:108
 msgid ""
 "The user signs in at the provider, which redirects back with a code. The "
 "playground then exchanges the code for tokens at the token endpoint. "
@@ -752,11 +744,11 @@ msgstr ""
 "code. Le playground échange ensuite ce code contre des jetons à "
 "l'endpoint de jetons. Se reconnecter met à jour auth_time, acr et amr."
 
-#: src/auth_playground/grants.py:121
+#: src/auth_playground/grants.py:123
 msgid "Client credentials"
 msgstr "Identifiants du client"
 
-#: src/auth_playground/grants.py:124
+#: src/auth_playground/grants.py:126
 msgid ""
 "The client gets tokens for itself, without any user. The playground sends"
 " its credentials to the token endpoint."
@@ -764,11 +756,11 @@ msgstr ""
 "Le client obtient des jetons pour lui-même, sans utilisateur. Le "
 "playground envoie ses identifiants à l'endpoint de jetons."
 
-#: src/auth_playground/grants.py:133
+#: src/auth_playground/grants.py:135
 msgid "Password (ROPC)"
 msgstr "Mot de passe (ROPC)"
 
-#: src/auth_playground/grants.py:136
+#: src/auth_playground/grants.py:138
 msgid ""
 "The client asks the user for their username and password, and sends them "
 "to the token endpoint. The provider never sees the user sign in."
@@ -777,11 +769,11 @@ msgstr ""
 "passe, et les envoie à l'endpoint de jetons. Le fournisseur ne voit "
 "jamais l'utilisateur se connecter."
 
-#: src/auth_playground/grants.py:147
+#: src/auth_playground/grants.py:149
 msgid "JWT bearer"
 msgstr "JWT bearer"
 
-#: src/auth_playground/grants.py:150
+#: src/auth_playground/grants.py:152
 msgid ""
 "The client sends a signed JWT that says who the tokens are for. The "
 "provider checks the signature and the claims, then issues tokens for the "
@@ -791,8 +783,8 @@ msgstr ""
 " Le fournisseur vérifie la signature et les claims, puis émet des jetons "
 "pour le sujet."
 
-#: src/auth_playground/grants.py:164
-#: src/auth_playground/templates/_tokens.html:276
+#: src/auth_playground/grants.py:166
+#: src/auth_playground/templates/_tokens.html:279
 msgid "Refresh token"
 msgstr "Jeton de rafraîchissement"
 
@@ -828,28 +820,28 @@ msgstr ""
 "L'audience n'est ni l'issuer ni l'endpoint de jetons. Le fournisseur "
 "refusera probablement l'assertion."
 
-#: src/auth_playground/oauth.py:167
+#: src/auth_playground/oauth.py:157
 msgid "Dynamic client registration not supported"
 msgstr "L'enregistrement dynamique de client n'est pas pris en charge"
 
-#: src/auth_playground/oauth.py:226
+#: src/auth_playground/oauth.py:223
 msgid "Invalid JSON response from registration endpoint"
 msgstr "Réponse JSON invalide de l'endpoint d'enregistrement"
 
-#: src/auth_playground/oauth.py:232
+#: src/auth_playground/oauth.py:229
 #, python-brace-format
 msgid "Dynamic client registration failed: {error}"
 msgstr "Échec de l'enregistrement dynamique du client : {error}"
 
-#: src/auth_playground/oauth.py:236
+#: src/auth_playground/oauth.py:233
 msgid "Dynamic client registration failed"
 msgstr "Échec de l'enregistrement dynamique du client"
 
-#: src/auth_playground/oauth.py:240
+#: src/auth_playground/oauth.py:237
 msgid "Invalid response from registration endpoint"
 msgstr "Réponse invalide de l'endpoint d'enregistrement"
 
-#: src/auth_playground/oauth.py:247
+#: src/auth_playground/oauth.py:244
 #, python-brace-format
 msgid ""
 "The server registered the client with the {auth_method} authentication "
@@ -860,7 +852,7 @@ msgstr ""
 "{auth_method}, qu'Auth Playground ne prend pas en charge. Le client reste"
 " enregistré sur le serveur."
 
-#: src/auth_playground/oauth.py:259
+#: src/auth_playground/oauth.py:256
 #, python-brace-format
 msgid ""
 "The server registered the client without a client secret, but its "
@@ -871,7 +863,7 @@ msgstr ""
 "d'authentification {auth_method} en nécessite un. Le client reste "
 "enregistré sur le serveur."
 
-#: src/auth_playground/oauth.py:270
+#: src/auth_playground/oauth.py:267
 msgid ""
 "The server registered the client with the private_key_jwt authentication "
 "method, but the playground has no key for it. The client is still "
@@ -881,7 +873,7 @@ msgstr ""
 "private_key_jwt, mais le playground n'a pas de clé pour lui. Le client "
 "reste enregistré sur le serveur."
 
-#: src/auth_playground/oauth.py:285
+#: src/auth_playground/oauth.py:282
 #, python-brace-format
 msgid ""
 "The server registered the client with the {alg} signing algorithm, which "
@@ -891,11 +883,7 @@ msgstr ""
 "que sa clé ne peut pas utiliser. Le client reste enregistré sur le "
 "serveur."
 
-#: src/auth_playground/oauth.py:313
-msgid "Client successfully registered!"
-msgstr "Client enregistré avec succès !"
-
-#: src/auth_playground/oauth.py:344
+#: src/auth_playground/oauth.py:337
 msgid ""
 "The provider did not register userinfo_signed_response_alg. The UserInfo "
 "response will not be signed."
@@ -903,38 +891,34 @@ msgstr ""
 "Le fournisseur n'a pas enregistré userinfo_signed_response_alg. La "
 "réponse UserInfo ne sera pas signée."
 
-#: src/auth_playground/oauth.py:366
+#: src/auth_playground/oauth.py:359
 msgid "Client registration management credentials not found"
 msgstr "Identifiants de gestion de l'enregistrement du client introuvables"
 
-#: src/auth_playground/oauth.py:380
+#: src/auth_playground/oauth.py:373
 #, python-brace-format
 msgid "Client unregistration failed: {error}"
 msgstr "Échec de la désinscription du client : {error}"
 
-#: src/auth_playground/oauth.py:384
+#: src/auth_playground/oauth.py:377
 msgid "Client unregistration failed"
 msgstr "Échec de la désinscription du client"
 
-#: src/auth_playground/oauth.py:388
+#: src/auth_playground/oauth.py:381
 msgid "Client successfully unregistered"
 msgstr "Client désinscrit avec succès"
 
-#: src/auth_playground/oauth.py:561
+#: src/auth_playground/oauth.py:562
 msgid "The provider has no token endpoint."
 msgstr "Le fournisseur n'a pas d'endpoint de jetons."
 
-#: src/auth_playground/oauth.py:574
+#: src/auth_playground/oauth.py:573
 #, python-brace-format
 msgid "The token request failed: {error}"
 msgstr "La requête de jetons a échoué : {error}"
 
-#: src/auth_playground/oauth.py:623
-msgid "The client obtained tokens."
-msgstr "Le client a obtenu des jetons."
-
 #: src/auth_playground/oauth.py:648 src/auth_playground/oauth.py:684
-#: src/auth_playground/oauth.py:787
+#: src/auth_playground/oauth.py:783
 #, python-brace-format
 msgid "The tokens are not kept. {reason}"
 msgstr "Les jetons ne sont pas conservés. {reason}"
@@ -944,65 +928,57 @@ msgstr "Les jetons ne sont pas conservés. {reason}"
 msgid "The assertion could not be signed: {error}"
 msgstr "L'assertion n'a pas pu être signée : {error}"
 
-#: src/auth_playground/oauth.py:697 src/auth_playground/oauth.py:798
-msgid "You have been successfully logged in."
-msgstr "Vous avez été connecté avec succès."
-
-#: src/auth_playground/oauth.py:699
+#: src/auth_playground/oauth.py:700
 #, python-brace-format
 msgid "Tokens obtained for {subject}."
 msgstr "Jetons obtenus pour {subject}."
 
-#: src/auth_playground/oauth.py:701
-msgid "Tokens obtained."
-msgstr "Jetons obtenus."
-
-#: src/auth_playground/oauth.py:718
+#: src/auth_playground/oauth.py:717
 #, python-brace-format
 msgid "The signing keys of the provider could not be fetched: {error}"
 msgstr ""
 "Les clés de signature du fournisseur n'ont pas pu être récupérées : "
 "{error}"
 
-#: src/auth_playground/oauth.py:721 src/auth_playground/oauth.py:756
+#: src/auth_playground/oauth.py:720 src/auth_playground/oauth.py:755
 #, python-brace-format
 msgid "The ID token is not valid: {error}"
 msgstr "Le jeton d'identité n'est pas valide : {error}"
 
-#: src/auth_playground/oauth.py:773
+#: src/auth_playground/oauth.py:767
 #, python-brace-format
 msgid "An error happened during login: {error}"
 msgstr "Une erreur s'est produite lors de la connexion : {error}"
 
-#: src/auth_playground/oauth.py:811
+#: src/auth_playground/oauth.py:806
 msgid "The tokens were forgotten"
 msgstr "Les jetons ont été oubliés"
 
-#: src/auth_playground/oauth.py:813
+#: src/auth_playground/oauth.py:808
 msgid "You have been logged out"
 msgstr "Vous avez été déconnecté"
 
-#: src/auth_playground/oauth.py:858
+#: src/auth_playground/oauth.py:853
 #, python-brace-format
 msgid "The logout response is not valid: {error}."
 msgstr "La réponse de déconnexion n'est pas valide : {error}."
 
-#: src/auth_playground/oauth.py:865
+#: src/auth_playground/oauth.py:860
 #, python-brace-format
 msgid "The logout response is not valid: {error}. You are still logged in here."
 msgstr ""
 "La réponse de déconnexion n'est pas valide : {error}. Vous êtes toujours "
 "connecté ici."
 
-#: src/auth_playground/oauth.py:873
+#: src/auth_playground/oauth.py:868
 msgid "You have been logged out from the server"
 msgstr "Vous avez été déconnecté du serveur"
 
-#: src/auth_playground/oauth.py:888
+#: src/auth_playground/oauth.py:883
 msgid "No refresh token available"
 msgstr "Aucun jeton de rafraîchissement disponible"
 
-#: src/auth_playground/oauth.py:902
+#: src/auth_playground/oauth.py:897
 #, python-brace-format
 msgid ""
 "The refresh response is rejected and the previous tokens are kept. If the"
@@ -1012,40 +988,36 @@ msgstr ""
 "conservés. Si le fournisseur renouvelle les jetons de rafraîchissement à "
 "chaque usage, reconnectez-vous. {reason}"
 
-#: src/auth_playground/oauth.py:912
+#: src/auth_playground/oauth.py:907
 msgid "Token successfully refreshed"
 msgstr "Jeton rafraîchi avec succès"
 
-#: src/auth_playground/oauth.py:951
+#: src/auth_playground/oauth.py:946
 msgid "No access token available"
 msgstr "Aucun jeton d'accès disponible"
 
-#: src/auth_playground/oauth.py:955
+#: src/auth_playground/oauth.py:950
 msgid "These tokens are not tied to a user."
 msgstr "Ces jetons ne sont liés à aucun utilisateur."
 
-#: src/auth_playground/oauth.py:960
+#: src/auth_playground/oauth.py:955
 msgid "The provider has no UserInfo endpoint."
 msgstr "Le fournisseur n'a pas d'endpoint UserInfo."
 
-#: src/auth_playground/oauth.py:971
+#: src/auth_playground/oauth.py:966
 msgid "The response is not JSON."
 msgstr "La réponse n'est pas du JSON."
 
-#: src/auth_playground/oauth.py:975
+#: src/auth_playground/oauth.py:970
 #, python-brace-format
 msgid "The signed response is not valid: {error}"
 msgstr "La réponse signée n'est pas valide : {error}"
 
-#: src/auth_playground/oauth.py:977
+#: src/auth_playground/oauth.py:972
 msgid "The response is not a JSON object."
 msgstr "La réponse n'est pas un objet JSON."
 
-#: src/auth_playground/oauth.py:985
-msgid "User info received"
-msgstr "Informations utilisateur reçues"
-
-#: src/auth_playground/oauth.py:989
+#: src/auth_playground/oauth.py:984
 #, python-brace-format
 msgid "An error happened during the UserInfo request: {error}"
 msgstr "Une erreur s'est produite lors de la requête UserInfo : {error}"
@@ -1187,8 +1159,8 @@ msgstr ""
 #: src/auth_playground/templates/_client_key_preview.html:27
 #: src/auth_playground/templates/_tokens.html:44
 #: src/auth_playground/templates/_tokens.html:220
-#: src/auth_playground/templates/_tokens.html:251
-#: src/auth_playground/templates/_tokens.html:280
+#: src/auth_playground/templates/_tokens.html:254
+#: src/auth_playground/templates/_tokens.html:283
 #: src/auth_playground/templates/configure_client.html:20
 msgid "Copy"
 msgstr "Copier"
@@ -1216,7 +1188,7 @@ msgstr "Avancé"
 msgid "Sign in again"
 msgstr "Se reconnecter"
 
-#: src/auth_playground/templates/_grant_panel.html:10
+#: src/auth_playground/templates/_grant_panel.html:6
 #, python-format
 msgid ""
 "The provider does not advertise the %(grant_type)s grant type. It may "
@@ -1225,7 +1197,7 @@ msgstr ""
 "Le fournisseur n'annonce pas le type de grant %(grant_type)s. Il peut "
 "rejeter la requête."
 
-#: src/auth_playground/templates/_grant_panel.html:16
+#: src/auth_playground/templates/_grant_panel.html:12
 #, python-format
 msgid ""
 "This client is not registered for the %(grant_type)s grant type, only for"
@@ -1235,11 +1207,11 @@ msgstr ""
 "seulement pour %(registered)s. Le fournisseur rejettera probablement la "
 "requête."
 
-#: src/auth_playground/templates/_grant_panel.html:17
+#: src/auth_playground/templates/_grant_panel.html:13
 msgid "See the client"
 msgstr "Voir le client"
 
-#: src/auth_playground/templates/_grant_panel.html:22
+#: src/auth_playground/templates/_grant_panel.html:18
 msgid ""
 "The OAuth 2.0 Security Best Current Practice (RFC 9700) advises against "
 "this grant type, and OAuth 2.1 removes it. Use it only to test a "
@@ -1249,7 +1221,7 @@ msgstr ""
 "type de grant, et OAuth 2.1 le supprime. Utilisez-le seulement pour "
 "tester un fournisseur."
 
-#: src/auth_playground/templates/_grant_panel.html:27
+#: src/auth_playground/templates/_grant_panel.html:23
 msgid ""
 "This grant type is for confidential clients, and this client is public. "
 "The provider will likely reject the request."
@@ -1261,12 +1233,16 @@ msgstr ""
 msgid "User"
 msgstr "Utilisateur"
 
-#: src/auth_playground/templates/_rejected_response.html:5
+#: src/auth_playground/templates/_rejected_response.html:8
 #: src/auth_playground/templates/form_post_relay.html:7
 msgid "Authorization response"
 msgstr "Réponse d'autorisation"
 
-#: src/auth_playground/templates/_rejected_response.html:7
+#: src/auth_playground/templates/_rejected_response.html:10
+msgid "Response of the UserInfo endpoint"
+msgstr "Réponse de l'endpoint UserInfo"
+
+#: src/auth_playground/templates/_rejected_response.html:12
 msgid "Response of the token endpoint"
 msgstr "Réponse de l'endpoint de jetons"
 
@@ -1282,7 +1258,7 @@ msgstr "Signée à l'envoi de la requête"
 msgid "Specifications"
 msgstr "Spécifications"
 
-#: src/auth_playground/templates/_steps.html:3
+#: src/auth_playground/templates/_steps.html:4
 msgid "Setup progress"
 msgstr "Progression de la configuration"
 
@@ -1414,7 +1390,7 @@ msgid "Issued at:"
 msgstr "Émis le :"
 
 #: src/auth_playground/templates/_tokens.html:160
-#: src/auth_playground/templates/_tokens.html:263
+#: src/auth_playground/templates/_tokens.html:266
 msgid "Expires at:"
 msgstr "Expire le :"
 
@@ -1484,46 +1460,46 @@ msgstr ""
 "Le playground envoie le jeton d'accès à l'endpoint UserInfo, qui renvoie "
 "les claims de l'utilisateur."
 
-#: src/auth_playground/templates/_tokens.html:243
+#: src/auth_playground/templates/_tokens.html:246
 msgid "Access token"
 msgstr "Jeton d'accès"
 
-#: src/auth_playground/templates/_tokens.html:245
+#: src/auth_playground/templates/_tokens.html:248
 msgid "Used to access protected resources on behalf of the client."
 msgstr "Utilisé pour accéder aux ressources protégées au nom du client."
 
-#: src/auth_playground/templates/_tokens.html:247
+#: src/auth_playground/templates/_tokens.html:250
 msgid "Used to access protected resources on behalf of the user."
 msgstr "Utilisé pour accéder aux ressources protégées au nom de l'utilisateur."
 
-#: src/auth_playground/templates/_tokens.html:255
+#: src/auth_playground/templates/_tokens.html:258
 msgid "Token type:"
 msgstr "Type de jeton :"
 
-#: src/auth_playground/templates/_tokens.html:259
+#: src/auth_playground/templates/_tokens.html:262
 msgid "Expires in:"
 msgstr "Expire dans :"
 
-#: src/auth_playground/templates/_tokens.html:260
+#: src/auth_playground/templates/_tokens.html:263
 #, python-format
 msgid "%(seconds)s seconds"
 msgstr "%(seconds)s secondes"
 
-#: src/auth_playground/templates/_tokens.html:267
+#: src/auth_playground/templates/_tokens.html:270
 msgid "Scope:"
 msgstr "Portée :"
 
-#: src/auth_playground/templates/_tokens.html:277
+#: src/auth_playground/templates/_tokens.html:280
 msgid "Used to obtain new access tokens without re-authentication."
 msgstr ""
 "Utilisé pour obtenir de nouveaux jetons d'accès sans nouvelle "
 "authentification."
 
-#: src/auth_playground/templates/_tokens.html:288
+#: src/auth_playground/templates/_tokens.html:294
 msgid "auth_time and acr stay the same."
 msgstr "auth_time et acr restent les mêmes."
 
-#: src/auth_playground/templates/_tokens.html:298
+#: src/auth_playground/templates/_tokens.html:304
 msgid "Token response"
 msgstr "Réponse de jetons"
 
@@ -1811,19 +1787,35 @@ msgstr ""
 msgid "OAuth 2.0 Demonstration Client"
 msgstr "Client de démonstration OAuth 2.0"
 
-#: src/auth_playground/templates/layout.html:41
+#: src/auth_playground/templates/layout.html:25
+msgid "Error:"
+msgstr "Erreur :"
+
+#: src/auth_playground/templates/layout.html:25
+msgid "Warning:"
+msgstr "Attention :"
+
+#: src/auth_playground/templates/layout.html:25
+msgid "Success:"
+msgstr "Succès :"
+
+#: src/auth_playground/templates/layout.html:25
+msgid "Information:"
+msgstr "Information :"
+
+#: src/auth_playground/templates/layout.html:44
 #: src/auth_playground/templates/tos.html:3
 #: src/auth_playground/templates/tos.html:8
 msgid "Terms of Service"
 msgstr "Conditions d'utilisation"
 
-#: src/auth_playground/templates/layout.html:43
+#: src/auth_playground/templates/layout.html:46
 #: src/auth_playground/templates/policy.html:3
 #: src/auth_playground/templates/policy.html:8
 msgid "Privacy Policy"
 msgstr "Politique de confidentialité"
 
-#: src/auth_playground/templates/layout.html:45
+#: src/auth_playground/templates/layout.html:48
 msgid "Powered by"
 msgstr "Propulsé par"
 
@@ -2027,11 +2019,11 @@ msgstr ""
 "Veuillez consulter sa politique de confidentialité pour des informations "
 "sur la façon dont il gère vos données."
 
-#: src/auth_playground/templates/request.html:8
+#: src/auth_playground/templates/request.html:9
 msgid "Get tokens"
 msgstr "Obtenir des jetons"
 
-#: src/auth_playground/templates/request.html:9
+#: src/auth_playground/templates/request.html:10
 msgid ""
 "Choose how the client obtains its tokens: for a user who signs in, or for"
 " the client itself."
@@ -2039,11 +2031,11 @@ msgstr ""
 "Choisissez comment le client obtient ses jetons : pour un utilisateur qui"
 " se connecte, ou pour le client lui-même."
 
-#: src/auth_playground/templates/request.html:36
+#: src/auth_playground/templates/request.html:30
 msgid "It gave the current tokens."
 msgstr "Il a donné les jetons actuels."
 
-#: src/auth_playground/templates/request.html:39
+#: src/auth_playground/templates/request.html:33
 #, python-format
 msgid "Use %(label)s"
 msgstr "Utiliser %(label)s"
@@ -2142,15 +2134,15 @@ msgstr "Jetons actuels"
 msgid "Logout"
 msgstr "Déconnexion"
 
-#: src/auth_playground/templates/tokens.html:21
+#: src/auth_playground/templates/tokens.html:19
 msgid "Forget tokens"
 msgstr "Oublier les jetons"
 
-#: src/auth_playground/templates/tokens.html:27
+#: src/auth_playground/templates/tokens.html:25
 msgid "Local logout"
 msgstr "Déconnexion locale"
 
-#: src/auth_playground/templates/tokens.html:28
+#: src/auth_playground/templates/tokens.html:26
 msgid ""
 "The playground forgets the tokens. You stay signed in at the provider, so"
 " the next sign-in may be silent (SSO)."
@@ -2158,7 +2150,7 @@ msgstr ""
 "Le playground oublie les jetons. Vous restez connecté chez le "
 "fournisseur, donc la prochaine connexion peut être silencieuse (SSO)."
 
-#: src/auth_playground/templates/tokens.html:42
+#: src/auth_playground/templates/tokens.html:40
 msgid ""
 "The provider also ends its session, so the next sign-in asks for the "
 "credentials again."

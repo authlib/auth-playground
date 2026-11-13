@@ -227,7 +227,7 @@ def test_tokens_for_an_unknown_subject(secret_client):
     """Test the tokens are kept when the assertion does not say who they are for."""
     res, _fetch = request_tokens(secret_client, source="paste", assertion="opaque")
 
-    assert "Tokens obtained." in res.follow().text
+    assert "<small>Tokens obtained</small>" in res.follow().text
 
 
 def test_the_id_token_signs_the_user_in(secret_client):
@@ -241,7 +241,7 @@ def test_the_id_token_signs_the_user_in(secret_client):
         )
 
     res = res.follow()
-    assert "You have been successfully logged in." in res.text
+    assert "Signed in as" in res.text
     assert "Signed in as jane" in res.text
 
 

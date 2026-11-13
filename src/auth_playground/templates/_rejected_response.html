@@ -1,16 +1,22 @@
+{#- Why a request to the provider failed, and its response if the playground got one. -#}
 {% if rejected_response %}
     <article class="rejected-response">
-        <header>
-            {% if rejected_response.kind == "authorization" %}
-                <strong>{% trans %}Authorization response{% endtrans %}</strong>
-            {% else %}
-                <strong>{% trans %}Response of the token endpoint{% endtrans %}</strong>
-            {% endif %}
-            <code>{{ rejected_response.request }}</code>
-            {% if rejected_response.status %}
-                <span class="status">{{ rejected_response.status }}</span>
-            {% endif %}
-        </header>
-        <pre class="token-response"><code>{{ rejected_response.body }}</code></pre>
+        <header role="alert">{{ rejected_response.message }}</header>
+        {% if rejected_response.request %}
+            <p class="response-line">
+                {% if rejected_response.kind == "authorization" %}
+                    <strong>{% trans %}Authorization response{% endtrans %}</strong>
+                {% elif rejected_response.kind == "userinfo" %}
+                    <strong>{% trans %}Response of the UserInfo endpoint{% endtrans %}</strong>
+                {% else %}
+                    <strong>{% trans %}Response of the token endpoint{% endtrans %}</strong>
+                {% endif %}
+                <code>{{ rejected_response.request }}</code>
+                {% if rejected_response.status %}
+                    <span class="status">{{ rejected_response.status }}</span>
+                {% endif %}
+            </p>
+            <pre class="token-response"><code>{{ rejected_response.body }}</code></pre>
+        {% endif %}
     </article>
 {% endif %}

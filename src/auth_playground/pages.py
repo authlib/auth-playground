@@ -44,7 +44,6 @@ def render_request_page():
         grants=GRANTS,
         tokens_grant=tokens_grant() if session.get("token") else None,
         public_client=is_public_client(),
-        rejected_response=session.pop(REJECTED_RESPONSE, None),
     )
 
 
@@ -57,7 +56,7 @@ def render_grant_page(grant, grant_form=None):
         registered_grant_types=registered_grant_types() or [],
         tokens_grant=tokens_grant(),
         public_client=is_public_client(),
-        rejected_response=session.pop(REJECTED_RESPONSE, None),
+        rejected_response=pop_failure(("token", "authorization"), grant.name),
     )
 
 
@@ -83,8 +82,19 @@ def render_tokens_page(tab):
         tokens_grant=tokens_grant(),
         logout_local_form=LogoutLocalForm(),
         logout_params_form=logout_params_form,
-        rejected_response=session.pop(REJECTED_RESPONSE, None),
+        rejected_response=pop_failure(("refresh", "userinfo")),
     )
+
+
+def pop_failure(kinds, grant=None):
+    """Return the failure kept for the page that shows these kinds, and forget it.
+
+    A failure of another kind, or of another grant type, stays for its own page.
+    """
+    failure = session.get(REJECTED_RESPONSE)
+    if not failure or failure["kind"] not in kinds or failure.get("grant") != grant:
+        return None
+    return session.pop(REJECTED_RESPONSE)
 
 
 def is_public_client():

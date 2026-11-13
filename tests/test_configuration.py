@@ -170,7 +170,7 @@ def test_configure_client_manual_setup_stores_in_session(unconfigured_testapp):
     form["client_secret"] = "test-client-secret"
     res = form.submit("save").maybe_follow()
 
-    assert "OAuth configuration completed successfully" in res.text
+    assert "Choose a grant type" in res.text
 
     with unconfigured_testapp.session_transaction() as sess:
         assert "oauth_config" in sess
@@ -316,7 +316,7 @@ def test_configure_server_stores_metadata(unconfigured_testapp):
     )
 
     mock_fetch.assert_called_once_with("https://auth.example.com")
-    assert "Server metadata successfully loaded" in res.maybe_follow().text
+    assert "Step 1, done:" in res.maybe_follow().text
     with unconfigured_testapp.session_transaction() as sess:
         assert sess["issuer_url"] == "https://auth.example.com"
         assert sess["server_metadata"] == {"issuer": "https://auth.example.com"}
@@ -381,7 +381,6 @@ def test_change_provider_forgets_the_configuration(unconfigured_testapp):
     page = unconfigured_testapp.get("/en/server")
     res = page.forms["change-server-form"].submit("change").maybe_follow()
 
-    assert "You can now configure a different identity provider" in res.text
     assert "Discover a provider" in res.text
     with unconfigured_testapp.session_transaction() as sess:
         assert not {"issuer_url", "server_metadata", "oauth_config", "token"} & set(
@@ -433,8 +432,8 @@ def test_provider_without_issuer(unconfigured_test_client):
     assert "The server metadata has no issuer." in res.text
 
 
-def test_failed_provider_load_keeps_the_page(unconfigured_test_client):
-    """Test the provider page renders when loading a provider fails."""
+def test_failed_provider_load_shows_the_error_in_the_form(unconfigured_test_client):
+    """Test the reason a provider cannot be loaded is shown under its URL."""
     with patch(
         "auth_playground.endpoints.fetch_server_metadata",
         side_effect=requests.exceptions.ConnectionError(),
@@ -442,7 +441,9 @@ def test_failed_provider_load_keeps_the_page(unconfigured_test_client):
         res = unconfigured_test_client.get("/en/server/unreachable.example.com")
 
     assert res.status_code == 200
-    assert "Cannot connect to the server" in res.text
+    assert 'value="https://unreachable.example.com"' in res.text
+    assert '<small id="issuer_url-error">Cannot connect to the server' in res.text
+    assert 'role="alert"' not in res.text
 
 
 def test_change_provider_without_provider(unconfigured_test_client, csrf_token):

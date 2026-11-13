@@ -227,6 +227,9 @@
             {% else %}
                 <p>{% trans %}The playground sends the access token to the UserInfo endpoint, which returns the claims of the user.{% endtrans %}</p>
             {% endif %}
+            {% if rejected_response and rejected_response.kind == "userinfo" %}
+                {% include "_rejected_response.html" %}
+            {% endif %}
             <footer>
                 <div class="actions">
                     {% call render_form(userinfo_form, url_for('oauth.userinfo'), id="userinfo-form") %}
@@ -279,6 +282,9 @@
                     <input type="text" value="{{ session.token.refresh_token }}" readonly aria-label="Refresh Token">
                     <button type="button" class="copy-token-btn secondary">{% trans %}Copy{% endtrans %}</button>
                 </div>
+                {% if rejected_response and rejected_response.kind == "refresh" %}
+                    {% include "_rejected_response.html" %}
+                {% endif %}
                 <footer>
                     <div class="actions">
                         {% call render_form(refresh_form, url_for('oauth.refresh'), id="refresh-form") %}

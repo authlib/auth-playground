@@ -63,7 +63,7 @@ def test_a_posted_response_signs_the_user_in(iam_server, iam_client, user, test_
 
     res = test_client.post("/authorize_callback", data=response, follow_redirects=True)
 
-    assert "You have been successfully logged in." in res.text
+    assert "Signed in as" in res.text
     with test_client.session_transaction() as sess:
         assert sess["user"]["sub"] == user.user_name
 
@@ -90,7 +90,7 @@ def test_a_response_posted_without_cookie_is_relayed(
         follow_redirects=True,
     )
 
-    assert "You have been successfully logged in." in res.text
+    assert "Signed in as" in res.text
 
 
 def test_a_relayed_response_is_not_relayed_again(app):

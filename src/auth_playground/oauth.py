@@ -53,6 +53,7 @@ from auth_playground.forms import RefreshTokenForm
 from auth_playground.forms import UnregisterClientForm
 from auth_playground.forms import UserInfoForm
 from auth_playground.grants import GRANTS_BY_NAME
+from auth_playground.grants import GRANTS_BY_VALUE
 from auth_playground.grants import JWT_BEARER
 from auth_playground.grants import tokens_grant
 from auth_playground.jwt_bearer import assertion_subject
@@ -149,27 +150,19 @@ def client_dynamic_registration():
     """Automatically register OAuth client using dynamic client registration."""
     # A form left open in another tab must not replace the client.
     if auth_playground.is_client_configured():
+        flash(_("A client is already set. Change it to use another one."), "info")
         return redirect(url_for("routes.configure_client"))
-
-    form = DynamicRegistrationForm()
-
-    if not form.validate_on_submit():
-        errors = (
-            []
-            if "csrf_token" in form.errors
-            else [
-                *form.grant_types.errors,
-                *form.private_key.errors,
-                *form.signing_alg.errors,
-            ]
-        )
-        for error in errors or [_("Invalid request")]:
-            flash(error, "error")
-        return redirect(url_for("routes.dynamic_client"))
 
     if not g.server_config.dynamic_registration:
         flash(_("Dynamic client registration not supported"), "error")
         return redirect(url_for("routes.manual_client"))
+
+    form = DynamicRegistrationForm()
+
+    if not form.validate_on_submit():
+        if "csrf_token" in form.errors:
+            flash(_("Invalid request"), "error")
+        return render_template("client_dynamic.html", dynamic_registration_form=form)
 
     registration_endpoint = g.server_config.metadata["registration_endpoint"]
 
@@ -313,10 +306,6 @@ def client_dynamic_registration():
     if "registration_client_uri" in client_data:
         g.server_config.registration_client_uri = client_data["registration_client_uri"]
 
-    flash(
-        _("Client successfully registered!"),
-        "success",
-    )
     return redirect(url_for("routes.request_tokens"))
 
 
@@ -513,26 +502,31 @@ def response_hooks(responses):
     return {"response": keep_response}
 
 
-def keep_rejected_response(responses):
-    """Keep the last response of the provider, to show it on the next page.
+def keep_failure(kind, message, responses=(), grant=None):
+    """Keep why a request to the provider failed, and its response, for the next page."""
+    failure = {"kind": kind, "message": message}
+    if grant:
+        failure["grant"] = grant
+    if responses:
+        failure.update(response_details(responses[-1]))
+    session[REJECTED_RESPONSE] = failure
+
+
+def response_details(response):
+    """Return the request, status and body of a response, to show them.
 
     A successful response with a JSON object holds tokens. The request then
-    failed after it, for instance on the ID token, and the response is not kept.
+    failed after it, for instance on the ID token, and the response is not shown.
     """
-    if not responses:
-        return
-
-    response = responses[-1]
     try:
         data = response.json()
     except ValueError:
         body = response.text
     else:
         if response.ok and isinstance(data, dict):
-            return
+            return {}
         body = json.dumps(data, indent=2, ensure_ascii=False)
-    session[REJECTED_RESPONSE] = {
-        "kind": "token",
+    return {
         "request": f"{response.request.method} {response.request.url}",
         "status": " ".join(
             str(part) for part in (response.status_code, response.reason) if part
@@ -541,7 +535,7 @@ def keep_rejected_response(responses):
     }
 
 
-def keep_authorization_error():
+def keep_authorization_error(message):
     """Keep the error the provider sent back to the callback, to show it."""
     error = {
         name: request.values[name]
@@ -550,6 +544,8 @@ def keep_authorization_error():
     }
     session[REJECTED_RESPONSE] = {
         "kind": "authorization",
+        "grant": "authorization_code",
+        "message": message,
         "request": f"{request.method} {request.base_url}",
         "status": "",
         "body": json.dumps(error, indent=2, ensure_ascii=False),
@@ -557,9 +553,10 @@ def keep_authorization_error():
 
 
 def fetch_tokens(grant_type, form=None, **params):
-    """Request tokens at the token endpoint, or flash why it failed.
+    """Request tokens at the token endpoint.
 
-    The response of a failed request is kept, to show it on the next page.
+    When the request fails, the reason and the response are kept to show them
+    on the next page.
     """
     if not server_metadata().get("token_endpoint"):
         flash(_("The provider has no token endpoint."), "error")
@@ -573,13 +570,13 @@ def fetch_tokens(grant_type, form=None, **params):
             grant_type=grant_type, hooks=response_hooks(responses), **params
         )
     except (AuthlibBaseError, requests.RequestException, ValueError) as exc:
-        keep_rejected_response(responses)
-        flash(
-            _("The token request failed: {error}").format(
-                error=token_request_error(exc)
-            ),
-            "error",
+        message = _("The token request failed: {error}").format(
+            error=token_request_error(exc)
         )
+        if grant_type == "refresh_token":
+            keep_failure("refresh", message, responses)
+        else:
+            keep_failure("token", message, responses, GRANTS_BY_VALUE[grant_type].name)
         return None
 
 
@@ -624,7 +621,6 @@ def client_credentials():
 
     forget_tokens()
     store_token(token, "client_credentials", requested_scope=scope or None)
-    flash(_("The client obtained tokens."), "success")
     return redirect(url_for("routes.tokens"))
 
 
@@ -695,14 +691,13 @@ def jwt_bearer():
 
 
 def sign_in_user(claims, subject):
-    """Sign in the user of the ID token, or else say who the tokens are for."""
+    """Sign in the user of the ID token, or else say who the tokens are for.
+
+    Without an ID token, the page does not show who the tokens are for.
+    """
     session["user"] = claims
-    if claims:
-        flash(_("You have been successfully logged in."), "success")
-    elif subject:
-        flash(_("Tokens obtained for {subject}.").format(subject=subject), "success")
-    else:
-        flash(_("Tokens obtained."), "success")
+    if not claims and subject:
+        flash(_("Tokens obtained for {subject}.").format(subject=subject), "info")
 
 
 def read_id_token(token):
@@ -769,16 +764,13 @@ def authorize_callback():
         ValueError,
         KeyError,
     ) as exc:
-        if "error" in request.values:
-            keep_authorization_error()
-        else:
-            keep_rejected_response(responses)
-        flash(
-            _("An error happened during login: {error}").format(
-                error=token_request_error(exc)
-            ),
-            "error",
+        message = _("An error happened during login: {error}").format(
+            error=token_request_error(exc)
         )
+        if "error" in request.values:
+            keep_authorization_error(message)
+        else:
+            keep_failure("token", message, responses, "authorization_code")
         return redirect(url_for("routes.grant_page", grant="authorization_code"))
 
     # Authlib only checks the ID token when the request had a nonce, that is
@@ -799,7 +791,6 @@ def authorize_callback():
         requested_scope=pending.get("scope"),
         pkce=pending.get("pkce"),
     )
-    flash(_("You have been successfully logged in."), "success")
     return redirect(url_for("routes.tokens"))
 
 
@@ -986,11 +977,11 @@ def userinfo():
             "claims": dict(claims),
             **signed_response(responses[-1]),
         }
-        flash(_("User info received"), "success")
         return redirect(url_for("routes.tokens"))
 
-    flash(
+    keep_failure(
+        "userinfo",
         _("An error happened during the UserInfo request: {error}").format(error=error),
-        "error",
+        responses,
     )
     return redirect(url_for("routes.tokens"))

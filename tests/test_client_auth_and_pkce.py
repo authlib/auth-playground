@@ -286,7 +286,7 @@ def test_new_client_forgets_the_previous_tokens(unconfigured_testapp):
     res = unconfigured_testapp.get("/en/client")
     assert "client-form" not in res.forms
     res = res.forms["change-client-form"].submit("change").follow()
-    assert "You can now configure another client" in res.text
+    assert "Choose a configuration method" in res.text
     with unconfigured_testapp.session_transaction() as sess:
         assert "oauth_config" not in sess
         assert not {"user", "token", "token_info"} & set(sess)

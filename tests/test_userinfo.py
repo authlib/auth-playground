@@ -34,7 +34,7 @@ def test_userinfo_shows_the_response(iam_server, iam_client, user, testapp):
 
     res = get_userinfo(testapp)
 
-    assert "User info received" in res.text
+    assert "Received at:" in res.text
     assert "UserInfo response" in res.text
     assert f"{iam_server.url}oauth/userinfo" in res.text
     with testapp.session_transaction() as sess:
@@ -66,7 +66,7 @@ def test_userinfo_without_id_token(iam_server, iam_client, user, testapp):
 
     res = get_userinfo(testapp)
 
-    assert "User info received" in res.text
+    assert "Received at:" in res.text
 
 
 def test_userinfo_sends_an_expired_token_as_it_is(
@@ -83,7 +83,7 @@ def test_userinfo_sends_an_expired_token_as_it_is(
 
     res = get_userinfo(testapp)
 
-    assert "User info received" in res.text
+    assert "Received at:" in res.text
     with testapp.session_transaction() as sess:
         assert sess["token"] == token
 

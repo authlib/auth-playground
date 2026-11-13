@@ -133,7 +133,7 @@ def test_the_signed_response_is_shown(iam_server, iam_client, user, testapp):
 
     res = get_userinfo(testapp)
 
-    assert "User info received" in res.text
+    assert "Received at:" in res.text
     assert (
         "Signed with RS256. Authlib checked the signature, iss, aud and sub."
         in res.text

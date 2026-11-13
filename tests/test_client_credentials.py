@@ -26,7 +26,7 @@ def test_client_credentials_obtains_tokens(iam_server, iam_client, testapp):
     """Test the client obtains tokens for itself from the provider."""
     res = request_tokens(testapp).follow()
 
-    assert "The client obtained tokens." in res.text
+    assert "<small>Client tokens</small>" in res.text
     assert "<code>client_credentials</code>" in res.text
     assert "there are no user claims to show" in res.text
     with testapp.session_transaction() as sess:

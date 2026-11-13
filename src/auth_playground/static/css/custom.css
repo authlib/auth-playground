@@ -243,32 +243,32 @@ article > footer .actions small {
 }
 
 /* Flash messages styling */
-article[role="alert"],
+article:is([role="alert"], [role="status"]),
 article.notice {
     border-left: 4px solid;
     padding: var(--pico-spacing);
     margin-bottom: var(--pico-spacing);
 }
 
-article[role="alert"][data-type="success"] {
+article:is([role="alert"], [role="status"])[data-type="success"] {
     border-color: light-dark(#22c55e, #4ade80);
     background-color: light-dark(#f0fdf4, #14532d);
     color: light-dark(#14532d, #bbf7d0);
 }
 
-article[role="alert"][data-type="error"] {
+article:is([role="alert"], [role="status"])[data-type="error"] {
     border-color: light-dark(#ef4444, #f87171);
     background-color: light-dark(#fef2f2, #7f1d1d);
     color: light-dark(#7f1d1d, #fecaca);
 }
 
-article[role="alert"][data-type="info"] {
+article:is([role="alert"], [role="status"])[data-type="info"] {
     border-color: light-dark(#3b82f6, #60a5fa);
     background-color: light-dark(#eff6ff, #1e3a8a);
     color: light-dark(#1e3a8a, #bfdbfe);
 }
 
-article[role="alert"][data-type="warning"],
+article:is([role="alert"], [role="status"])[data-type="warning"],
 article.notice[data-type="warning"] {
     border-color: light-dark(#f59e0b, #fbbf24);
     background-color: light-dark(#fffbeb, #78350f);
@@ -398,8 +398,12 @@ small[id$="-error"] + small {
     color: var(--pico-muted-color);
 }
 
-/* The response of the provider when it gave no tokens. */
+/* Why a request to the provider failed, and its response. */
 .rejected-response > header {
+    color: var(--pico-del-color);
+}
+
+.rejected-response .response-line {
     display: flex;
     flex-wrap: wrap;
     gap: 0.25rem 0.75rem;

@@ -10,8 +10,6 @@
         <p>{% trans %}Choose how the client obtains its tokens: for a user who signs in, or for the client itself.{% endtrans %}</p>
     </hgroup>
 
-    {% include "_rejected_response.html" %}
-
     {% for key, label, intro in grant_groups %}
         <section>
             <hgroup>

@@ -53,8 +53,8 @@ def test_the_setup_pages_send_back_to_the_client(unconfigured_test_client, path)
     assert res.location.endswith("/en/client")
 
 
-def test_a_failed_registration_comes_back_to_its_page(unconfigured_testapp):
-    """Test a refused registration shows the dynamic registration form again."""
+def test_a_refused_registration_form_shows_its_errors(unconfigured_testapp):
+    """Test the errors of the registration form are shown in the form."""
     server_session(unconfigured_testapp)
     form = unconfigured_testapp.get("/en/client/dynamic").forms[
         "dynamic-registration-form"
@@ -64,7 +64,10 @@ def test_a_failed_registration_comes_back_to_its_page(unconfigured_testapp):
 
     res = form.submit("register")
 
-    assert res.location.endswith("/en/client/dynamic")
+    assert '<small id="grant_types-error">Choose at least one grant type.</small>' in (
+        res.text
+    )
+    assert "dynamic-registration-form" in res.forms
 
 
 def test_the_server_page_offers_both_methods_in_debug(unconfigured_app):
@@ -136,6 +139,7 @@ def test_a_stale_manual_form_keeps_the_configured_client(unconfigured_test_clien
     assert res.location.endswith("/en/client")
     with unconfigured_test_client.session_transaction() as sess:
         assert sess["oauth_config"]["client_id"] == "c"
+    assert "A client is already set." in unconfigured_test_client.get(res.location).text
 
 
 def test_a_post_to_a_fixed_path_is_not_a_provider_url(unconfigured_test_client):
@@ -159,6 +163,7 @@ def test_a_stale_registration_form_keeps_the_configured_client(
 
     mock_post.assert_not_called()
     assert res.location.endswith("/en/client")
+    assert "A client is already set." in unconfigured_test_client.get(res.location).text
 
 
 def test_a_stale_discovery_form_keeps_the_provider(unconfigured_test_client):
@@ -170,6 +175,9 @@ def test_a_stale_discovery_form_keeps_the_provider(unconfigured_test_client):
     )
 
     assert res.location.endswith("/en/server")
+    assert "A provider is already set." in (
+        unconfigured_test_client.get(res.location).text
+    )
     with unconfigured_test_client.session_transaction() as sess:
         assert sess["issuer_url"] == "https://test.example.com"
 

@@ -21,10 +21,13 @@
         </header>
 
         <main class="container">
+            {#- A title, so the kind of message does not rely on its colour only. -#}
+            {% set flash_titles = {"error": _("Error:"), "warning": _("Warning:"), "success": _("Success:"), "info": _("Information:")} %}
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     {% for category, message in messages %}
-                        <article role="alert" data-type="{{ category }}">
+                        <article role="{{ 'alert' if category in ('error', 'warning') else 'status' }}" data-type="{{ category }}">
+                            <strong>{{ flash_titles[category] }}</strong>
                             {{ message }}
                         </article>
                     {% endfor %}

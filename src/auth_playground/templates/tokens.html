@@ -12,8 +12,6 @@
         </nav>
     {% endif %}
 
-    {% include "_rejected_response.html" %}
-
     {% if tab == 'current' %}
         {% include "_tokens.html" %}
         {% if not tokens_grant.provider_session %}

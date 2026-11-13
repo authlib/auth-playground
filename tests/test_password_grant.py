@@ -59,7 +59,7 @@ def test_password_grant_reads_the_id_token(testapp):
         res = request_tokens(testapp, username="jane", password=PASSWORD).follow()
 
     assert parse.call_args.kwargs == {"nonce": None}
-    assert "You have been successfully logged in." in res.text
+    assert "Signed in as" in res.text
     assert "Signed in as jane" in res.text
 
 
