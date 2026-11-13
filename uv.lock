@@ -42,7 +42,7 @@ wheels = [
 
 [[package]]
 name = "auth-playground"
-version = "0.1.7"
+version = "0.2.0b1"
 source = { editable = "." }
 dependencies = [
     { name = "authlib" },
