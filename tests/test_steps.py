@@ -26,7 +26,7 @@ def configure(client, oauth_config=None, token=None, user=None):
 
 def test_steps_without_server(unconfigured_test_client):
     """Test only the provider step is reachable without a server."""
-    res = unconfigured_test_client.get("/en/server")
+    res = unconfigured_test_client.get("/en/server", follow_redirects=True)
 
     assert "Choose a provider" in res.text
     assert '<a href="/en/server" aria-current="step">' in res.text

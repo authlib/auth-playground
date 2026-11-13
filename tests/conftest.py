@@ -64,6 +64,7 @@ def proxy_fix():
 def unconfigured_app(monkeypatch, proxy_fix):
     """Create an unconfigured Flask application for testing config errors."""
     monkeypatch.setenv("PROXY_FIX", str(proxy_fix).lower())
+    monkeypatch.delenv("FLASK_DEBUG", raising=False)
     app = create_app()
     app.config["TESTING"] = True
     app.config["SERVER_NAME"] = "client.test"
