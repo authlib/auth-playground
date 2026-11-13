@@ -12,6 +12,7 @@ from auth_playground.authorization import parse_extra_params
 from auth_playground.forms import DynamicRegistrationForm
 from auth_playground.forms import disable_for_public_client
 from tests.fake_provider import METADATA
+from tests.fake_provider import http_response
 from tests.fake_provider import server_session
 
 pytestmark = pytest.mark.usefixtures("provider_metadata")
@@ -405,11 +406,15 @@ def test_dynamic_registration_with_unsupported_method(unconfigured_testapp):
         "dynamic-registration-form"
     ]
     with patch("requests.post") as mock_post:
-        mock_post.return_value.json.return_value = {
-            "client_id": "client",
-            "client_secret": "secret",
-            "token_endpoint_auth_method": "tls_client_auth",
-        }
+        mock_post.return_value = http_response(
+            201,
+            json={
+                "client_id": "client",
+                "client_secret": "secret",
+                "token_endpoint_auth_method": "tls_client_auth",
+            },
+            url="https://test.example.com/oauth/register",
+        )
         res = form.submit("register").maybe_follow()
 
     assert "tls_client_auth" in res.text

@@ -10,6 +10,7 @@ from joserfc.errors import InvalidClaimError
 from auth_playground.oauth import get_response_error
 from auth_playground.oauth import get_software_id
 from auth_playground.oauth import get_software_version
+from tests.fake_provider import http_response
 
 
 def test_get_software_id_with_repository_url():
@@ -252,6 +253,9 @@ def unregistration_session(client):
         sess["registration_client_uri"] = "https://test.example.com/oauth/register/123"
 
 
+REGISTRATION = "https://test.example.com/oauth/register"
+
+
 def registration_session(client, **metadata):
     """Store a provider supporting dynamic registration in the session."""
     with client.session_transaction() as sess:
@@ -295,12 +299,34 @@ def test_dynamic_registration_shows_provider_error(unconfigured_testapp):
 
     res = unconfigured_testapp.get("/en/client/dynamic")
     with patch("requests.post") as mock_post:
-        mock_post.return_value.raise_for_status.side_effect = response_error(
-            json={"error_description": "Invalid redirect URI"}
+        mock_post.return_value = http_response(
+            400, json={"error_description": "Invalid redirect URI"}, url=REGISTRATION
         )
         res = res.forms["dynamic-registration-form"].submit("register").maybe_follow()
 
     assert "Dynamic client registration failed: Invalid redirect URI" in res.text
+    assert "Response of the registration endpoint" in res.text
+    assert "400 Bad Request" in res.text
+
+
+def test_dynamic_registration_shows_a_refused_access_token(unconfigured_testapp):
+    """Test the reason a provider gives in WWW-Authenticate is shown (RFC 6750 §3)."""
+    registration_session(unconfigured_testapp)
+
+    res = unconfigured_testapp.get("/en/client/dynamic")
+    with patch("requests.post") as mock_post:
+        mock_post.return_value = http_response(
+            401,
+            headers={"WWW-Authenticate": 'Bearer error="invalid_token"'},
+            url=REGISTRATION,
+        )
+        res = res.forms["dynamic-registration-form"].submit("register").maybe_follow()
+
+    assert (
+        "Dynamic client registration failed: Bearer error=&#34;invalid_token&#34;"
+        in res.text
+    )
+    assert "401 Unauthorized" in res.text
 
 
 def test_dynamic_registration_invalid_json(unconfigured_testapp):
@@ -309,12 +335,13 @@ def test_dynamic_registration_invalid_json(unconfigured_testapp):
 
     res = unconfigured_testapp.get("/en/client/dynamic")
     with patch("requests.post") as mock_post:
-        mock_post.return_value.json.side_effect = requests.JSONDecodeError(
-            "Expecting value", "", 0
+        mock_post.return_value = http_response(
+            201, text="<h1>Created</h1>", url=REGISTRATION
         )
         res = res.forms["dynamic-registration-form"].submit("register").maybe_follow()
 
     assert "Invalid JSON response from registration endpoint" in res.text
+    assert "&lt;h1&gt;Created&lt;/h1&gt;" in res.text
 
 
 @pytest.mark.parametrize("client_data", [[], {"client_secret": "secret"}])
@@ -324,10 +351,11 @@ def test_dynamic_registration_invalid_client_data(unconfigured_testapp, client_d
 
     res = unconfigured_testapp.get("/en/client/dynamic")
     with patch("requests.post") as mock_post:
-        mock_post.return_value.json.return_value = client_data
+        mock_post.return_value = http_response(201, json=client_data, url=REGISTRATION)
         res = res.forms["dynamic-registration-form"].submit("register").maybe_follow()
 
     assert "Invalid response from registration endpoint" in res.text
+    assert "Response of the registration endpoint" in res.text
 
 
 def test_dynamic_registration_without_client_secret(unconfigured_testapp):
@@ -336,7 +364,11 @@ def test_dynamic_registration_without_client_secret(unconfigured_testapp):
 
     res = unconfigured_testapp.get("/en/client/dynamic")
     with patch("requests.post") as mock_post:
-        mock_post.return_value.json.return_value = {"client_id": "public-client"}
+        mock_post.return_value = http_response(
+            201,
+            json={"client_id": "public-client"},
+            url="https://test.example.com/oauth/register",
+        )
         res = res.forms["dynamic-registration-form"].submit("register").maybe_follow()
 
     assert "without a client secret" in res.text

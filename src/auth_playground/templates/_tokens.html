@@ -291,7 +291,7 @@
                             {{ refresh_form.refresh() }}
                         {% endcall %}
                         {% if tokens_grant.provider_session %}
-                            <small>{% trans %}auth_time and acr stay the same.{% endtrans %}</small>
+                            <small>{% trans %}The sign-in claims (auth_time, acr, amr) stay the same.{% endtrans %}</small>
                         {% endif %}
                     </div>
                 </footer>

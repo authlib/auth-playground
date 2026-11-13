@@ -16,6 +16,11 @@ DEFAULT_GRANT_TYPES = ["authorization_code", "implicit"]
 JWT_BEARER = JWTBearerGrant.GRANT_TYPE
 
 
+def grant_types_listed():
+    """Tell whether the server metadata list the grant types it supports."""
+    return "grant_types_supported" in server_metadata()
+
+
 def advertised_grant_types():
     """Return the grant types the server advertises."""
     return server_metadata().get("grant_types_supported", DEFAULT_GRANT_TYPES)
@@ -92,8 +97,10 @@ class Grant:
         marks = []
         if self.deprecated:
             marks.append(_("Deprecated"))
-        if not self.advertised:
+        if not self.advertised and grant_types_listed():
             marks.append(_("Not advertised"))
+        elif not self.advertised:
+            marks.append(_("Not in the default grant types"))
         if not self.registered:
             marks.append(_("Not registered"))
         return marks
@@ -107,7 +114,8 @@ GRANTS = (
         _(
             "The user signs in at the provider, which redirects back with a code. "
             "The playground then exchanges the code for tokens at the token "
-            "endpoint. Signing in again updates auth_time, acr and amr."
+            "endpoint. Signing in again updates auth_time, and acr and amr when "
+            "the provider issues them."
         ),
         (
             ("RFC 6749 §4.1", "https://www.rfc-editor.org/rfc/rfc6749#section-4.1"),
@@ -136,7 +144,8 @@ GRANTS = (
         DIRECT,
         _(
             "The client asks the user for their username and password, and sends "
-            "them to the token endpoint. The provider never sees the user sign in."
+            "them to the token endpoint. The user does not sign in at the provider: "
+            "no session, no second factor, no consent page."
         ),
         (
             ("RFC 6749 §4.3", "https://www.rfc-editor.org/rfc/rfc6749#section-4.3"),

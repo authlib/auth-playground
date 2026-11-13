@@ -106,7 +106,7 @@ def test_a_grant_type_not_registered_is_marked(unconfigured_testapp):
     register(unconfigured_testapp, grant_types=["authorization_code", "refresh_token"])
 
     res = unconfigured_testapp.get("/en/request")
-    assert "Deprecated · Not advertised · Not registered" in res.text
+    assert "Deprecated · Not in the default grant types · Not registered" in res.text
 
     res = unconfigured_testapp.get("/en/request/password")
     assert (

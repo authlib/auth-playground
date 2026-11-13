@@ -3,7 +3,11 @@
 
 {% if not grant.advertised %}
     <article class="notice" data-type="warning">
-        {% trans grant_type=grant.label %}The provider does not advertise the {{ grant_type }} grant type. It may reject the request.{% endtrans %}
+        {% if grant_types_listed %}
+            {% trans grant_type=grant.label %}The provider does not advertise the {{ grant_type }} grant type. It may reject the request.{% endtrans %}
+        {% else %}
+            {% trans grant_type=grant.label, defaults=default_grant_types|join(", ") %}The metadata of the provider list no grant types, so only the default ones count as advertised: {{ defaults }} (RFC 8414 §2). The provider may still support the {{ grant_type }} grant type.{% endtrans %}
+        {% endif %}
     </article>
 {% endif %}
 {% if not grant.registered %}
@@ -15,7 +19,7 @@
 {% endif %}
 {% if grant.deprecated %}
     <article class="notice" data-type="warning">
-        {% trans %}The OAuth 2.0 Security Best Current Practice (RFC 9700) advises against this grant type, and OAuth 2.1 removes it. Use it only to test a provider.{% endtrans %}
+        {% trans %}The OAuth 2.0 Security Best Current Practice (RFC 9700) advises against this grant type, and the OAuth 2.1 draft removes it. Use it only to test a provider.{% endtrans %}
     </article>
 {% endif %}
 {% if grant.confidential_client and public_client %}

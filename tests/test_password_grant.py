@@ -168,7 +168,7 @@ def test_password_grant_is_marked_deprecated(unconfigured_test_client):
     """Test the selector and the panel say the grant type is deprecated."""
     server_session(unconfigured_test_client, {"client_id": "c", "client_secret": "s"})
     res = unconfigured_test_client.get("/en/request")
-    assert "Deprecated · Not advertised" in res.text
+    assert "Deprecated · Not in the default grant types" in res.text
 
     res = unconfigured_test_client.get("/en/request/password")
     assert "advises against this grant type" in res.text

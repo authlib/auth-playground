@@ -16,6 +16,7 @@ from auth_playground.client_key import InvalidKeyError
 from auth_playground.endpoints import load_server_metadata
 from auth_playground.session import ServerConfig
 from tests.fake_provider import METADATA
+from tests.fake_provider import http_response
 from tests.fake_provider import server_session
 
 HTMX_HEADERS = {"HX-Request": "true"}
@@ -504,11 +505,15 @@ def test_dynamic_registration_without_the_key(unconfigured_testapp):
         "dynamic-registration-form"
     ]
     with patch("requests.post") as mock_post:
-        mock_post.return_value.json.return_value = {
-            "client_id": "client",
-            "client_secret": "secret",
-            "token_endpoint_auth_method": "private_key_jwt",
-        }
+        mock_post.return_value = http_response(
+            201,
+            json={
+                "client_id": "client",
+                "client_secret": "secret",
+                "token_endpoint_auth_method": "private_key_jwt",
+            },
+            url="https://test.example.com/oauth/register",
+        )
         res = form.submit("register").maybe_follow()
 
     assert "the playground has no key for it" in res.text
@@ -766,11 +771,15 @@ def test_dynamic_registration_refuses_an_algorithm_the_key_cannot_use(
     ]
     form["auth_method"] = "private_key_jwt"
     with patch("requests.post") as mock_post:
-        mock_post.return_value.json.return_value = {
-            "client_id": "keyed-client",
-            "token_endpoint_auth_method": "private_key_jwt",
-            "token_endpoint_auth_signing_alg": "ES256",
-        }
+        mock_post.return_value = http_response(
+            201,
+            json={
+                "client_id": "keyed-client",
+                "token_endpoint_auth_method": "private_key_jwt",
+                "token_endpoint_auth_signing_alg": "ES256",
+            },
+            url="https://test.example.com/oauth/register",
+        )
         res = form.submit("register").maybe_follow()
 
     assert "the ES256 signing algorithm, which its key cannot use" in res.text

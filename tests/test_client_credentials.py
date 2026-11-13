@@ -237,11 +237,19 @@ def test_grants_not_advertised_are_marked(unconfigured_test_client):
     """Test the grants missing from grant_types_supported are labelled and warned."""
     server_session(unconfigured_test_client, {"client_id": "c", "client_secret": "s"})
     res = unconfigured_test_client.get("/en/request")
-    assert '<small class="marks">Not advertised</small>' in res.text
+    assert '<small class="marks">Not in the default grant types</small>' in res.text
 
     res = unconfigured_test_client.get("/en/request/client_credentials")
-    assert "does not advertise the Client credentials grant type" in res.text
+    assert "list no grant types" in res.text
     assert "for confidential clients" not in res.text
+
+    with unconfigured_test_client.session_transaction() as sess:
+        sess["server_metadata"] = {
+            **sess["server_metadata"],
+            "grant_types_supported": ["authorization_code"],
+        }
+    res = unconfigured_test_client.get("/en/request/client_credentials")
+    assert "does not advertise the Client credentials grant type" in res.text
 
 
 @pytest.mark.usefixtures("provider_metadata")

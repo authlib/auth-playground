@@ -1,32 +1,37 @@
-from unittest.mock import Mock
-
 import pytest
 from flask import session
 
+from auth_playground.oauth import http_message
 from auth_playground.oauth import keep_failure
 from auth_playground.pages import GRANT_FORM_DATA
 from auth_playground.pages import REJECTED_RESPONSE
+from tests.fake_provider import http_response
 from tests.fake_provider import server_session
 
 
-def test_a_response_that_is_not_json_is_shown_as_text(unconfigured_app):
-    """Test a body the playground cannot read as JSON is shown as it is."""
-    response = Mock(
-        ok=False, status_code=502, reason="Bad Gateway", text="<h1>Bad Gateway</h1>"
+def test_the_exchange_is_kept_as_http_shows_it(unconfigured_app):
+    """Test the request sent and the response are kept with their headers."""
+    response = http_response(
+        502,
+        text="<h1>Bad Gateway</h1>",
+        headers={"Server": "nginx"},
+        data={"grant_type": "password", "password": "secret"},
     )
-    response.json.side_effect = ValueError("Not JSON")
-    response.request.method = "POST"
-    response.request.url = "https://test.example.com/oauth/token"
 
     with unconfigured_app.test_request_context():
-        keep_failure("token", "Failed", [response])
+        keep_failure("token", "Failed", [response], "password")
 
         assert session[REJECTED_RESPONSE] == {
             "kind": "token",
+            "grant": "password",
             "message": "Failed",
-            "request": "POST https://test.example.com/oauth/token",
+            "sent": "POST https://test.example.com/oauth/token\n"
+            "Content-Length: 35\n"
+            "Content-Type: application/x-www-form-urlencoded\n"
+            "\n"
+            "grant_type=password&password=secret",
             "status": "502 Bad Gateway",
-            "body": "<h1>Bad Gateway</h1>",
+            "received": "Server: nginx\n\n<h1>Bad Gateway</h1>",
         }
 
 
@@ -46,8 +51,7 @@ def test_an_authorization_error_is_shown(unconfigured_test_client):
 
 def test_a_response_with_tokens_is_not_kept(unconfigured_app):
     """Test a token response is not shown when the request fails after it."""
-    response = Mock(ok=True, status_code=200)
-    response.json.return_value = {"access_token": "secret", "token_type": "Bearer"}
+    response = http_response(json={"access_token": "secret", "token_type": "Bearer"})
 
     with unconfigured_app.test_request_context():
         keep_failure("token", "Failed", [response])
@@ -57,15 +61,12 @@ def test_a_response_with_tokens_is_not_kept(unconfigured_app):
 
 def test_the_response_keeps_its_accents(unconfigured_app):
     """Test the error of the provider is shown with its own characters."""
-    response = Mock(ok=False, status_code=400, reason="Bad Request")
-    response.json.return_value = {"error_description": "Mot de passe érroné"}
-    response.request.method = "POST"
-    response.request.url = "https://test.example.com/oauth/token"
+    response = http_response(400, json={"error_description": "Mot de passe érroné"})
 
     with unconfigured_app.test_request_context():
         keep_failure("token", "Failed", [response])
 
-        assert "érroné" in session[REJECTED_RESPONSE]["body"]
+        assert "érroné" in session[REJECTED_RESPONSE]["received"]
 
 
 def test_changing_the_client_forgets_the_rejected_response(unconfigured_testapp):
@@ -96,9 +97,9 @@ def failure_page(client, kind):
         sess[REJECTED_RESPONSE] = {
             "kind": kind,
             "message": "The request failed: invalid_token",
-            "request": "POST https://test.example.com/endpoint",
+            "sent": "POST https://test.example.com/endpoint",
             "status": "401 Unauthorized",
-            "body": '{"error": "invalid_token"}',
+            "received": '{"error": "invalid_token"}',
         }
     return client.get("/en/tokens").text
 
@@ -188,3 +189,10 @@ def test_messages_have_a_role_and_a_title(
 
     assert f'<article role="{role}" data-type="{category}">' in res.text
     assert f"<strong>{title}</strong>" in res.text
+
+
+def test_a_body_sent_as_bytes_is_shown_as_text():
+    """Test a JSON body, which requests sends as bytes, is shown as text."""
+    message = http_message("POST https://test.example.com/register", {}, b'{"a": 1}')
+
+    assert message == 'POST https://test.example.com/register\n\n{"a": 1}'

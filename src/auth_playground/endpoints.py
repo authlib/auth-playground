@@ -24,6 +24,7 @@ from auth_playground.forms import UnregisterClientForm
 from auth_playground.grants import GRANTS_BY_NAME
 from auth_playground.grants import tokens_grant
 from auth_playground.oauth import forget_registered_client
+from auth_playground.pages import pop_failure
 from auth_playground.pages import render_grant_page
 from auth_playground.pages import render_request_page
 from auth_playground.pages import render_tokens_page
@@ -298,7 +299,9 @@ def dynamic_client():
         return redirect(url_for("routes.manual_client"))
 
     return render_template(
-        "client_dynamic.html", dynamic_registration_form=DynamicRegistrationForm()
+        "client_dynamic.html",
+        dynamic_registration_form=DynamicRegistrationForm(),
+        rejected_response=pop_failure(("registration",)),
     )
 
 

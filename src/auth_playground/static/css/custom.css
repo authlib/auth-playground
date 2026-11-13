@@ -403,6 +403,10 @@ small[id$="-error"] + small {
     color: var(--pico-del-color);
 }
 
+.rejected-response pre:not(:last-child) {
+    margin-bottom: var(--pico-spacing);
+}
+
 .rejected-response .response-line {
     display: flex;
     flex-wrap: wrap;

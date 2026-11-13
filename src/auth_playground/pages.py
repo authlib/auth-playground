@@ -16,8 +16,10 @@ from auth_playground.forms import LogoutParamsForm
 from auth_playground.forms import PasswordForm
 from auth_playground.forms import RefreshTokenForm
 from auth_playground.forms import UserInfoForm
+from auth_playground.grants import DEFAULT_GRANT_TYPES
 from auth_playground.grants import GRANT_GROUPS
 from auth_playground.grants import GRANTS
+from auth_playground.grants import grant_types_listed
 from auth_playground.grants import registered_grant_types
 from auth_playground.grants import tokens_grant
 from auth_playground.session import server_metadata
@@ -54,6 +56,8 @@ def render_grant_page(grant, grant_form=None):
         grant=grant,
         grant_form=grant_form or grant_form_again(grant.name),
         registered_grant_types=registered_grant_types() or [],
+        grant_types_listed=grant_types_listed(),
+        default_grant_types=DEFAULT_GRANT_TYPES,
         tokens_grant=tokens_grant(),
         public_client=is_public_client(),
         rejected_response=pop_failure(("token", "authorization"), grant.name),

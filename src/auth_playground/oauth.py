@@ -77,6 +77,10 @@ RELAYED = "relayed"
 # The longest response body kept to show it to the user.
 MAX_SHOWN_BODY = 10_000
 
+# Failures of token requests. A successful token response holds tokens, so it
+# is not shown.
+TOKEN_KINDS = ("token", "refresh")
+
 
 def get_software_id() -> str:
     """Get unique software identifier based on repository URL."""
@@ -220,55 +224,67 @@ def client_dynamic_registration():
         response.raise_for_status()
         client_data = response.json()
     except requests.JSONDecodeError:
-        flash(_("Invalid JSON response from registration endpoint"), "error")
+        keep_failure(
+            "registration",
+            _("Invalid JSON response from registration endpoint"),
+            [response],
+        )
         return redirect(url_for("routes.dynamic_client"))
     except requests.RequestException as exc:
-        error = get_response_error(exc)
-        if error:
-            flash(
-                _("Dynamic client registration failed: {error}").format(error=error),
-                "error",
-            )
-        else:
-            flash(_("Dynamic client registration failed"), "error")
+        # Per RFC 6750 §3, a refused initial access token gives its error in
+        # the WWW-Authenticate header, often with an empty body.
+        error = get_response_error(exc) or www_authenticate(exc)
+        message = (
+            _("Dynamic client registration failed: {error}").format(error=error)
+            if error
+            else _("Dynamic client registration failed")
+        )
+        keep_failure(
+            "registration", message, [exc.response] if exc.response is not None else []
+        )
         return redirect(url_for("routes.dynamic_client"))
 
     if not isinstance(client_data, dict) or not client_data.get("client_id"):
-        flash(_("Invalid response from registration endpoint"), "error")
+        keep_failure(
+            "registration", _("Invalid response from registration endpoint"), [response]
+        )
         return redirect(url_for("routes.dynamic_client"))
 
     auth_method = client_data.get("token_endpoint_auth_method", requested_auth_method)
     if auth_method not in METHODS:
-        flash(
+        keep_failure(
+            "registration",
             _(
                 "The server registered the client with the {auth_method} "
                 "authentication method, which Auth Playground does not support. "
                 "The client is still registered on the server."
             ).format(auth_method=auth_method),
-            "error",
+            [response],
         )
         return redirect(url_for("routes.dynamic_client"))
 
     client_secret = client_data.get("client_secret")
     if auth_method in SECRET_METHODS and not client_secret:
-        flash(
+        keep_failure(
+            "registration",
             _(
                 "The server registered the client without a client secret, "
                 "but its authentication method {auth_method} needs one. "
                 "The client is still registered on the server."
             ).format(auth_method=auth_method),
-            "error",
+            [response],
         )
         return redirect(url_for("routes.dynamic_client"))
 
     if auth_method == KEY_METHOD and not client_key:
-        flash(
+        keep_failure(
+            "registration",
             _(
                 "The server registered the client with the private_key_jwt "
                 "authentication method, but the playground has no key for it. "
                 "The client is still registered on the server."
             ),
-            "error",
+            [response],
         )
         return redirect(url_for("routes.dynamic_client"))
 
@@ -277,13 +293,14 @@ def client_dynamic_registration():
         # Per RFC 7591 §3.2.1, the server may choose another algorithm.
         signing_alg = client_data.get("token_endpoint_auth_signing_alg") or signing_alg
         if signing_alg not in key_algorithms(client_key):
-            flash(
+            keep_failure(
+                "registration",
                 _(
                     "The server registered the client with the {alg} signing "
                     "algorithm, which its key cannot use. "
                     "The client is still registered on the server."
                 ).format(alg=signing_alg),
-                "error",
+                [response],
             )
             return redirect(url_for("routes.dynamic_client"))
 
@@ -310,11 +327,14 @@ def client_dynamic_registration():
 
 
 def response_grant_types(client_data):
-    """Return the grant types the provider registered, or ``None`` when it does not say.
+    """Return the grant types the provider registered, or ``None`` when they are unclear.
 
-    Per RFC 7591 §3.2.1, the response holds every registered setting.
+    Per RFC 7591 §3.2.1, the response holds every registered setting. Per
+    RFC 7591 §2, a client without grant_types uses authorization_code only.
     """
-    grant_types = client_data.get("grant_types")
+    if "grant_types" not in client_data:
+        return ["authorization_code"]
+    grant_types = client_data["grant_types"]
     if not isinstance(grant_types, list) or not grant_types:
         return None
     if not all(isinstance(grant_type, str) for grant_type in grant_types):
@@ -503,36 +523,51 @@ def response_hooks(responses):
 
 
 def keep_failure(kind, message, responses=(), grant=None):
-    """Keep why a request to the provider failed, and its response, for the next page."""
+    """Keep why a request to the provider failed, and the exchange, for the next page."""
     failure = {"kind": kind, "message": message}
     if grant:
         failure["grant"] = grant
     if responses:
-        failure.update(response_details(responses[-1]))
+        failure.update(exchange(responses[-1], hide_tokens=kind in TOKEN_KINDS))
     session[REJECTED_RESPONSE] = failure
 
 
-def response_details(response):
-    """Return the request, status and body of a response, to show them.
+def exchange(response, hide_tokens=False):
+    """Return the request the playground sent, and the response, to show them.
 
-    A successful response with a JSON object holds tokens. The request then
-    failed after it, for instance on the ID token, and the response is not shown.
+    A successful token response holds tokens. The request then failed after
+    it, for instance on the ID token, and the exchange is not shown.
     """
     try:
         data = response.json()
     except ValueError:
         body = response.text
     else:
-        if response.ok and isinstance(data, dict):
+        if hide_tokens and response.ok and isinstance(data, dict):
             return {}
         body = json.dumps(data, indent=2, ensure_ascii=False)
     return {
-        "request": f"{response.request.method} {response.request.url}",
+        "sent": http_message(
+            f"{response.request.method} {response.request.url}",
+            response.request.headers,
+            response.request.body,
+        ),
         "status": " ".join(
             str(part) for part in (response.status_code, response.reason) if part
         ),
-        "body": body[:MAX_SHOWN_BODY],
+        "received": http_message(None, response.headers, body),
     }
+
+
+def http_message(first_line, headers, body):
+    """Write a request or a response as HTTP shows it: headers, a blank line, the body."""
+    if isinstance(body, bytes):
+        body = body.decode(errors="replace")
+    lines = [first_line] if first_line else []
+    lines += [f"{name}: {value}" for name, value in headers.items()]
+    if body:
+        lines += ["", body[:MAX_SHOWN_BODY]]
+    return "\n".join(lines)
 
 
 def keep_authorization_error(message):
@@ -546,9 +581,7 @@ def keep_authorization_error(message):
         "kind": "authorization",
         "grant": "authorization_code",
         "message": message,
-        "request": f"{request.method} {request.base_url}",
-        "status": "",
-        "body": json.dumps(error, indent=2, ensure_ascii=False),
+        "received": json.dumps(error, indent=2, ensure_ascii=False),
     }
 
 
