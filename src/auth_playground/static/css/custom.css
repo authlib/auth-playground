@@ -11,6 +11,13 @@
     --pico-primary-underline: light-dark(#d24317, #f45d2c);
 }
 
+/* blades.css leaves out the spacing of the landmarks that pico.css has. */
+body > header,
+body > main,
+body > footer {
+    padding-block: var(--pico-block-spacing-vertical);
+}
+
 /* Reduce margin bottom for titles in article headers */
 article header h2,
 article header h3,
