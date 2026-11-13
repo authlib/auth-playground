@@ -1,76 +1,60 @@
 {% extends "layout.html" %}
-{% set current_step = 3 %}
+{% set current_step = 4 %}
 {% from "_form.html" import render_form %}
 
 {% block title %}{% trans %}Tokens{% endtrans %}{% endblock %}
 
 {% block content %}
-    {% if session.token %}
+    {% if tokens_grant.provider_session %}
         <nav class="subtabs">
-            <a href="{{ url_for('routes.tokens', tab='request') }}"{% if tab == 'request' %} aria-current="page"{% endif %}>{% trans %}Request{% endtrans %}</a>
-            <a href="{{ url_for('routes.tokens', tab='current') }}"{% if tab == 'current' %} aria-current="page"{% endif %}>{% trans %}Current tokens{% endtrans %}</a>
-            {% if tokens_grant.provider_session %}
-                <a href="{{ url_for('routes.tokens', tab='logout') }}"{% if tab == 'logout' %} aria-current="page"{% endif %}>{% trans %}Logout{% endtrans %}</a>
-            {% endif %}
+            <a href="{{ url_for('routes.tokens') }}"{% if tab == 'current' %} aria-current="page"{% endif %}>{% trans %}Current tokens{% endtrans %}</a>
+            <a href="{{ url_for('routes.tokens', tab='logout') }}"{% if tab == 'logout' %} aria-current="page"{% endif %}>{% trans %}Logout{% endtrans %}</a>
         </nav>
+    {% endif %}
 
-        {% include "_rejected_response.html" %}
+    {% include "_rejected_response.html" %}
 
-        {% if tab == 'request' %}
-            {% include "_grant_panel.html" %}
-
-        {% elif tab == 'current' %}
-            {% include "_tokens.html" %}
-            {% if not tokens_grant.provider_session %}
-                {% call render_form(logout_local_form, url_for('oauth.logout_local'), id="forget-tokens-form") %}
-                    {{ logout_local_form.logout(value=_("Forget tokens")) }}
-                {% endcall %}
-            {% endif %}
-
-        {% elif tab == 'logout' %}
-            <article>
-                <header><h3>{% trans %}Local logout{% endtrans %}</h3></header>
-                <p>{% trans %}The playground forgets the tokens. You stay signed in at the provider, so the next sign-in may be silent (SSO).{% endtrans %}</p>
-                <footer>
-                    <div class="actions">
-                        {% call render_form(logout_local_form, url_for('oauth.logout_local'), id="logout-local-form") %}
-                            {{ logout_local_form.logout() }}
-                        {% endcall %}
-                    </div>
-                </footer>
-            </article>
-
-            {% if g.server_config and g.server_config.specs and g.server_config.specs.oidc_rpinitiated_logout %}
-                <article>
-                    <header><h3>RP-Initiated Logout</h3></header>
-                    <p>
-                        {% trans %}The provider also ends its session, so the next sign-in asks for the credentials again.{% endtrans %}
-                        <a href="https://openid.net/specs/openid-connect-rpinitiated-1_0.html#RPLogout" target="_blank" rel="noopener noreferrer">OpenID Connect RP-Initiated Logout 1.0 §2</a>
-                    </p>
-                    {% call render_form(logout_params_form, url_for('oauth.logout'), id="logout-params-form") %}
-                        {{ logout_params_form.id_token_hint() }}
-                        {{ logout_params_form.client_id() }}
-                        {{ logout_params_form.post_logout_redirect_uri() }}
-                        {{ logout_params_form.logout_hint() }}
-                        {% if logout_params_form.ui_locales.choices|length > 1 %}
-                            {{ logout_params_form.ui_locales() }}
-                        {% endif %}
-                        {{ logout_params_form.preview() }}
-                        {{ logout_params_form.server_logout() }}
-                    {% endcall %}
-                </article>
-            {% endif %}
+    {% if tab == 'current' %}
+        {% include "_tokens.html" %}
+        {% if not tokens_grant.provider_session %}
+            {% call render_form(logout_local_form, url_for('oauth.logout_local'), id="forget-tokens-form") %}
+                {{ logout_local_form.logout(value=_("Forget tokens")) }}
+            {% endcall %}
         {% endif %}
 
-    {% else %}
-        <hgroup>
-            <h2>{% trans %}Get tokens{% endtrans %}</h2>
-            <p>{% trans %}Choose how the client obtains its tokens: for a user who signs in, or for the client itself.{% endtrans %}</p>
-        </hgroup>
+    {% elif tab == 'logout' %}
+        <article>
+            <header><h3>{% trans %}Local logout{% endtrans %}</h3></header>
+            <p>{% trans %}The playground forgets the tokens. You stay signed in at the provider, so the next sign-in may be silent (SSO).{% endtrans %}</p>
+            <footer>
+                <div class="actions">
+                    {% call render_form(logout_local_form, url_for('oauth.logout_local'), id="logout-local-form") %}
+                        {{ logout_local_form.logout() }}
+                    {% endcall %}
+                </div>
+            </footer>
+        </article>
 
-        {% include "_rejected_response.html" %}
-
-        {% include "_grant_panel.html" %}
+        {% if g.server_config and g.server_config.specs and g.server_config.specs.oidc_rpinitiated_logout %}
+            <article>
+                <header><h3>RP-Initiated Logout</h3></header>
+                <p>
+                    {% trans %}The provider also ends its session, so the next sign-in asks for the credentials again.{% endtrans %}
+                    <a href="https://openid.net/specs/openid-connect-rpinitiated-1_0.html#RPLogout" target="_blank" rel="noopener noreferrer">OpenID Connect RP-Initiated Logout 1.0 §2</a>
+                </p>
+                {% call render_form(logout_params_form, url_for('oauth.logout'), id="logout-params-form") %}
+                    {{ logout_params_form.id_token_hint() }}
+                    {{ logout_params_form.client_id() }}
+                    {{ logout_params_form.post_logout_redirect_uri() }}
+                    {{ logout_params_form.logout_hint() }}
+                    {% if logout_params_form.ui_locales.choices|length > 1 %}
+                        {{ logout_params_form.ui_locales() }}
+                    {% endif %}
+                    {{ logout_params_form.preview() }}
+                    {{ logout_params_form.server_logout() }}
+                {% endcall %}
+            </article>
+        {% endif %}
     {% endif %}
 {% endblock %}
 

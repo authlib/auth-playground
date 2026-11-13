@@ -39,7 +39,7 @@ def test_index_redirects_to_configure_server_when_no_config(unconfigured_app):
 def test_configure_server_displays_form(unconfigured_app):
     """Test that configure server page displays the form."""
     test_client = unconfigured_app.test_client()
-    res = test_client.get("/en/server")
+    res = test_client.get("/en/server/discover")
     assert res.status_code == 200
     assert b"issuer_url" in res.data
     assert b"Continue" in res.data
@@ -47,7 +47,7 @@ def test_configure_server_displays_form(unconfigured_app):
 
 def test_configure_server_validates_url(unconfigured_testapp):
     """Test that server configuration validates URL format."""
-    form = unconfigured_testapp.get("/en/server").forms["server-form"]
+    form = unconfigured_testapp.get("/en/server/discover").forms["server-form"]
     form["issuer_url"] = "not-a-url"
     res = form.submit("discover")
 
@@ -70,7 +70,7 @@ def test_fixed_server_without_client_shows_client_page(unconfigured_app):
     test_client = unconfigured_app.test_client()
 
     with patch("auth_playground.endpoints.load_server_metadata"):
-        res = test_client.get("/en/client")
+        res = test_client.get("/en/client", follow_redirects=True)
 
     assert res.status_code == 200
 
@@ -96,7 +96,7 @@ def test_configure_client_redirects_without_server_metadata(unconfigured_app):
     test_client = unconfigured_app.test_client()
     res = test_client.get("/en/client", follow_redirects=True)
     assert res.status_code == 200
-    assert b"Provider URL" in res.data
+    assert b"Choose a provider" in res.data
 
 
 def test_configure_client_displays_manual_form(unconfigured_app):
@@ -110,7 +110,7 @@ def test_configure_client_displays_manual_form(unconfigured_app):
         }
         sess["issuer_url"] = "https://test.example.com"
 
-    res = test_client.get("/en/client")
+    res = test_client.get("/en/client", follow_redirects=True)
     assert res.status_code == 200
     assert b"Manual configuration" in res.data
     assert b"Client ID" in res.data
@@ -129,7 +129,7 @@ def test_configure_client_shows_dynamic_registration_when_supported(unconfigured
         }
         sess["issuer_url"] = "https://test.example.com"
 
-    res = test_client.get("/en/client")
+    res = test_client.get("/en/client/dynamic")
     assert res.status_code == 200
     assert b"Dynamic registration" in res.data
     assert b"Register client" in res.data
@@ -149,7 +149,7 @@ def test_configure_client_hides_dynamic_registration_when_not_supported(
         }
         sess["issuer_url"] = "https://test.example.com"
 
-    res = test_client.get("/en/client")
+    res = test_client.get("/en/client/dynamic", follow_redirects=True)
     assert res.status_code == 200
     assert b"Dynamic registration" not in res.data
     assert b"Register client" not in res.data
@@ -165,7 +165,7 @@ def test_configure_client_manual_setup_stores_in_session(unconfigured_testapp):
         }
         sess["issuer_url"] = "https://test.example.com"
 
-    form = unconfigured_testapp.get("/en/client").forms["client-form"]
+    form = unconfigured_testapp.get("/en/client/manual").forms["client-form"]
     form["client_id"] = "test-client-id"
     form["client_secret"] = "test-client-secret"
     res = form.submit("save").maybe_follow()
@@ -215,7 +215,7 @@ def test_flash_messages_displayed_in_layout(unconfigured_app):
 
     res = test_client.get("/en/client", follow_redirects=True)
     assert res.status_code == 200
-    assert b"Provider URL" in res.data
+    assert b"Choose a provider" in res.data
 
 
 def test_switch_link_hidden_when_env_configured(app, iam_server, iam_client):
@@ -260,7 +260,7 @@ def test_server_link_visible_when_session_configured(unconfigured_app):
 
 def submit_server_form(testapp, issuer_url):
     """Submit the provider URL form with a mocked metadata endpoint."""
-    form = testapp.get("/en/server").forms["server-form"]
+    form = testapp.get("/en/server/discover").forms["server-form"]
     form["issuer_url"] = issuer_url
     with patch("auth_playground.endpoints.fetch_server_metadata") as mock_fetch:
         mock_fetch.return_value = ({"issuer": issuer_url.rstrip("/")}, "oidc")
@@ -382,7 +382,7 @@ def test_change_provider_forgets_the_configuration(unconfigured_testapp):
     res = page.forms["change-server-form"].submit("change").maybe_follow()
 
     assert "You can now configure a different identity provider" in res.text
-    assert "server-form" in res.forms
+    assert "Discover a provider" in res.text
     with unconfigured_testapp.session_transaction() as sess:
         assert not {"issuer_url", "server_metadata", "oauth_config", "token"} & set(
             sess
@@ -559,7 +559,7 @@ def test_client_uri_included_in_dynamic_registration(unconfigured_app):
         }
         sess["issuer_url"] = "https://test.example.com"
 
-    res = test_client.get("/en/client")
+    res = test_client.get("/en/client/dynamic")
     assert res.status_code == 200
     assert b"Register client" in res.data
 
@@ -574,7 +574,7 @@ def test_initial_access_token_sent_in_authorization_header(unconfigured_app):
         }
         sess["issuer_url"] = "https://test.example.com"
 
-    res = test_client.get("/en/client")
+    res = test_client.get("/en/client/dynamic")
     assert res.status_code == 200
     assert b"Initial access token" in res.data
 

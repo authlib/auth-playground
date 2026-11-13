@@ -21,7 +21,7 @@ def test_the_setting_is_hidden_without_advertised_algorithms(unconfigured_testap
     """Test the UserInfo response setting is hidden when the provider signs nothing."""
     server_session(unconfigured_testapp)
 
-    res = unconfigured_testapp.get("/en/client")
+    res = unconfigured_testapp.get("/en/client/manual")
 
     assert '<div id="wrap-userinfo_signed_response_alg" hidden>' in res.text
 
@@ -29,7 +29,7 @@ def test_the_setting_is_hidden_without_advertised_algorithms(unconfigured_testap
 def test_a_static_client_stores_the_setting(unconfigured_testapp):
     """Test the algorithm set at the provider is stored with the client."""
     advertise_userinfo_algs(unconfigured_testapp, ["RS256", "none"])
-    res = unconfigured_testapp.get("/en/client")
+    res = unconfigured_testapp.get("/en/client/manual")
     assert "Signed with RS256" in res.text
     assert "Signed with none" not in res.text
 
@@ -46,7 +46,7 @@ def test_a_static_client_stores_the_setting(unconfigured_testapp):
 def test_a_static_client_without_signed_responses(unconfigured_testapp):
     """Test the setting is not stored when the response is not signed."""
     advertise_userinfo_algs(unconfigured_testapp, ["RS256"])
-    form = unconfigured_testapp.get("/en/client").forms["client-form"]
+    form = unconfigured_testapp.get("/en/client/manual").forms["client-form"]
     form["client_id"] = "client"
     form["client_secret"] = "secret"
     form.submit("save")
@@ -58,7 +58,9 @@ def test_a_static_client_without_signed_responses(unconfigured_testapp):
 def test_dynamic_registration_asks_for_signed_responses(unconfigured_testapp):
     """Test the requested algorithm is sent, and the registered one is kept."""
     advertise_userinfo_algs(unconfigured_testapp, ["RS256", "ES256"])
-    form = unconfigured_testapp.get("/en/client").forms["dynamic-registration-form"]
+    form = unconfigured_testapp.get("/en/client/dynamic").forms[
+        "dynamic-registration-form"
+    ]
     form["userinfo_signed_response_alg"] = "RS256"
     with patch("requests.post") as mock_post:
         mock_post.return_value.json.return_value = {
@@ -77,7 +79,9 @@ def test_dynamic_registration_asks_for_signed_responses(unconfigured_testapp):
 def test_dynamic_registration_ignored_by_the_provider(unconfigured_testapp, registered):
     """Test the setting is not kept when the provider did not register it."""
     advertise_userinfo_algs(unconfigured_testapp, "RS256")
-    form = unconfigured_testapp.get("/en/client").forms["dynamic-registration-form"]
+    form = unconfigured_testapp.get("/en/client/dynamic").forms[
+        "dynamic-registration-form"
+    ]
     form["userinfo_signed_response_alg"] = "RS256"
     client_data = {"client_id": "registered", "client_secret": "secret"}
     if registered:
@@ -94,7 +98,9 @@ def test_dynamic_registration_ignored_by_the_provider(unconfigured_testapp, regi
 def test_dynamic_registration_without_signed_responses(unconfigured_testapp):
     """Test the registration request does not ask for a signed response by default."""
     advertise_userinfo_algs(unconfigured_testapp, ["RS256"])
-    form = unconfigured_testapp.get("/en/client").forms["dynamic-registration-form"]
+    form = unconfigured_testapp.get("/en/client/dynamic").forms[
+        "dynamic-registration-form"
+    ]
     with patch("requests.post") as mock_post:
         mock_post.return_value.json.return_value = {
             "client_id": "registered",
@@ -122,7 +128,7 @@ def test_the_signed_response_is_shown(iam_server, iam_client, user, testapp):
     iam_server.backend.save(iam_client)
     sign_in(iam_server, iam_client, user, testapp)
     ask_for_signed_responses(testapp, "RS256")
-    res = testapp.get("/en/tokens/current")
+    res = testapp.get("/en/tokens")
     assert "The client expects a response signed with RS256." in res.text
 
     res = get_userinfo(testapp)

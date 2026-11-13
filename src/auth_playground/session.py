@@ -31,6 +31,11 @@ class ServerConfig:
         return ServerSpecs(self.metadata)
 
     @property
+    def dynamic_registration(self) -> bool:
+        """Tell whether the server advertises dynamic client registration."""
+        return bool(self.specs and self.specs.oauth_2_dynamic_client_registration)
+
+    @property
     def display_name(self) -> str:
         """Get display name for the server type."""
         if self.server_type == "oidc":

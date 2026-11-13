@@ -13,21 +13,21 @@ from tests.fake_provider import server_session
 
 def test_index_shows_signin_when_unauthenticated(iam_server, test_client):
     """Test that unauthenticated users see signin button."""
-    res = test_client.get("/en/tokens", follow_redirects=True)
+    res = test_client.get("/en/request/authorization_code")
     assert res.status_code == 200
     assert b"Sign in" in res.data
 
 
 def test_index_shows_signup_when_server_supports_prompt_create(iam_server, test_client):
     """Test that registration option appears in prompt selector when server supports prompt=create."""
-    res = test_client.get("/en/tokens", follow_redirects=True)
+    res = test_client.get("/en/request/authorization_code")
     assert res.status_code == 200
     assert b"Create - Registration" in res.data
 
 
 def test_registration_redirects_to_iam(iam_server, iam_client, test_client):
     """Test that the authorization parameters form includes create option."""
-    res = test_client.get("/en/tokens", follow_redirects=True)
+    res = test_client.get("/en/request/authorization_code")
     assert res.status_code == 200
     # Verify that the prompt select includes the create option
     assert b'value="create"' in res.data
@@ -148,7 +148,7 @@ def test_authorize_callback_reports_an_unusable_response(
 
 def test_consent_redirects_with_prompt(iam_server, test_client):
     """Test that the authorization parameters form includes consent option."""
-    res = test_client.get("/en/tokens", follow_redirects=True)
+    res = test_client.get("/en/request/authorization_code")
     assert res.status_code == 200
     # Verify that the prompt select includes the consent option
     assert b'value="consent"' in res.data
@@ -310,7 +310,7 @@ def test_refresh_token_form_displays_when_refresh_token_present(test_client):
         }
         sess["user"] = {"sub": "testuser"}
 
-    res = test_client.get("/en/tokens", follow_redirects=True)
+    res = test_client.get("/en/tokens")
     assert res.status_code == 200
     assert b"Renew tokens" in res.data
 
@@ -344,7 +344,7 @@ def test_refresh_token_success(iam_server, iam_client, user, testapp):
         old_refresh_token = sess["token"].get("refresh_token")
         assert old_refresh_token is not None, "Refresh token should exist after login"
 
-    res = testapp.get("/en/tokens/current")
+    res = testapp.get("/en/tokens")
     res = res.forms["refresh-form"].submit("refresh").maybe_follow()
 
     assert "Token successfully refreshed" in res.text
@@ -360,7 +360,7 @@ def test_refresh_token_success(iam_server, iam_client, user, testapp):
         assert sess["token_info"]["grant_type"] == "refresh_token"
         assert sess["token_info"]["grant"] == "authorization_code"
 
-    res = testapp.get("/en/tokens/current")
+    res = testapp.get("/en/tokens")
     assert "First obtained with:" in res.text
 
 
@@ -374,7 +374,7 @@ def test_tokens_tab_shows_how_tokens_were_obtained(
     res = test_client.get("/authorize")
     res = iam_server.test_client.get(res.location)
     test_client.get(res.location)
-    res = test_client.get("/en/tokens/current")
+    res = test_client.get("/en/tokens")
 
     assert "How these tokens were obtained" in res.text
     assert "<code>authorization_code</code>" in res.text
@@ -446,7 +446,7 @@ def sign_in_and_get_refresh_form(iam_server, iam_client, user, testapp):
     testapp.get(res.location)
     with testapp.session_transaction() as sess:
         token = dict(sess["token"])
-    return testapp.get("/en/tokens/current").forms["refresh-form"], token
+    return testapp.get("/en/tokens").forms["refresh-form"], token
 
 
 def refresh_response(token):

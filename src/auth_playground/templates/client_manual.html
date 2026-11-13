@@ -1,0 +1,44 @@
+{% extends "layout.html" %}
+{% set step_summary = _("Manual configuration") %}
+{% set current_step = 2 %}
+{% from "_form.html" import render_form %}
+
+{% block title %}{% trans %}Manual configuration{% endtrans %}{% endblock %}
+
+{% block content %}
+    <article>
+        <header>
+            <h2>{% trans %}Manual configuration{% endtrans %}</h2>
+        </header>
+
+        <p>{% trans display_name=g.server_config.display_name %}Manually register the client at the {{ display_name }},
+            then enter the client credentials below.{% endtrans %}</p>
+
+        <details>
+            <summary role="button" class="outline">{% trans display_name=g.server_config.display_name %}{{ display_name }} configuration{% endtrans %}</summary>
+            <p>{% trans display_name=g.server_config.display_name %}When creating your OAuth client at the {{ display_name }}, configure these URIs:{% endtrans %}</p>
+            <p><strong>{% trans %}Redirect URIs{% endtrans %} (<code>redirect_uris</code>):</strong></p>
+            <ul>
+                <li><code>{{ url_for('oauth.authorize_callback', _external=True) }}</code></li>
+            </ul>
+            <p><strong>{% trans %}Post-Logout Redirect URIs{% endtrans %} (<code>post_logout_redirect_uris</code>):</strong></p>
+            <ul>
+                <li><code>{{ url_for('oauth.logout_callback', _external=True) }}</code></li>
+            </ul>
+        </details>
+
+        {% call render_form(client_form, url_for('routes.manual_client'), id="client-form") %}
+            {{ client_form.client_id() }}
+            {{ client_form.token_endpoint_auth_method() }}
+            {{ client_form.client_secret() }}
+            {{ client_form.key_source() }}
+            {{ client_form.private_key() }}
+            {{ client_form.key_id() }}
+            {{ client_form.signing_alg() }}
+            {{ client_form.regenerate_key() }}
+            {{ client_form.key_preview() }}
+            {{ client_form.userinfo_signed_response_alg() }}
+            {{ client_form.save() }}
+        {% endcall %}
+    </article>
+{% endblock %}

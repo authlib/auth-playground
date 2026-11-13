@@ -13,6 +13,6 @@ def test_static_configuration_hidden_in_production_mode(unconfigured_app):
     unconfigured_app.config["DEBUG"] = False
     test_client = unconfigured_app.test_client()
 
-    res = test_client.get("/en/server")
+    res = test_client.get("/en/server", follow_redirects=True)
     assert res.status_code == 200
     assert b"Static configuration" not in res.data

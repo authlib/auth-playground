@@ -30,6 +30,26 @@ def registered_grant_types():
     return auth_playground.get_oauth_config(current_app).get("grant_types")
 
 
+REDIRECT = _("Redirect")
+DIRECT = _("Direct")
+
+GRANT_GROUPS = (
+    (
+        REDIRECT,
+        _(
+            "The user signs in at the provider, which sends them back to the playground."
+        ),
+    ),
+    (
+        DIRECT,
+        _(
+            "The playground calls the token endpoint itself, without a browser "
+            "redirection."
+        ),
+    ),
+)
+
+
 @dataclass(frozen=True)
 class Grant:
     """A grant type, and how it is presented."""
@@ -64,12 +84,24 @@ class Grant:
         grant_types = registered_grant_types()
         return grant_types is None or self.value in grant_types
 
+    @property
+    def marks(self):
+        """Return the reasons to think twice before using this grant type."""
+        marks = []
+        if self.deprecated:
+            marks.append(_("Deprecated"))
+        if not self.advertised:
+            marks.append(_("Not advertised"))
+        if not self.registered:
+            marks.append(_("Not registered"))
+        return marks
+
 
 GRANTS = (
     Grant(
         "authorization_code",
         _("Authorization code"),
-        _("Redirect"),
+        REDIRECT,
         _(
             "The user signs in at the provider, which redirects back with a code. "
             "The playground then exchanges the code for tokens at the token "
@@ -87,7 +119,7 @@ GRANTS = (
     Grant(
         "client_credentials",
         _("Client credentials"),
-        _("Direct"),
+        DIRECT,
         _(
             "The client gets tokens for itself, without any user. The playground "
             "sends its credentials to the token endpoint."
@@ -99,7 +131,7 @@ GRANTS = (
     Grant(
         "password",
         _("Password (ROPC)"),
-        _("Direct"),
+        DIRECT,
         _(
             "The client asks the user for their username and password, and sends "
             "them to the token endpoint. The provider never sees the user sign in."
@@ -113,7 +145,7 @@ GRANTS = (
     Grant(
         JWT_BEARER,
         _("JWT bearer"),
-        _("Direct"),
+        DIRECT,
         _(
             "The client sends a signed JWT that says who the tokens are for. "
             "The provider checks the signature and the claims, then issues tokens "
@@ -142,8 +174,3 @@ def tokens_grant():
     """Return the grant type that obtained the tokens, or else the default one."""
     grant = session.get("token_info", {}).get("grant")
     return GRANTS_BY_VALUE.get(grant, GRANTS[0])
-
-
-def get_grant(name):
-    """Return the grant type called ``name``, or else the one that obtained the tokens."""
-    return GRANTS_BY_NAME.get(name) or tokens_grant()

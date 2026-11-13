@@ -1,4 +1,5 @@
-{#- A div with the navigation role, as Blades restyles every nav element. -#}
+{#- A div with the navigation role, as Blades restyles every nav element.
+    A setup page can set step_summary to tell which way it sets up its step. -#}
 <div class="setup-steps" role="navigation" aria-label="{% trans %}Setup progress{% endtrans %}">
     <ol>
         {% for step in setup_steps() %}
@@ -20,7 +21,7 @@
                 <span class="step-text">
                     <span class="visually-hidden">{{ step.status }}</span>
                     <strong>{{ step.label }}</strong>
-                    <small>{{ step.summary }}</small>
+                    <small>{{ step_summary if step.number == current_step and step_summary else step.summary }}</small>
                 </span>
                 {% if step.url %}
                     </a>

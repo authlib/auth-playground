@@ -38,7 +38,7 @@ header h1 a:hover {
 /* Setup steps */
 .setup-steps ol {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: var(--pico-spacing);
     margin: 0;
     padding: 0;
@@ -173,7 +173,19 @@ fieldset > ul:has(input[type="checkbox"], input[type="radio"]) {
 }
 
 fieldset > ul:has(input[type="checkbox"], input[type="radio"]) > li {
+    display: flex;
+    align-items: baseline;
     list-style: none;
+}
+
+/* A long label, like a URN, wraps next to its box instead of below it. */
+fieldset > ul:has(input[type="checkbox"], input[type="radio"]) > li > input {
+    flex: none;
+}
+
+fieldset > ul:has(input[type="checkbox"], input[type="radio"]) > li > label {
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
 
 /* Label and value pairs. */
@@ -394,4 +406,32 @@ small[id$="-error"] + small {
     color: var(--pico-del-color);
     font-family: var(--pico-font-family-monospace);
     font-weight: 600;
+}
+
+/* The cards of a choice page, with their button at the bottom. */
+:is(.setup-choices, .grant-choices) > article {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0;
+}
+
+:is(.setup-choices, .grant-choices) > article > footer {
+    margin-top: auto;
+}
+
+/* One column per card, so a group with a single grant type is not wider. */
+.grant-choices {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+    gap: var(--pico-spacing);
+    margin-bottom: calc(var(--pico-spacing) * 2);
+}
+
+.grant-choices .marks {
+    color: var(--pico-muted-color);
+}
+
+/* The current step leads back to the choice of its setup pages. */
+.setup-steps a:hover strong {
+    text-decoration: underline;
 }

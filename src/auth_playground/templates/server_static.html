@@ -1,0 +1,9 @@
+{% extends "layout.html" %}
+{% set step_summary = _("Static configuration") %}
+{% set current_step = 1 %}
+
+{% block title %}{% trans %}Static configuration{% endtrans %}{% endblock %}
+
+{% block content %}
+    {% include "static-configuration.html" %}
+{% endblock %}

@@ -101,7 +101,7 @@ def http_error(status_code):
 )
 def test_handle_fetch_metadata_errors(unconfigured_testapp, exception, message):
     """Test the error messages when the server metadata cannot be loaded."""
-    form = unconfigured_testapp.get("/en/server").forms["server-form"]
+    form = unconfigured_testapp.get("/en/server/discover").forms["server-form"]
     form["issuer_url"] = "https://test.example.com"
     with patch(
         "auth_playground.endpoints.fetch_server_metadata", side_effect=exception
@@ -114,7 +114,7 @@ def test_handle_fetch_metadata_errors(unconfigured_testapp, exception, message):
 def test_specs_endpoint_without_server_config(unconfigured_test_client):
     """Test specs endpoint redirects without server configuration."""
     res = unconfigured_test_client.get("/en/specs", follow_redirects=True)
-    assert b"Provider URL" in res.data
+    assert b"Choose a provider" in res.data
 
 
 def test_specs_endpoint_with_server_config(unconfigured_test_client):
@@ -148,7 +148,7 @@ def test_configure_client_refetches_metadata_when_missing(unconfigured_test_clie
             "oidc",
         )
 
-        res = unconfigured_test_client.get("/en/client")
+        res = unconfigured_test_client.get("/en/client", follow_redirects=True)
 
     assert res.status_code == 200
     assert mock_load.called
@@ -177,7 +177,7 @@ def test_playground_handles_metadata_fetch_exception(unconfigured_app):
     with patch("auth_playground.endpoints.fetch_server_metadata") as mock_fetch:
         mock_fetch.side_effect = Exception("Network error")
 
-        res = test_client.get("/en/tokens", follow_redirects=True)
+        res = test_client.get("/en/request/authorization_code")
 
     assert res.status_code == 200
     mock_fetch.assert_called()
@@ -195,6 +195,9 @@ def test_specs_redirects_without_server_metadata(unconfigured_test_client):
 
 def test_session_redirects_unknown_tab(test_client):
     """Test that an unknown tab redirects to the tokens page."""
+    with test_client.session_transaction() as sess:
+        sess["token"] = {"access_token": "a"}
+
     res = test_client.get("/en/tokens/unknown")
 
     assert res.status_code == 302
@@ -203,10 +206,10 @@ def test_session_redirects_unknown_tab(test_client):
 
 def test_session_redirects_to_authentication_when_logged_out(test_client):
     """Test that session tabs need a logged in user."""
-    res = test_client.get("/en/tokens/current")
+    res = test_client.get("/en/tokens")
 
     assert res.status_code == 302
-    assert res.location.endswith("/en/tokens/request")
+    assert res.location.endswith("/en/request")
 
 
 def test_ui_locales_falls_back_to_unknown_locale_code(unconfigured_test_client):
@@ -223,7 +226,7 @@ def test_ui_locales_falls_back_to_unknown_locale_code(unconfigured_test_client):
             "auth_server": "https://test.example.com",
         }
 
-    res = unconfigured_test_client.get("/en/tokens/request")
+    res = unconfigured_test_client.get("/en/request/authorization_code")
 
     assert res.status_code == 200
     assert '<option value="fr">français</option>' in res.text

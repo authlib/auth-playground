@@ -52,6 +52,7 @@ from auth_playground.forms import PasswordForm
 from auth_playground.forms import RefreshTokenForm
 from auth_playground.forms import UnregisterClientForm
 from auth_playground.forms import UserInfoForm
+from auth_playground.grants import GRANTS_BY_NAME
 from auth_playground.grants import JWT_BEARER
 from auth_playground.grants import tokens_grant
 from auth_playground.jwt_bearer import assertion_subject
@@ -60,7 +61,7 @@ from auth_playground.jwt_bearer import sign_assertion
 from auth_playground.logout import logout_params
 from auth_playground.pages import GRANT_FORM_DATA
 from auth_playground.pages import REJECTED_RESPONSE
-from auth_playground.pages import render_tokens_page
+from auth_playground.pages import render_grant_page
 from auth_playground.session import server_metadata
 from auth_playground.token_request import extra_token_params
 
@@ -160,11 +161,11 @@ def client_dynamic_registration():
         )
         for error in errors or [_("Invalid request")]:
             flash(error, "error")
-        return redirect(url_for("routes.configure_client"))
+        return redirect(url_for("routes.dynamic_client"))
 
-    if not g.server_config.specs.oauth_2_dynamic_client_registration:
+    if not g.server_config.dynamic_registration:
         flash(_("Dynamic client registration not supported"), "error")
-        return redirect(url_for("routes.configure_client"))
+        return redirect(url_for("routes.manual_client"))
 
     registration_endpoint = g.server_config.metadata["registration_endpoint"]
 
@@ -223,7 +224,7 @@ def client_dynamic_registration():
         client_data = response.json()
     except requests.JSONDecodeError:
         flash(_("Invalid JSON response from registration endpoint"), "error")
-        return redirect(url_for("routes.configure_client"))
+        return redirect(url_for("routes.dynamic_client"))
     except requests.RequestException as exc:
         error = get_response_error(exc)
         if error:
@@ -233,11 +234,11 @@ def client_dynamic_registration():
             )
         else:
             flash(_("Dynamic client registration failed"), "error")
-        return redirect(url_for("routes.configure_client"))
+        return redirect(url_for("routes.dynamic_client"))
 
     if not isinstance(client_data, dict) or not client_data.get("client_id"):
         flash(_("Invalid response from registration endpoint"), "error")
-        return redirect(url_for("routes.configure_client"))
+        return redirect(url_for("routes.dynamic_client"))
 
     auth_method = client_data.get("token_endpoint_auth_method", requested_auth_method)
     if auth_method not in METHODS:
@@ -249,7 +250,7 @@ def client_dynamic_registration():
             ).format(auth_method=auth_method),
             "error",
         )
-        return redirect(url_for("routes.configure_client"))
+        return redirect(url_for("routes.dynamic_client"))
 
     client_secret = client_data.get("client_secret")
     if auth_method in SECRET_METHODS and not client_secret:
@@ -261,7 +262,7 @@ def client_dynamic_registration():
             ).format(auth_method=auth_method),
             "error",
         )
-        return redirect(url_for("routes.configure_client"))
+        return redirect(url_for("routes.dynamic_client"))
 
     if auth_method == KEY_METHOD and not client_key:
         flash(
@@ -272,7 +273,7 @@ def client_dynamic_registration():
             ),
             "error",
         )
-        return redirect(url_for("routes.configure_client"))
+        return redirect(url_for("routes.dynamic_client"))
 
     uses_key = auth_method == KEY_METHOD
     if uses_key:
@@ -287,7 +288,7 @@ def client_dynamic_registration():
                 ).format(alg=signing_alg),
                 "error",
             )
-            return redirect(url_for("routes.configure_client"))
+            return redirect(url_for("routes.dynamic_client"))
 
     auth_playground.setup_oauth_runtime(
         current_app,
@@ -424,11 +425,7 @@ def authorize():
     """Redirect users to the Identity Provider authorization page."""
     form = AuthorizationParamsForm()
     if request.method == "POST" and not form.validate_on_submit():
-        if "csrf_token" in form.errors:
-            flash(_("Invalid request"), "error")
-        return render_tokens_page(
-            "request", grant="authorization_code", grant_form=form
-        )
+        return render_grant_form("authorization_code", form)
 
     params = authorization_params(form)
     if request.method == "GET" and "user" in session:
@@ -597,14 +594,14 @@ def retry_grant_form(grant, form):
             if name not in skipped
         ],
     }
-    return redirect(url_for("routes.tokens", tab="request", grant=grant))
+    return redirect(url_for("routes.grant_page", grant=grant))
 
 
 def render_grant_form(grant, form):
-    """Render the request tab again, with the form of the grant type called ``grant``."""
+    """Render the page of the grant type called ``grant`` again, with its form."""
     if "csrf_token" in form.errors:
         flash(_("Invalid request"), "error")
-    return render_tokens_page("request", grant=grant, grant_form=form)
+    return render_grant_page(GRANTS_BY_NAME[grant], grant_form=form)
 
 
 @bp.route("/token/client-credentials", methods=["POST"])
@@ -624,7 +621,7 @@ def client_credentials():
     forget_tokens()
     store_token(token, "client_credentials", requested_scope=scope or None)
     flash(_("The client obtained tokens."), "success")
-    return redirect(url_for("routes.tokens", tab="current"))
+    return redirect(url_for("routes.tokens"))
 
 
 @bp.route("/token/password", methods=["POST"])
@@ -654,7 +651,7 @@ def password():
     forget_tokens()
     store_token(token, "password", requested_scope=scope or None)
     sign_in_user(claims, form.username.data)
-    return redirect(url_for("routes.tokens", tab="current"))
+    return redirect(url_for("routes.tokens"))
 
 
 @bp.route("/token/jwt-bearer", methods=["POST"])
@@ -690,7 +687,7 @@ def jwt_bearer():
     forget_tokens()
     store_token(token, JWT_BEARER, requested_scope=scope or None)
     sign_in_user(claims, assertion_subject(form))
-    return redirect(url_for("routes.tokens", tab="current"))
+    return redirect(url_for("routes.tokens"))
 
 
 def sign_in_user(claims, subject):
@@ -757,7 +754,7 @@ def authorize_callback():
         )
     except JoseError as exc:
         flash(_("The ID token is not valid: {error}").format(error=exc), "error")
-        return redirect(url_for("routes.tokens"))
+        return redirect(url_for("routes.grant_page", grant="authorization_code"))
     # RuntimeError and KeyError come from the ID token check, for instance a
     # provider without jwks_uri. ValueError comes from a token response that
     # is not a JSON object.
@@ -778,7 +775,7 @@ def authorize_callback():
             ),
             "error",
         )
-        return redirect(url_for("routes.tokens"))
+        return redirect(url_for("routes.grant_page", grant="authorization_code"))
 
     # Authlib only checks the ID token when the request had a nonce, that is
     # when the scope had openid. The checked claims are then a UserInfo. A
@@ -788,7 +785,7 @@ def authorize_callback():
         claims, reason = read_id_token(token)
         if reason:
             flash(_("The tokens are not kept. {reason}").format(reason=reason), "error")
-            return redirect(url_for("routes.tokens"))
+            return redirect(url_for("routes.grant_page", grant="authorization_code"))
 
     session.pop("token", None)
     session["user"] = claims

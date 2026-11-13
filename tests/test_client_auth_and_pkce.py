@@ -25,7 +25,7 @@ def authorization_query(res):
 def test_manual_public_client(unconfigured_testapp):
     """Test a client without secret is configured as a public client."""
     server_session(unconfigured_testapp)
-    form = unconfigured_testapp.get("/en/client").forms["client-form"]
+    form = unconfigured_testapp.get("/en/client/manual").forms["client-form"]
     form["client_id"] = "public-client"
     form["token_endpoint_auth_method"] = "none"
     form.submit("save")
@@ -47,7 +47,7 @@ def test_manual_client_secret_must_match_method(
 ):
     """Test the client secret is required exactly when the method uses one."""
     server_session(unconfigured_testapp)
-    form = unconfigured_testapp.get("/en/client").forms["client-form"]
+    form = unconfigured_testapp.get("/en/client/manual").forms["client-form"]
     form["client_id"] = "client"
     form["client_secret"] = secret
     form["token_endpoint_auth_method"] = method
@@ -59,7 +59,7 @@ def test_manual_client_secret_must_match_method(
 def test_manual_client_marks_methods_not_advertised(unconfigured_testapp):
     """Test the methods the server does not advertise are labelled."""
     server_session(unconfigured_testapp)
-    res = unconfigured_testapp.get("/en/client")
+    res = unconfigured_testapp.get("/en/client/manual")
 
     assert "client_secret_post (not advertised)" in res.text
     assert "client_secret_basic (not advertised)" not in res.text
@@ -68,7 +68,9 @@ def test_manual_client_marks_methods_not_advertised(unconfigured_testapp):
 def test_dynamic_registration_public_client(unconfigured_testapp):
     """Test the registration of a public client."""
     server_session(unconfigured_testapp)
-    form = unconfigured_testapp.get("/en/client").forms["dynamic-registration-form"]
+    form = unconfigured_testapp.get("/en/client/dynamic").forms[
+        "dynamic-registration-form"
+    ]
     form["client_type"] = "public"
     with patch("requests.post") as mock_post:
         mock_post.return_value.json.return_value = {"client_id": "public-client"}
@@ -86,7 +88,9 @@ def test_dynamic_registration_public_client(unconfigured_testapp):
 def test_dynamic_registration_keeps_the_method_of_the_server(unconfigured_testapp):
     """Test the method returned by the server wins over the requested one."""
     server_session(unconfigured_testapp)
-    form = unconfigured_testapp.get("/en/client").forms["dynamic-registration-form"]
+    form = unconfigured_testapp.get("/en/client/dynamic").forms[
+        "dynamic-registration-form"
+    ]
     with patch("requests.post") as mock_post:
         mock_post.return_value.json.return_value = {
             "client_id": "client",
@@ -104,7 +108,9 @@ def test_dynamic_registration_keeps_the_method_of_the_server(unconfigured_testap
 def test_dynamic_registration_without_grant_types(unconfigured_testapp):
     """Test the registration needs at least one grant type."""
     server_session(unconfigured_testapp)
-    form = unconfigured_testapp.get("/en/client").forms["dynamic-registration-form"]
+    form = unconfigured_testapp.get("/en/client/dynamic").forms[
+        "dynamic-registration-form"
+    ]
     for checkbox in form.fields["grant_types"]:
         checkbox.checked = False
     with patch("requests.post") as mock_post:
@@ -117,7 +123,9 @@ def test_dynamic_registration_without_grant_types(unconfigured_testapp):
 def test_dynamic_registration_grant_types_are_not_required(unconfigured_testapp):
     """Test the browser lets a grant type checkbox stay unchecked."""
     server_session(unconfigured_testapp)
-    form = unconfigured_testapp.get("/en/client").forms["dynamic-registration-form"]
+    form = unconfigured_testapp.get("/en/client/dynamic").forms[
+        "dynamic-registration-form"
+    ]
 
     assert all("required" not in box.attrs for box in form.fields["grant_types"])
 
@@ -125,7 +133,9 @@ def test_dynamic_registration_grant_types_are_not_required(unconfigured_testapp)
 def test_dynamic_registration_only_refresh_token(unconfigured_testapp):
     """Test no response type is registered without authorization_code."""
     server_session(unconfigured_testapp)
-    form = unconfigured_testapp.get("/en/client").forms["dynamic-registration-form"]
+    form = unconfigured_testapp.get("/en/client/dynamic").forms[
+        "dynamic-registration-form"
+    ]
     form.fields["grant_types"][0].checked = False
     with patch("requests.post") as mock_post:
         mock_post.return_value.json.return_value = {
@@ -164,7 +174,9 @@ def test_authorize_uses_s256_by_default(unconfigured_test_client):
 def test_authorize_with_chosen_pkce(unconfigured_testapp, method):
     """Test the PKCE method chosen in the form."""
     server_session(unconfigured_testapp, {"client_id": "c", "client_secret": "s"})
-    form = unconfigured_testapp.get("/en/tokens/request").forms["auth-params-form"]
+    form = unconfigured_testapp.get("/en/request/authorization_code").forms[
+        "auth-params-form"
+    ]
     form["pkce"] = method
     res = form.submit("sign_in")
 
@@ -183,7 +195,9 @@ def test_authorize_with_chosen_pkce(unconfigured_testapp, method):
 def test_authorize_with_other_scopes_and_extra_params(unconfigured_testapp):
     """Test the other scopes and the extra parameters are sent."""
     server_session(unconfigured_testapp, {"client_id": "c", "client_secret": "s"})
-    form = unconfigured_testapp.get("/en/tokens/request").forms["auth-params-form"]
+    form = unconfigured_testapp.get("/en/request/authorization_code").forms[
+        "auth-params-form"
+    ]
     form["other_scopes"] = "offline_access openid"
     form["extra_params"] = "resource=https://api.example.com\n\naudience = api"
     res = form.submit("sign_in")
@@ -208,7 +222,9 @@ def test_authorize_refuses_invalid_parameters(
 ):
     """Test the authorization request is not sent with invalid parameters."""
     server_session(unconfigured_testapp, {"client_id": "c", "client_secret": "s"})
-    form = unconfigured_testapp.get("/en/tokens/request").forms["auth-params-form"]
+    form = unconfigured_testapp.get("/en/request/authorization_code").forms[
+        "auth-params-form"
+    ]
     form[field] = value
     res = form.submit("sign_in")
 
@@ -227,7 +243,7 @@ def test_parse_extra_params():
 def test_preview_shows_the_authorization_request(unconfigured_test_client):
     """Test the preview of the authorization request on the page."""
     server_session(unconfigured_test_client, {"client_id": "c", "client_secret": "s"})
-    res = unconfigured_test_client.get("/en/tokens/request")
+    res = unconfigured_test_client.get("/en/request/authorization_code")
 
     assert "GET https://test.example.com/oauth/authorize" in res.text
     assert "code_challenge_method=S256" in res.text
@@ -275,7 +291,7 @@ def test_new_client_forgets_the_previous_tokens(unconfigured_testapp):
         assert "oauth_config" not in sess
         assert not {"user", "token", "token_info"} & set(sess)
 
-    form = res.forms["client-form"]
+    form = unconfigured_testapp.get("/en/client/manual").forms["client-form"]
     form["client_id"] = "new"
     form["client_secret"] = "secret"
     form.submit("save")
@@ -324,7 +340,9 @@ def test_callback_sends_the_verifier_of_its_state(unconfigured_test_client):
 def test_repeated_extra_params_are_all_sent(unconfigured_testapp):
     """Test an extra parameter given on several lines is sent several times."""
     server_session(unconfigured_testapp, {"client_id": "c", "client_secret": "s"})
-    form = unconfigured_testapp.get("/en/tokens/request").forms["auth-params-form"]
+    form = unconfigured_testapp.get("/en/request/authorization_code").forms[
+        "auth-params-form"
+    ]
     form["extra_params"] = "resource=https://a.example\nresource=https://b.example"
     res = form.submit("sign_in")
 
@@ -357,7 +375,7 @@ def test_preview_lists_repeated_extra_params(unconfigured_test_client, csrf_toke
 def test_authorize_without_scope_sends_the_default_scope(unconfigured_testapp):
     """Test the default scope is sent and shown when no scope is chosen."""
     server_session(unconfigured_testapp, {"client_id": "c", "client_secret": "s"})
-    page = unconfigured_testapp.get("/en/tokens/request")
+    page = unconfigured_testapp.get("/en/request/authorization_code")
     form = page.forms["auth-params-form"]
     for checkbox in form.fields["scopes"]:
         checkbox.checked = False
@@ -370,7 +388,9 @@ def test_authorize_without_scope_sends_the_default_scope(unconfigured_testapp):
 def test_authorize_refuses_authlib_argument_names(unconfigured_testapp, name):
     """Test the extra parameters cannot use the names of Authlib arguments."""
     server_session(unconfigured_testapp, {"client_id": "c", "client_secret": "s"})
-    form = unconfigured_testapp.get("/en/tokens/request").forms["auth-params-form"]
+    form = unconfigured_testapp.get("/en/request/authorization_code").forms[
+        "auth-params-form"
+    ]
     form["extra_params"] = f"{name}=x"
     res = form.submit("sign_in")
 
@@ -381,7 +401,9 @@ def test_authorize_refuses_authlib_argument_names(unconfigured_testapp, name):
 def test_dynamic_registration_with_unsupported_method(unconfigured_testapp):
     """Test a client registered with an unsupported method is refused."""
     server_session(unconfigured_testapp)
-    form = unconfigured_testapp.get("/en/client").forms["dynamic-registration-form"]
+    form = unconfigured_testapp.get("/en/client/dynamic").forms[
+        "dynamic-registration-form"
+    ]
     with patch("requests.post") as mock_post:
         mock_post.return_value.json.return_value = {
             "client_id": "client",
@@ -394,23 +416,6 @@ def test_dynamic_registration_with_unsupported_method(unconfigured_testapp):
     assert "does not support" in res.text
     with unconfigured_testapp.session_transaction() as sess:
         assert "oauth_config" not in sess
-
-
-def test_invalid_manual_form_keeps_the_registration_form(unconfigured_testapp):
-    """Test a refused manual configuration keeps the registration defaults."""
-    server_session(unconfigured_testapp)
-    form = unconfigured_testapp.get("/en/client").forms["client-form"]
-    form["client_id"] = "client"
-    res = form.submit("save")
-
-    registration = res.forms["dynamic-registration-form"]
-    assert [box.checked for box in registration.fields["grant_types"]] == [
-        True,
-        True,
-        False,
-        False,
-        False,
-    ]
 
 
 @pytest.mark.parametrize(
@@ -440,7 +445,9 @@ def test_pkce_default_without_advertised_methods(
 def test_invalid_field_is_marked_for_blades(unconfigured_testapp):
     """Test an invalid field gets aria-invalid and its message right after it."""
     server_session(unconfigured_testapp, {"client_id": "c", "client_secret": "s"})
-    form = unconfigured_testapp.get("/en/tokens/request").forms["auth-params-form"]
+    form = unconfigured_testapp.get("/en/request/authorization_code").forms[
+        "auth-params-form"
+    ]
     form["claims"] = "[1]"
     res = form.submit("sign_in")
 
@@ -464,7 +471,7 @@ def test_invalid_checkbox_list_is_marked_for_blades(unconfigured_app):
 def test_htmx_partial_uses_the_browsing_language(unconfigured_test_client, csrf_token):
     """Test a route without language prefix answers in the session language."""
     server_session(unconfigured_test_client, {"client_id": "c", "client_secret": "s"})
-    unconfigured_test_client.get("/fr/tokens/request")
+    unconfigured_test_client.get("/fr/request")
     res = unconfigured_test_client.post(
         "/authorize",
         data={"csrf_token": csrf_token(unconfigured_test_client), "max_age": "-1"},
@@ -484,7 +491,7 @@ def test_redirect_flash_uses_the_browsing_language(
 ):
     """Test a flash message from a route without prefix is translated."""
     server_session(unconfigured_test_client, {"client_id": "c", "client_secret": "s"})
-    unconfigured_test_client.get("/fr/tokens/request")
+    unconfigured_test_client.get("/fr/request")
     res = unconfigured_test_client.post(
         "/refresh",
         data={"csrf_token": csrf_token(unconfigured_test_client)},

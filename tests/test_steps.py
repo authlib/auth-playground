@@ -38,10 +38,10 @@ def test_steps_without_server(unconfigured_test_client):
 def test_steps_without_client(unconfigured_test_client):
     """Test the client step is current once the provider is set."""
     configure(unconfigured_test_client)
-    res = unconfigured_test_client.get("/en/client")
+    res = unconfigured_test_client.get("/en/client/manual")
 
     assert "<small>idp.example.com</small>" in res.text
-    assert "Register or enter a client" in res.text
+    assert "<small>Manual configuration</small>" in res.text
     assert '<a href="/en/client" aria-current="step">' in res.text
     assert "Step 1, done:" in res.text
 
@@ -62,11 +62,12 @@ def test_steps_without_client(unconfigured_test_client):
 def test_steps_show_the_client(unconfigured_test_client, oauth_config, summary):
     """Test the client step shows the client type and authentication."""
     configure(unconfigured_test_client, oauth_config)
-    res = unconfigured_test_client.get("/en/tokens/request")
+    res = unconfigured_test_client.get("/en/request")
 
     assert summary in res.text
-    assert "No tokens yet" in res.text
-    assert '<a href="/en/tokens" aria-current="step">' in res.text
+    assert "Choose a grant type" in res.text
+    assert "Available once you have tokens" in res.text
+    assert '<a href="/en/request" aria-current="step">' in res.text
 
 
 @pytest.mark.parametrize(
@@ -85,7 +86,7 @@ def test_steps_show_the_session(unconfigured_test_client, user, summary):
         token={"access_token": "a", "token_type": "Bearer"},
         user=user,
     )
-    res = unconfigured_test_client.get("/en/tokens/current")
+    res = unconfigured_test_client.get("/en/tokens")
 
     assert summary in res.text
 

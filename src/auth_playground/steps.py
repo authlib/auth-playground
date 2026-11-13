@@ -76,29 +76,39 @@ def client_step(provider):
     return Step(2, _("Client"), summary, url, done=True, locked=locked)
 
 
-def tokens_step(client):
-    """Return the tokens step."""
+def request_step(client):
+    """Return the step where the client requests tokens."""
     if not client.done:
-        return Step(3, _("Tokens"), _("Available once the client is set"), None)
+        return Step(3, _("Request"), _("Available once the client is set"), None)
+
+    url = url_for("routes.request_tokens")
+    if not session.get("token"):
+        return Step(3, _("Request"), _("Choose a grant type"), url)
+
+    return Step(3, _("Request"), str(tokens_grant().label), url, done=True)
+
+
+def tokens_step(request):
+    """Return the step that shows the tokens."""
+    if not request.done:
+        return Step(4, _("Tokens"), _("Available once you have tokens"), None)
 
     url = url_for("routes.tokens")
-    if not session.get("token"):
-        return Step(3, _("Tokens"), _("No tokens yet"), url)
-
     if not tokens_grant().user:
-        return Step(3, _("Tokens"), _("Client tokens"), url, done=True)
+        return Step(4, _("Tokens"), _("Client tokens"), url, done=True)
 
     user = session.get("user") or {}
     if name := user.get("preferred_username") or user.get("sub"):
         return Step(
-            3, _("Tokens"), _("Signed in as {name}").format(name=name), url, done=True
+            4, _("Tokens"), _("Signed in as {name}").format(name=name), url, done=True
         )
 
-    return Step(3, _("Tokens"), _("Tokens obtained"), url, done=True)
+    return Step(4, _("Tokens"), _("Tokens obtained"), url, done=True)
 
 
 def setup_steps():
-    """Return the provider, client and tokens steps."""
+    """Return the provider, client, request and tokens steps."""
     provider = provider_step()
     client = client_step(provider)
-    return [provider, client, tokens_step(client)]
+    request = request_step(client)
+    return [provider, client, request, tokens_step(request)]

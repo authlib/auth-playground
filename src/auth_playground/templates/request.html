@@ -1,0 +1,46 @@
+{% extends "layout.html" %}
+{% set current_step = 3 %}
+
+{% block title %}{% trans %}Request tokens{% endtrans %}{% endblock %}
+
+{% block content %}
+    <hgroup>
+        <h2>{% trans %}Get tokens{% endtrans %}</h2>
+        <p>{% trans %}Choose how the client obtains its tokens: for a user who signs in, or for the client itself.{% endtrans %}</p>
+    </hgroup>
+
+    {% include "_rejected_response.html" %}
+
+    {% for group, intro in grant_groups %}
+        <section>
+            <hgroup>
+                <h3>{{ group }}</h3>
+                <p>{{ intro }}</p>
+            </hgroup>
+            <div class="grant-choices">
+                {% for grant in grants|selectattr("group", "sameas", group) %}
+                    <article>
+                        <header>
+                            <h4>{{ grant.label }}</h4>
+                        </header>
+                        <p>
+                            {{ grant.description }}
+                            {% for label, url in grant.references %}
+                                <a href="{{ url }}" target="_blank" rel="noopener noreferrer">{{ label }}</a>{% if not loop.last %} ·{% endif %}
+                            {% endfor %}
+                        </p>
+                        {% if grant.marks %}
+                            <p><small class="marks">{{ grant.marks|join(" · ") }}</small></p>
+                        {% endif %}
+                        {% if grant is sameas tokens_grant %}
+                            <p><small class="marks">{% trans %}It gave the current tokens.{% endtrans %}</small></p>
+                        {% endif %}
+                        <footer>
+                            <a href="{{ url_for('routes.grant_page', grant=grant.name) }}" role="button"{% if grant.marks %} class="secondary"{% endif %}>{% trans label=grant.label %}Use {{ label }}{% endtrans %}</a>
+                        </footer>
+                    </article>
+                {% endfor %}
+            </div>
+        </section>
+    {% endfor %}
+{% endblock %}

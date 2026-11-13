@@ -1,0 +1,13 @@
+{% extends "layout.html" %}
+{% set step_summary = grant.label %}
+{% set current_step = 3 %}
+
+{% block title %}{{ grant.label }}{% endblock %}
+
+{% block content %}
+    <h2>{{ grant.label }}</h2>
+
+    {% include "_rejected_response.html" %}
+
+    {% include "_grant_panel.html" %}
+{% endblock %}

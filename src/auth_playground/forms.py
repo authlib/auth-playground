@@ -60,7 +60,6 @@ from auth_playground.client_key import key_summary
 from auth_playground.client_key import pending_key
 from auth_playground.client_key import preferred_algorithm
 from auth_playground.client_key import publish_key
-from auth_playground.grants import GRANTS
 from auth_playground.grants import JWT_BEARER
 from auth_playground.grants import advertised_grant_types
 from auth_playground.grants import grant_type_label
@@ -592,7 +591,7 @@ class ClientConfigForm(ClientKeyMixin, BaseForm):
     key_form_name = "manual"
 
     def __init__(self, *args, **kwargs):
-        meta = {"htmx_endpoint": url_for("routes.configure_client")}
+        meta = {"htmx_endpoint": url_for("routes.manual_client")}
         super().__init__(*args, meta={**meta, **kwargs.pop("meta", {})}, **kwargs)
         show_field(self.client_secret, not self.uses_key())
         show_field(self.userinfo_signed_response_alg, bool(advertised_userinfo_algs()))
@@ -1167,36 +1166,6 @@ class JwtBearerForm(RequestParamsForm):
                     claims=", ".join(form_claims)
                 )
             )
-
-
-def grant_label(grant):
-    """Mark the label of a grant type that is deprecated, not advertised or not registered."""
-    marks = [grant.label]
-    if grant.deprecated:
-        marks.append(_("deprecated"))
-    if not grant.advertised:
-        marks.append(_("not advertised"))
-    if not grant.registered:
-        marks.append(_("not registered"))
-    return " · ".join(str(mark) for mark in marks)
-
-
-def get_grant_choices():
-    """Group the grant types, and label the ones the server does not advertise."""
-    return [
-        SelectChoice(grant.name, grant_label(grant), optgroup=grant.group)
-        for grant in GRANTS
-    ]
-
-
-class GrantForm(BaseForm):
-    """Choose the grant type used to obtain tokens."""
-
-    class Meta:
-        csrf = False
-
-    grant = SelectField(_("Grant type:"), choices=get_grant_choices)
-    choose = SubmitField(_("Choose"), render_kw={"class": "secondary"})
 
 
 class LogoutParamsForm(BaseForm):

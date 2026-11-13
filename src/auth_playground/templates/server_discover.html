@@ -1,0 +1,28 @@
+{% extends "layout.html" %}
+{% set step_summary = _("Discover a provider") %}
+{% set current_step = 1 %}
+{% from "_form.html" import render_form %}
+
+{% block title %}{% trans %}Discover a provider{% endtrans %}{% endblock %}
+
+{% block content %}
+    <article>
+        <header>
+            <h2>{% trans %}Choose a provider{% endtrans %}</h2>
+        </header>
+
+        <p>{% trans %}Enter the URL of your OAuth2 or OpenID Connect provider to validate it and discover configuration options.{% endtrans %}</p>
+
+        {% call render_form(form, url_for('routes.discover_server'), id="server-form") %}
+            {{ form.issuer_url() }}
+        {% endcall %}
+
+        <details>
+            <summary role="button" class="outline">{% trans %}What happens next?{% endtrans %}</summary>
+            <ol>
+                <li>{% trans %}Auth Playground will fetch the server's metadata from{% endtrans %} <code>/.well-known/openid-configuration</code> {% trans %}or{% endtrans %} <code>/.well-known/oauth-authorization-server</code></li>
+                <li>{% trans %}You then register the client of the playground, dynamically if the provider supports it, or by hand.{% endtrans %}</li>
+            </ol>
+        </details>
+    </article>
+{% endblock %}

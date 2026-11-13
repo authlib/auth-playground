@@ -17,7 +17,7 @@ def password_user(iam_server):
 
 def request_tokens(testapp, **fields):
     """Fill the password form and submit it."""
-    res = testapp.get("/en/tokens/request?grant=password")
+    res = testapp.get("/en/request/password")
     form = res.forms["password-form"]
     for name, value in fields.items():
         form[name] = value
@@ -37,7 +37,7 @@ def test_password_grant_obtains_tokens(iam_server, iam_client, password_user, te
     assert "<code>password</code>" in res.text
     assert "forget-tokens-form" in res.forms
     assert "/en/tokens/logout" not in res.text
-    res = testapp.get("/en/tokens/request?grant=authorization_code")
+    res = testapp.get("/en/request/authorization_code")
     assert "Sign in again" not in res.text
     with testapp.session_transaction() as sess:
         assert sess["token"]["access_token"]
@@ -155,7 +155,7 @@ def test_password_grant_refuses_reserved_params(testapp, name):
 def test_password_grant_preview_leaves_out_empty_credentials(unconfigured_test_client):
     """Test the preview shows no credentials until they are typed."""
     server_session(unconfigured_test_client, {"client_id": "c", "client_secret": "s"})
-    res = unconfigured_test_client.get("/en/tokens/request?grant=password")
+    res = unconfigured_test_client.get("/en/request/password")
 
     assert "grant_type=password" in res.text
     assert "username=" not in res.text
@@ -167,9 +167,10 @@ def test_password_grant_preview_leaves_out_empty_credentials(unconfigured_test_c
 def test_password_grant_is_marked_deprecated(unconfigured_test_client):
     """Test the selector and the panel say the grant type is deprecated."""
     server_session(unconfigured_test_client, {"client_id": "c", "client_secret": "s"})
-    res = unconfigured_test_client.get("/en/tokens/request?grant=password")
+    res = unconfigured_test_client.get("/en/request")
+    assert "Deprecated · Not advertised" in res.text
 
-    assert "Password (ROPC) · deprecated · not advertised" in res.text
+    res = unconfigured_test_client.get("/en/request/password")
     assert "advises against this grant type" in res.text
 
 
@@ -205,7 +206,7 @@ def test_a_refused_request_shows_the_response(
     res = request_tokens(testapp, username=password_user.user_name, password="wrong")
 
     assert res.status_int == 302
-    assert res.location.endswith("/en/tokens/request?grant=password")
+    assert res.location.endswith("/en/request/password")
     res = res.follow()
     assert "Response of the token endpoint" in res.text
     assert f"POST {iam_server.url}oauth/token" in res.text

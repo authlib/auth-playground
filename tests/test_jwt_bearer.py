@@ -60,7 +60,7 @@ def key_client(unconfigured_testapp, provider_metadata, client_key):
 
 def jwt_bearer_form(testapp):
     """Return the JWT bearer form of the tokens page."""
-    return testapp.get("/en/tokens/request?grant=jwt_bearer").forms["jwt-bearer-form"]
+    return testapp.get("/en/request/jwt_bearer").forms["jwt-bearer-form"]
 
 
 def request_tokens(testapp, token=None, **fields):
@@ -117,7 +117,7 @@ def test_the_key_is_the_default_source(key_client, client_key):
     form = jwt_bearer_form(key_client)
 
     assert form["source"].value == "key"
-    res = key_client.get("/en/tokens/request?grant=jwt_bearer")
+    res = key_client.get("/en/request/jwt_bearer")
     assert "Sign with the client key: ES256" in res.text
     assert "Sign with the client secret: this client has none." in res.text
     assert '"kid": "' + client_key["kid"] in res.text.replace("&#34;", '"')
@@ -126,7 +126,7 @@ def test_the_key_is_the_default_source(key_client, client_key):
 def test_a_public_client_pastes_the_assertion(unconfigured_testapp, provider_metadata):
     """Test a client without a secret or a key can only paste an assertion."""
     server_session(unconfigured_testapp, {"client_id": "client"})
-    res = unconfigured_testapp.get("/en/tokens/request?grant=jwt_bearer")
+    res = unconfigured_testapp.get("/en/request/jwt_bearer")
 
     assert res.forms["jwt-bearer-form"]["source"].value == "paste"
     assert 'disabled id="source-0"' in res.text
@@ -419,14 +419,14 @@ def test_the_preview_of_an_empty_pasted_assertion(secret_client):
 
     assert "Decoded, the signature is not checked" in text
     assert "Header" not in text
-    res = secret_client.get("/en/tokens/request?grant=jwt_bearer")
+    res = secret_client.get("/en/request/jwt_bearer")
     assert "assertion=[generated]" in res.text
 
 
 def test_the_grant_type_can_be_registered(unconfigured_testapp, provider_metadata):
     """Test the JWT bearer grant type is offered at registration."""
     server_session(unconfigured_testapp)
-    res = unconfigured_testapp.get("/en/client")
+    res = unconfigured_testapp.get("/en/client/dynamic")
 
     assert f'value="{JWT_BEARER}"' in res.text
 

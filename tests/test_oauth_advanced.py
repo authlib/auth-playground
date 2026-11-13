@@ -38,7 +38,7 @@ def test_dynamic_registration_success(iam_server, unconfigured_testapp):
         }
         sess["server_type"] = "oidc"
 
-    res = unconfigured_testapp.get("/en/client")
+    res = unconfigured_testapp.get("/en/client/dynamic")
     res = res.forms["dynamic-registration-form"].submit("register")
 
     assert res.status_int == 302
@@ -72,14 +72,14 @@ def test_dynamic_registration_without_server_metadata(
         data={"csrf_token": csrf_token(unconfigured_test_client)},
         follow_redirects=True,
     )
-    assert b"Provider URL" in res.data
+    assert b"Choose a provider" in res.data
 
 
 def test_dynamic_registration_request_exception(unconfigured_testapp):
     """Test dynamic registration handles request exceptions."""
     registration_session(unconfigured_testapp)
 
-    res = unconfigured_testapp.get("/en/client")
+    res = unconfigured_testapp.get("/en/client/dynamic")
     with patch("requests.post", side_effect=requests.ConnectionError()):
         res = res.forms["dynamic-registration-form"].submit("register").maybe_follow()
 
@@ -90,7 +90,7 @@ def test_dynamic_registration_with_initial_access_token(unconfigured_testapp):
     """Test dynamic registration with initial access token."""
     registration_session(unconfigured_testapp)
 
-    res = unconfigured_testapp.get("/en/client")
+    res = unconfigured_testapp.get("/en/client/dynamic")
     form = res.forms["dynamic-registration-form"]
     form["initial_access_token"] = "test-token"
     with patch("requests.post") as mock_post:
@@ -270,7 +270,7 @@ def test_dynamic_registration_with_rp_initiated_logout(unconfigured_testapp):
         end_session_endpoint="https://test.example.com/oauth/end_session",
     )
 
-    res = unconfigured_testapp.get("/en/client")
+    res = unconfigured_testapp.get("/en/client/dynamic")
     with patch("requests.post") as mock_post:
         mock_post.return_value.json.return_value = {
             "client_id": "new-client-id",
@@ -293,7 +293,7 @@ def test_dynamic_registration_shows_provider_error(unconfigured_testapp):
     """Test dynamic registration displays the provider error."""
     registration_session(unconfigured_testapp)
 
-    res = unconfigured_testapp.get("/en/client")
+    res = unconfigured_testapp.get("/en/client/dynamic")
     with patch("requests.post") as mock_post:
         mock_post.return_value.raise_for_status.side_effect = response_error(
             json={"error_description": "Invalid redirect URI"}
@@ -307,7 +307,7 @@ def test_dynamic_registration_invalid_json(unconfigured_testapp):
     """Test dynamic registration handles a response that is not JSON."""
     registration_session(unconfigured_testapp)
 
-    res = unconfigured_testapp.get("/en/client")
+    res = unconfigured_testapp.get("/en/client/dynamic")
     with patch("requests.post") as mock_post:
         mock_post.return_value.json.side_effect = requests.JSONDecodeError(
             "Expecting value", "", 0
@@ -322,7 +322,7 @@ def test_dynamic_registration_invalid_client_data(unconfigured_testapp, client_d
     """Test dynamic registration handles a response without a client."""
     registration_session(unconfigured_testapp)
 
-    res = unconfigured_testapp.get("/en/client")
+    res = unconfigured_testapp.get("/en/client/dynamic")
     with patch("requests.post") as mock_post:
         mock_post.return_value.json.return_value = client_data
         res = res.forms["dynamic-registration-form"].submit("register").maybe_follow()
@@ -334,7 +334,7 @@ def test_dynamic_registration_without_client_secret(unconfigured_testapp):
     """Test dynamic registration refuses a client without a secret."""
     registration_session(unconfigured_testapp)
 
-    res = unconfigured_testapp.get("/en/client")
+    res = unconfigured_testapp.get("/en/client/dynamic")
     with patch("requests.post") as mock_post:
         mock_post.return_value.json.return_value = {"client_id": "public-client"}
         res = res.forms["dynamic-registration-form"].submit("register").maybe_follow()
@@ -372,7 +372,7 @@ def callback_without_openid(testapp, **parse_id_token):
     Authlib sends no nonce for this scope, so it does not check the ID token.
     The response also has a userinfo member that the playground must ignore.
     """
-    form = testapp.get("/en/tokens/request").forms["auth-params-form"]
+    form = testapp.get("/en/request/authorization_code").forms["auth-params-form"]
     check_scopes(form, ["profile"])
     res = form.submit("sign_in")
     state = parse_qs(urlsplit(res.location).query)["state"][0]
@@ -443,7 +443,7 @@ def test_each_session_uses_its_own_client(iam_server, unconfigured_app):
 
 def test_authorize_with_custom_parameters(testapp):
     """Test authorization request with the parameters from the form."""
-    form = testapp.get("/en/tokens/request").forms["auth-params-form"]
+    form = testapp.get("/en/request/authorization_code").forms["auth-params-form"]
     check_scopes(form, ["openid", "profile"])
     form["prompt"] = "consent"
     form["ui_locales"] = "fr"
@@ -529,7 +529,7 @@ def test_refresh_shows_provider_error(testapp):
     with testapp.session_transaction() as sess:
         sess["token"] = {"access_token": "test-access", "refresh_token": "invalid"}
 
-    res = testapp.get("/en/tokens/current")
+    res = testapp.get("/en/tokens")
     res = res.forms["refresh-form"].submit("refresh").maybe_follow()
 
     assert "The token request failed:" in res.text
@@ -537,7 +537,7 @@ def test_refresh_shows_provider_error(testapp):
 
 def test_authorize_with_empty_parameters(testapp):
     """Test authorization request without optional parameters."""
-    form = testapp.get("/en/tokens/request").forms["auth-params-form"]
+    form = testapp.get("/en/request/authorization_code").forms["auth-params-form"]
     check_scopes(form, [])
     res = form.submit("sign_in")
 

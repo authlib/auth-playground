@@ -38,7 +38,7 @@ def test_form_post_is_labelled_when_not_advertised(app, metadata, label):
 
 def test_the_response_mode_is_sent(testapp):
     """Test the form_post response mode goes in the authorization request."""
-    form = testapp.get("/en/tokens/request").forms["auth-params-form"]
+    form = testapp.get("/en/request/authorization_code").forms["auth-params-form"]
     form["response_mode"] = "form_post"
 
     res = form.submit("sign_in")
@@ -48,7 +48,7 @@ def test_the_response_mode_is_sent(testapp):
 
 def test_the_response_mode_is_not_an_extra_param(testapp):
     """Test the response mode is set with its own field."""
-    form = testapp.get("/en/tokens/request").forms["auth-params-form"]
+    form = testapp.get("/en/request/authorization_code").forms["auth-params-form"]
     form["extra_params"] = "response_mode=form_post"
 
     res = form.submit("sign_in")

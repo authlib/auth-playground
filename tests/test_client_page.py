@@ -8,7 +8,7 @@ from tests.fake_provider import server_session
 
 def register(testapp, **client_data):
     """Register a client with the dynamic registration form."""
-    form = testapp.get("/en/client").forms["dynamic-registration-form"]
+    form = testapp.get("/en/client/dynamic").forms["dynamic-registration-form"]
     with patch("requests.post") as mock_post:
         mock_post.return_value.json.return_value = {
             "client_id": "registered",
@@ -66,7 +66,7 @@ def test_changing_a_registered_client_keeps_it_at_the_provider(unconfigured_test
         res = res.forms["change-client-form"].submit("change").follow()
 
     mock_delete.assert_not_called()
-    assert "dynamic-registration-form" in res.forms
+    assert "/en/client/dynamic" in res.text
     with unconfigured_testapp.session_transaction() as sess:
         assert "oauth_config" not in sess
         assert "registration_access_token" not in sess
@@ -105,9 +105,10 @@ def test_a_grant_type_not_registered_is_marked(unconfigured_testapp):
     server_session(unconfigured_testapp)
     register(unconfigured_testapp, grant_types=["authorization_code", "refresh_token"])
 
-    res = unconfigured_testapp.get("/en/tokens/request?grant=password")
+    res = unconfigured_testapp.get("/en/request")
+    assert "Deprecated · Not advertised · Not registered" in res.text
 
-    assert "Password (ROPC) · deprecated · not advertised · not registered" in res.text
+    res = unconfigured_testapp.get("/en/request/password")
     assert (
         "This client is not registered for the Password (ROPC) grant type, "
         "only for <code>authorization_code</code>, <code>refresh_token</code>."
@@ -119,7 +120,7 @@ def test_a_manual_client_has_no_registration_warning(unconfigured_testapp):
     """Test the grant types of a client entered by hand are not known."""
     server_session(unconfigured_testapp, {"client_id": "c", "client_secret": "s"})
 
-    res = unconfigured_testapp.get("/en/tokens/request?grant=password")
+    res = unconfigured_testapp.get("/en/request/password")
 
     assert "not registered" not in res.text
 
@@ -128,7 +129,7 @@ def test_the_registered_grant_types_show_their_label_and_value(unconfigured_test
     """Test the registration checkboxes show the label, then the protocol value."""
     server_session(unconfigured_testapp)
 
-    res = unconfigured_testapp.get("/en/client")
+    res = unconfigured_testapp.get("/en/client/dynamic")
 
     assert (
         'JWT bearer (not advertised) <code class="param-name">'

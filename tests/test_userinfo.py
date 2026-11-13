@@ -20,7 +20,7 @@ def sign_in(iam_server, iam_client, user, testapp):
 
 def userinfo_form(testapp):
     """Return the UserInfo form of the current tokens tab."""
-    return testapp.get("/en/tokens/current").forms["userinfo-form"]
+    return testapp.get("/en/tokens").forms["userinfo-form"]
 
 
 def get_userinfo(testapp):
@@ -278,7 +278,7 @@ def test_userinfo_button_only_for_user_tokens(test_client, grant, shown):
         sess["token"] = {"access_token": "test-access"}
         sess["token_info"] = {"grant": grant, "obtained_at": 0}
 
-    res = test_client.get("/en/tokens/current")
+    res = test_client.get("/en/tokens")
 
     assert (b"userinfo-form" in res.data) is shown
 

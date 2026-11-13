@@ -21,8 +21,11 @@ from auth_playground.forms import ClientConfigForm
 from auth_playground.forms import DynamicRegistrationForm
 from auth_playground.forms import ServerConfigForm
 from auth_playground.forms import UnregisterClientForm
+from auth_playground.grants import GRANTS_BY_NAME
 from auth_playground.grants import tokens_grant
 from auth_playground.oauth import forget_registered_client
+from auth_playground.pages import render_grant_page
+from auth_playground.pages import render_request_page
 from auth_playground.pages import render_tokens_page
 from auth_playground.session import ServerConfig
 
@@ -180,13 +183,31 @@ def index():
     return redirect(url_for("routes.tokens"))
 
 
-@bp.route("/server", methods=["GET", "POST"])
-@bp.route("/server/<path:domain>", methods=["GET", "POST"])
-def configure_server(domain=None):
-    """Display form to configure and validate identity provider URL."""
+@bp.route("/server")
+def configure_server():
+    """Show the provider, or the ways to choose one."""
     if auth_playground.is_oauth_server_from_env(current_app):
         load_server_metadata()
         return render_template("configure_server.html", locked=True)
+
+    if g.server_config.issuer_url:
+        return render_template("configure_server.html", change_form=ChangeServerForm())
+
+    if not current_app.debug:
+        return redirect(url_for("routes.discover_server"))
+
+    return render_template("configure_server.html")
+
+
+@bp.route("/server/discover", methods=["GET", "POST"])
+@bp.route("/server/<path:domain>")
+def discover_server(domain=None):
+    """Read the metadata of the provider at the URL the user enters."""
+    if auth_playground.is_oauth_server_from_env(current_app):
+        return redirect(url_for("routes.configure_server"))
+
+    if not domain and g.server_config.issuer_url and request.method == "GET":
+        return redirect(url_for("routes.configure_server"))
 
     form = ServerConfigForm()
 
@@ -196,14 +217,14 @@ def configure_server(domain=None):
         issuer_url = domain.rstrip("/")
 
     elif not form.validate_on_submit():
-        return render_server_page(form)
+        return render_template("server_discover.html", form=form)
 
     else:
         issuer_url = form.issuer_url.data.rstrip("/")
 
     result = load_server_metadata(issuer_url, update_config=False)
     if not result:
-        return render_server_page(form)
+        return render_template("server_discover.html", form=form)
     metadata, server_type = result
 
     # The client and the tokens belong to the previous provider.
@@ -221,11 +242,12 @@ def configure_server(domain=None):
     return redirect(url_for("routes.configure_client"))
 
 
-def render_server_page(form):
-    """Render the provider page, with the form to change the provider."""
-    return render_template(
-        "configure_server.html", form=form, change_form=ChangeServerForm()
-    )
+@bp.route("/server/static")
+def static_server_configuration():
+    """Explain how to set the provider and the client with environment variables."""
+    if not current_app.debug or auth_playground.is_server_configured():
+        return redirect(url_for("routes.configure_server"))
+    return render_template("server_static.html")
 
 
 @bp.route("/server/change", methods=["POST"])
@@ -255,10 +277,10 @@ def current_client_key():
     return key_summary(config["client_key"], config["token_endpoint_auth_signing_alg"])
 
 
-@bp.route("/client", methods=["GET", "POST"])
+@bp.route("/client")
 @server_config_needed(client_needed=False)
 def configure_client():
-    """Display options to configure OAuth client credentials."""
+    """Show the client, or the ways to set one up."""
     if auth_playground.is_oauth_client_from_env(current_app):
         oauth_config = auth_playground.get_oauth_config(current_app)
         return render_template(
@@ -268,7 +290,7 @@ def configure_client():
             client_key=current_client_key(),
         )
 
-    if auth_playground.is_client_configured() and request.method == "GET":
+    if auth_playground.is_client_configured():
         return render_template(
             "configure_client.html",
             configured=True,
@@ -278,15 +300,45 @@ def configure_client():
             client_key=current_client_key(),
         )
 
+    if not g.server_config.dynamic_registration:
+        return redirect(url_for("routes.manual_client"))
+
+    return render_template("configure_client.html")
+
+
+def client_already_set():
+    """Tell whether the setup pages of the client should send back to the client page."""
+    return (
+        auth_playground.is_oauth_client_from_env(current_app)
+        or auth_playground.is_client_configured()
+    )
+
+
+@bp.route("/client/dynamic")
+@server_config_needed(client_needed=False)
+def dynamic_client():
+    """Show the dynamic registration form."""
+    if client_already_set():
+        return redirect(url_for("routes.configure_client"))
+
+    if not g.server_config.dynamic_registration:
+        return redirect(url_for("routes.manual_client"))
+
+    return render_template(
+        "client_dynamic.html", dynamic_registration_form=DynamicRegistrationForm()
+    )
+
+
+@bp.route("/client/manual", methods=["GET", "POST"])
+@server_config_needed(client_needed=False)
+def manual_client():
+    """Show the form to enter a client created at the provider, and save it."""
+    if client_already_set():
+        return redirect(url_for("routes.configure_client"))
+
     client_form = ClientConfigForm()
     if not client_form.validate_on_submit():
-        return render_template(
-            "configure_client.html",
-            client_form=client_form,
-            # It posts elsewhere: it must not read the data of the client form.
-            dynamic_registration_form=DynamicRegistrationForm(formdata=None),
-            client_key=current_client_key(),
-        )
+        return render_template("client_manual.html", client_form=client_form)
 
     method = client_form.token_endpoint_auth_method.data
     uses_key = client_form.uses_key()
@@ -321,29 +373,39 @@ def change_client():
     return redirect(url_for("routes.configure_client"))
 
 
-TOKENS_TABS = ("request", "current", "logout")
+@bp.route("/request")
+@server_config_needed
+def request_tokens():
+    """Show the grant types the client can use to obtain tokens."""
+    return render_request_page()
+
+
+@bp.route("/request/<grant>")
+@server_config_needed
+def grant_page(grant):
+    """Show the form of a grant type."""
+    if grant not in GRANTS_BY_NAME:
+        return redirect(url_for("routes.request_tokens"))
+    return render_grant_page(GRANTS_BY_NAME[grant])
+
+
+TOKENS_TABS = ("current", "logout")
 
 
 @bp.route("/tokens", endpoint="tokens")
 @bp.route("/tokens/<tab>", endpoint="tokens")
 @server_config_needed
-def tokens_page(tab=None):
-    """Display the tokens area: request, current tokens and logout sub-pages.
+def tokens_page(tab="current"):
+    """Show the current tokens, or how to log out.
 
     Client tokens have no user to log out.
     """
-    logged_in = bool(session.get("token"))
-    args = request.args.to_dict()
-
-    if tab is None:
-        tab = "current" if logged_in and "grant" not in args else "request"
-        return redirect(url_for("routes.tokens", tab=tab, **args))
+    if not session.get("token"):
+        return redirect(url_for("routes.request_tokens"))
     if tab not in TOKENS_TABS:
-        return redirect(url_for("routes.tokens", **args))
-    if not logged_in and tab != "request":
-        return redirect(url_for("routes.tokens", tab="request", **args))
+        return redirect(url_for("routes.tokens"))
     if tab == "logout" and not tokens_grant().provider_session:
-        return redirect(url_for("routes.tokens", tab="current"))
+        return redirect(url_for("routes.tokens"))
 
     return render_tokens_page(tab)
 

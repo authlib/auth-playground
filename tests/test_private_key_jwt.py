@@ -184,7 +184,7 @@ def test_private_pem_is_the_same_key():
 def test_manual_form_hides_the_key_fields(unconfigured_testapp):
     """Test the key fields are hidden until private_key_jwt is chosen."""
     server_session(unconfigured_testapp)
-    res = unconfigured_testapp.get("/en/client")
+    res = unconfigured_testapp.get("/en/client/manual")
 
     assert '<div id="wrap-key_source" hidden>' in res.text
     assert '<div id="wrap-client_secret">' in res.text
@@ -197,7 +197,7 @@ def test_choosing_private_key_jwt_shows_a_generated_key(
     """Test the key fields and the public key appear with private_key_jwt."""
     server_session(unconfigured_test_client)
     res = unconfigured_test_client.post(
-        "/en/client",
+        "/en/client/manual",
         data={
             "csrf_token": csrf_token(unconfigured_test_client),
             "token_endpoint_auth_method": "private_key_jwt",
@@ -233,16 +233,16 @@ def test_the_generated_key_stays_until_regenerated(
         "signing_alg": "RS256",
     }
     unconfigured_test_client.get("/en/client")
-    unconfigured_test_client.post("/en/client", data=data)
+    unconfigured_test_client.post("/en/client/manual", data=data)
     with unconfigured_test_client.session_transaction() as sess:
         first = sess[client_key.PENDING_KEY]["manual"]
 
-    unconfigured_test_client.post("/en/client", data=data)
+    unconfigured_test_client.post("/en/client/manual", data=data)
     with unconfigured_test_client.session_transaction() as sess:
         assert sess[client_key.PENDING_KEY]["manual"] == first
 
     unconfigured_test_client.post(
-        "/en/client",
+        "/en/client/manual",
         data={**data, "regenerate_key": ""},
         headers={**HTMX_HEADERS, "HX-Source": "button#regenerate_key"},
     )
@@ -255,7 +255,7 @@ def test_the_generated_key_stays_until_regenerated(
 def test_the_generated_key_is_served_before_saving(unconfigured_testapp):
     """Test the jwks_uri of a generated key works before the client is saved."""
     server_session(unconfigured_testapp)
-    form = unconfigured_testapp.get("/en/client").forms["client-form"]
+    form = unconfigured_testapp.get("/en/client/manual").forms["client-form"]
     form["token_endpoint_auth_method"] = "private_key_jwt"
     form.submit()
     with unconfigured_testapp.session_transaction() as sess:
@@ -278,8 +278,12 @@ def test_changing_the_algorithm_generates_a_key_that_fits(
         "token_endpoint_auth_method": "private_key_jwt",
         "key_source": "generate",
     }
-    unconfigured_test_client.post("/en/client", data={**data, "signing_alg": "RS256"})
-    unconfigured_test_client.post("/en/client", data={**data, "signing_alg": "ES256"})
+    unconfigured_test_client.post(
+        "/en/client/manual", data={**data, "signing_alg": "RS256"}
+    )
+    unconfigured_test_client.post(
+        "/en/client/manual", data={**data, "signing_alg": "ES256"}
+    )
 
     with unconfigured_test_client.session_transaction() as sess:
         assert sess[client_key.PENDING_KEY]["manual"]["kty"] == "EC"
@@ -296,7 +300,7 @@ def test_pasting_a_jwk_selects_its_algorithm(
     server_session(unconfigured_test_client)
     extra = {"alg": alg} if alg else {}
     res = unconfigured_test_client.post(
-        "/en/client",
+        "/en/client/manual",
         data={
             "csrf_token": csrf_token(unconfigured_test_client),
             "token_endpoint_auth_method": "private_key_jwt",
@@ -314,7 +318,7 @@ def test_pasting_a_jwk_selects_its_algorithm(
 def test_manual_configuration_with_a_generated_key(unconfigured_testapp):
     """Test the client keeps the generated key, and serves its public key."""
     server_session(unconfigured_testapp)
-    form = unconfigured_testapp.get("/en/client").forms["client-form"]
+    form = unconfigured_testapp.get("/en/client/manual").forms["client-form"]
     form["client_id"] = "keyed-client"
     form["token_endpoint_auth_method"] = "private_key_jwt"
     form.submit("save")
@@ -345,7 +349,7 @@ def test_manual_configuration_with_a_generated_key(unconfigured_testapp):
 def test_manual_configuration_with_an_imported_key(unconfigured_testapp, ec_key):
     """Test an imported EC key gets an algorithm that fits it."""
     server_session(unconfigured_testapp)
-    form = unconfigured_testapp.get("/en/client").forms["client-form"]
+    form = unconfigured_testapp.get("/en/client/manual").forms["client-form"]
     form["client_id"] = "keyed-client"
     form["token_endpoint_auth_method"] = "private_key_jwt"
     form["key_source"] = "import"
@@ -371,7 +375,7 @@ def test_manual_configuration_refuses_a_wrong_key(
 ):
     """Test the imported key must be a private key the playground can use."""
     server_session(unconfigured_testapp)
-    form = unconfigured_testapp.get("/en/client").forms["client-form"]
+    form = unconfigured_testapp.get("/en/client/manual").forms["client-form"]
     form["client_id"] = "keyed-client"
     form["token_endpoint_auth_method"] = "private_key_jwt"
     form["key_source"] = "import"
@@ -387,7 +391,7 @@ def test_manual_configuration_refuses_a_wrong_key(
 def test_manual_configuration_refuses_a_key_without_algorithm(unconfigured_testapp):
     """Test a key no algorithm of the playground can use is refused."""
     server_session(unconfigured_testapp)
-    form = unconfigured_testapp.get("/en/client").forms["client-form"]
+    form = unconfigured_testapp.get("/en/client/manual").forms["client-form"]
     form["client_id"] = "keyed-client"
     form["token_endpoint_auth_method"] = "private_key_jwt"
     form["key_source"] = "import"
@@ -407,7 +411,7 @@ def test_signing_algorithms_follow_the_server(unconfigured_testapp):
             **METADATA,
             "token_endpoint_auth_signing_alg_values_supported": ["ES256"],
         }
-    res = unconfigured_testapp.get("/en/client")
+    res = unconfigured_testapp.get("/en/client/manual")
     select = res.forms["client-form"]["signing_alg"]
 
     assert select.value == "ES256"
@@ -417,7 +421,9 @@ def test_signing_algorithms_follow_the_server(unconfigured_testapp):
 def test_dynamic_registration_sends_the_public_key(unconfigured_testapp):
     """Test the registration request holds the public key, and the client keeps it."""
     server_session(unconfigured_testapp)
-    form = unconfigured_testapp.get("/en/client").forms["dynamic-registration-form"]
+    form = unconfigured_testapp.get("/en/client/dynamic").forms[
+        "dynamic-registration-form"
+    ]
     form["auth_method"] = "private_key_jwt"
     form["signing_alg"] = "Ed25519"
     with patch("requests.post") as mock_post:
@@ -440,7 +446,9 @@ def test_dynamic_registration_sends_the_public_key(unconfigured_testapp):
 def test_dynamic_registration_with_a_jwks_uri(unconfigured_testapp):
     """Test the provider can download the key during the registration."""
     server_session(unconfigured_testapp)
-    form = unconfigured_testapp.get("/en/client").forms["dynamic-registration-form"]
+    form = unconfigured_testapp.get("/en/client/dynamic").forms[
+        "dynamic-registration-form"
+    ]
     form["auth_method"] = "private_key_jwt"
     form["jwks_delivery"] = "jwks_uri"
 
@@ -492,7 +500,9 @@ def test_dynamic_registration_preview_follows_the_delivery(
 def test_dynamic_registration_without_the_key(unconfigured_testapp):
     """Test a server that picks private_key_jwt by itself leaves the client unusable."""
     server_session(unconfigured_testapp)
-    form = unconfigured_testapp.get("/en/client").forms["dynamic-registration-form"]
+    form = unconfigured_testapp.get("/en/client/dynamic").forms[
+        "dynamic-registration-form"
+    ]
     with patch("requests.post") as mock_post:
         mock_post.return_value.json.return_value = {
             "client_id": "client",
@@ -528,7 +538,7 @@ def test_unknown_jwks_uri(unconfigured_testapp):
 def test_the_imported_key_is_served_before_saving(unconfigured_testapp, ec_key):
     """Test the jwks_uri of an imported key works before the client is saved."""
     server_session(unconfigured_testapp)
-    form = unconfigured_testapp.get("/en/client").forms["client-form"]
+    form = unconfigured_testapp.get("/en/client/manual").forms["client-form"]
     form["token_endpoint_auth_method"] = "private_key_jwt"
     form["key_source"] = "import"
     form["private_key"] = ec_key
@@ -575,7 +585,7 @@ def test_no_private_key_to_download(unconfigured_testapp):
 def test_token_preview_shows_the_client_assertion(unconfigured_test_client):
     """Test the preview shows the header and the claims the client signs."""
     data = key_session(unconfigured_test_client, alg="ES256")
-    res = unconfigured_test_client.get("/en/tokens/request?grant=client_credentials")
+    res = unconfigured_test_client.get("/en/request/client_credentials")
 
     assert "client_assertion=[generated]" in res.text
     assert "Client assertion" in res.text
@@ -595,7 +605,7 @@ def test_token_preview_shows_the_client_secret_jwt_assertion(unconfigured_test_c
             "token_endpoint_auth_method": "client_secret_jwt",
         },
     )
-    res = unconfigured_test_client.get("/en/tokens/request?grant=client_credentials")
+    res = unconfigured_test_client.get("/en/request/client_credentials")
 
     assert "&#34;alg&#34;: &#34;HS256&#34;" in res.text
 
@@ -638,7 +648,7 @@ def test_env_client_gets_tokens_with_its_key(keyed_app, keyed_client, iam_server
     _client, data = keyed_client
     user = iam_server.random_user(password="correct horse battery staple")
     testapp = TestApp(keyed_app)
-    form = testapp.get("/en/tokens/request?grant=password").forms["password-form"]
+    form = testapp.get("/en/request/password").forms["password-form"]
     form["username"] = user.user_name
     form["password"] = "correct horse battery staple"
     with patch.object(
@@ -686,7 +696,7 @@ def test_each_form_keeps_its_own_generated_key(unconfigured_test_client, csrf_to
     server_session(unconfigured_test_client)
     token = csrf_token(unconfigured_test_client)
     unconfigured_test_client.post(
-        "/en/client",
+        "/en/client/manual",
         data={
             "csrf_token": token,
             "token_endpoint_auth_method": "private_key_jwt",
@@ -730,7 +740,9 @@ def test_dynamic_registration_keeps_the_algorithm_of_the_server(
 ):
     """Test the client signs with the algorithm the server registered."""
     server_session(unconfigured_testapp)
-    form = unconfigured_testapp.get("/en/client").forms["dynamic-registration-form"]
+    form = unconfigured_testapp.get("/en/client/dynamic").forms[
+        "dynamic-registration-form"
+    ]
     form["auth_method"] = "private_key_jwt"
     with patch("requests.post") as mock_post:
         mock_post.return_value.json.return_value = {
@@ -749,7 +761,9 @@ def test_dynamic_registration_refuses_an_algorithm_the_key_cannot_use(
 ):
     """Test a server algorithm that does not fit the key leaves the client unusable."""
     server_session(unconfigured_testapp)
-    form = unconfigured_testapp.get("/en/client").forms["dynamic-registration-form"]
+    form = unconfigured_testapp.get("/en/client/dynamic").forms[
+        "dynamic-registration-form"
+    ]
     form["auth_method"] = "private_key_jwt"
     with patch("requests.post") as mock_post:
         mock_post.return_value.json.return_value = {
@@ -767,7 +781,9 @@ def test_dynamic_registration_refuses_an_algorithm_the_key_cannot_use(
 def test_dynamic_registration_shows_the_key_error(unconfigured_testapp):
     """Test a wrong imported key is explained, not reported as an invalid request."""
     server_session(unconfigured_testapp)
-    form = unconfigured_testapp.get("/en/client").forms["dynamic-registration-form"]
+    form = unconfigured_testapp.get("/en/client/dynamic").forms[
+        "dynamic-registration-form"
+    ]
     form["auth_method"] = "private_key_jwt"
     form["key_source"] = "import"
     form["private_key"] = "garbage"
@@ -784,7 +800,7 @@ def test_the_key_is_published_again_with_the_session(unconfigured_testapp):
 
     with unconfigured_testapp.session_transaction() as sess:
         sess["something"] = "changed"
-    unconfigured_testapp.get("/en/tokens/request?grant=client_credentials")
+    unconfigured_testapp.get("/en/request/client_credentials")
     unconfigured_testapp.post("/logout/local", status="*")
 
     assert unconfigured_testapp.get(url).json["keys"][0]["kid"] == data["kid"]

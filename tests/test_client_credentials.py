@@ -15,7 +15,7 @@ from tests.fake_provider import server_session
 
 def request_tokens(testapp, **fields):
     """Fill the client credentials form and submit it."""
-    res = testapp.get("/en/tokens/request?grant=client_credentials")
+    res = testapp.get("/en/request/client_credentials")
     form = res.forms["client-credentials-form"]
     for name, value in fields.items():
         form[name] = value
@@ -120,10 +120,10 @@ def test_client_tokens_hide_the_user_parts(iam_server, iam_client, testapp):
     request_tokens(testapp)
 
     res = testapp.get("/en/tokens/logout")
-    assert res.location.endswith("/en/tokens/current")
-    res = testapp.get("/en/tokens/request?grant=authorization_code")
+    assert res.location.endswith("/en/tokens")
+    res = testapp.get("/en/request/authorization_code")
     assert "Sign in again" not in res.text
-    res = testapp.get("/en/tokens/current")
+    res = testapp.get("/en/tokens")
     assert "on behalf of the client" in res.text
     assert "Client tokens" in res.text
     assert "/en/tokens/logout" not in res.text
@@ -201,7 +201,7 @@ def test_client_auth_preview(method, headers, params):
 def test_preview_shows_the_token_request(unconfigured_test_client):
     """Test the preview of the client credentials request on the page."""
     server_session(unconfigured_test_client, {"client_id": "c", "client_secret": "s"})
-    res = unconfigured_test_client.get("/en/tokens/request?grant=client_credentials")
+    res = unconfigured_test_client.get("/en/request/client_credentials")
 
     assert "POST https://test.example.com/oauth/token" in res.text
     assert "Accept: application/json" in res.text
@@ -233,12 +233,13 @@ def test_token_preview_updates_with_htmx(unconfigured_test_client, csrf_token):
 
 
 @pytest.mark.usefixtures("provider_metadata")
-def test_grant_selector_marks_grants_not_advertised(unconfigured_test_client):
+def test_grants_not_advertised_are_marked(unconfigured_test_client):
     """Test the grants missing from grant_types_supported are labelled and warned."""
     server_session(unconfigured_test_client, {"client_id": "c", "client_secret": "s"})
-    res = unconfigured_test_client.get("/en/tokens/request?grant=client_credentials")
+    res = unconfigured_test_client.get("/en/request")
+    assert '<small class="marks">Not advertised</small>' in res.text
 
-    assert "Client credentials · not advertised" in res.text
+    res = unconfigured_test_client.get("/en/request/client_credentials")
     assert "does not advertise the Client credentials grant type" in res.text
     assert "for confidential clients" not in res.text
 
@@ -250,17 +251,17 @@ def test_client_credentials_warns_a_public_client(unconfigured_test_client):
         unconfigured_test_client,
         {"client_id": "c", "token_endpoint_auth_method": "none"},
     )
-    res = unconfigured_test_client.get("/en/tokens/request?grant=client_credentials")
+    res = unconfigured_test_client.get("/en/request/client_credentials")
 
     assert "for confidential clients" in res.text
 
 
 @pytest.mark.usefixtures("provider_metadata")
-def test_grant_defaults_to_the_grant_of_the_last_tokens(unconfigured_testapp):
-    """Test the grant of the last tokens is selected, else the authorization code."""
+def test_the_grant_of_the_current_tokens_is_marked(unconfigured_testapp):
+    """Test the choice of grant types says which one gave the current tokens."""
     server_session(unconfigured_testapp, {"client_id": "c", "client_secret": "s"})
-    res = unconfigured_testapp.get("/en/tokens/request?grant=unknown")
-    assert "auth-params-form" in res.forms
+    res = unconfigured_testapp.get("/en/request")
+    assert "It gave the current tokens." not in res.text
 
     with unconfigured_testapp.session_transaction() as sess:
         sess["token"] = {"access_token": "a"}
@@ -268,8 +269,18 @@ def test_grant_defaults_to_the_grant_of_the_last_tokens(unconfigured_testapp):
             "grant_type": "refresh_token",
             "grant": "client_credentials",
         }
-    res = unconfigured_testapp.get("/en/tokens/request")
-    assert "client-credentials-form" in res.forms
+    res = unconfigured_testapp.get("/en/request")
+    card = res.text.split("<h4>Client credentials</h4>", 1)[1].split("</article>")[0]
+    assert "It gave the current tokens." in card
+
+
+def test_an_unknown_grant_type_shows_the_choice(unconfigured_test_client):
+    """Test an unknown grant type in the URL leads to the choice of grant types."""
+    server_session(unconfigured_test_client, {"client_id": "c", "client_secret": "s"})
+
+    res = unconfigured_test_client.get("/en/request/unknown")
+
+    assert res.location.endswith("/en/request")
 
 
 def test_every_grant_has_a_form_and_a_template(app):
@@ -277,17 +288,6 @@ def test_every_grant_has_a_form_and_a_template(app):
     for grant in GRANTS:
         assert grant.name in GRANT_FORMS
         app.jinja_env.get_template(f"_grant_{grant.name}.html")
-
-
-@pytest.mark.usefixtures("provider_metadata")
-def test_session_redirects_keep_the_grant(unconfigured_test_client):
-    """Test the redirects of the tokens page keep the chosen grant."""
-    server_session(unconfigured_test_client, {"client_id": "c", "client_secret": "s"})
-
-    res = unconfigured_test_client.get("/en/tokens?grant=client_credentials")
-    assert res.location.endswith("/en/tokens/request?grant=client_credentials")
-    res = unconfigured_test_client.get("/en/tokens/current?grant=client_credentials")
-    assert res.location.endswith("/en/tokens/request?grant=client_credentials")
 
 
 def test_client_credentials_refuses_a_missing_csrf_token(app):
