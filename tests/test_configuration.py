@@ -389,8 +389,8 @@ def test_change_provider_forgets_the_configuration(unconfigured_testapp):
         )
 
 
-def test_loading_another_provider_forgets_the_previous_client(unconfigured_test_client):
-    """Test that loading a different issuer drops the client and the tokens."""
+def test_a_provider_link_does_not_replace_the_provider(unconfigured_test_client):
+    """Test a link to /server/<domain> keeps the provider, its client and tokens."""
     with unconfigured_test_client.session_transaction() as sess:
         sess["issuer_url"] = "https://test.example.com"
         sess["server_metadata"] = {"issuer": "https://test.example.com"}
@@ -402,31 +402,13 @@ def test_loading_another_provider_forgets_the_previous_client(unconfigured_test_
         sess["token"] = {"access_token": "a"}
 
     with patch("auth_playground.endpoints.fetch_server_metadata") as mock_fetch:
-        mock_fetch.return_value = ({"issuer": "https://other.example.com"}, "oidc")
-        unconfigured_test_client.get("/en/server/other.example.com")
+        res = unconfigured_test_client.get("/en/server/other.example.com")
 
+    mock_fetch.assert_not_called()
+    assert res.location.endswith("/en/server")
     with unconfigured_test_client.session_transaction() as sess:
-        assert sess["issuer_url"] == "https://other.example.com"
-        assert not {"oauth_config", "token"} & set(sess)
-
-
-def test_reloading_the_same_provider_keeps_the_client(unconfigured_test_client):
-    """Test that loading the same issuer again keeps the client."""
-    with unconfigured_test_client.session_transaction() as sess:
-        sess["issuer_url"] = "https://test.example.com"
-        sess["server_metadata"] = {"issuer": "https://test.example.com"}
-        sess["oauth_config"] = {
-            "client_id": "c",
-            "client_secret": "s",
-            "auth_server": "https://test.example.com",
-        }
-
-    with patch("auth_playground.endpoints.fetch_server_metadata") as mock_fetch:
-        mock_fetch.return_value = ({"issuer": "https://test.example.com"}, "oidc")
-        unconfigured_test_client.get("/en/server/test.example.com")
-
-    with unconfigured_test_client.session_transaction() as sess:
-        assert sess["oauth_config"]["client_id"] == "c"
+        assert sess["issuer_url"] == "https://test.example.com"
+        assert sess["token"] == {"access_token": "a"}
 
 
 def test_provider_with_another_issuer(unconfigured_test_client):
@@ -452,11 +434,7 @@ def test_provider_without_issuer(unconfigured_test_client):
 
 
 def test_failed_provider_load_keeps_the_page(unconfigured_test_client):
-    """Test the provider page renders when loading another issuer fails."""
-    with unconfigured_test_client.session_transaction() as sess:
-        sess["issuer_url"] = "https://test.example.com"
-        sess["server_metadata"] = {"issuer": "https://test.example.com"}
-
+    """Test the provider page renders when loading a provider fails."""
     with patch(
         "auth_playground.endpoints.fetch_server_metadata",
         side_effect=requests.exceptions.ConnectionError(),

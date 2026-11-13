@@ -147,6 +147,10 @@ def forget_registered_client():
 @server_config_needed(client_needed=False)
 def client_dynamic_registration():
     """Automatically register OAuth client using dynamic client registration."""
+    # A form left open in another tab must not replace the client.
+    if auth_playground.is_client_configured():
+        return redirect(url_for("routes.configure_client"))
+
     form = DynamicRegistrationForm()
 
     if not form.validate_on_submit():
@@ -313,7 +317,7 @@ def client_dynamic_registration():
         _("Client successfully registered!"),
         "success",
     )
-    return redirect(url_for("routes.tokens"))
+    return redirect(url_for("routes.request_tokens"))
 
 
 def response_grant_types(client_data):

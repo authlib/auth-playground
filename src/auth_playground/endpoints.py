@@ -5,7 +5,6 @@ from flask import flash
 from flask import g
 from flask import redirect
 from flask import render_template
-from flask import request
 from flask import session
 from flask import url_for
 from flask_babel import gettext as _
@@ -180,6 +179,9 @@ def index():
     elif not client_configured:
         return redirect(url_for("routes.configure_client"))
 
+    elif not session.get("token"):
+        return redirect(url_for("routes.request_tokens"))
+
     return redirect(url_for("routes.tokens"))
 
 
@@ -202,11 +204,12 @@ def configure_server():
 @bp.route("/server/discover", methods=["GET", "POST"])
 @bp.route("/server/<path:domain>")
 def discover_server(domain=None):
-    """Read the metadata of the provider at the URL the user enters."""
-    if auth_playground.is_oauth_server_from_env(current_app):
-        return redirect(url_for("routes.configure_server"))
+    """Read the metadata of the provider at the URL the user enters.
 
-    if not domain and g.server_config.issuer_url and request.method == "GET":
+    The /server/<domain> URL reads the metadata of that domain, only while no
+    provider is set: a link on another site cannot replace the provider.
+    """
+    if auth_playground.is_server_configured():
         return redirect(url_for("routes.configure_server"))
 
     form = ServerConfigForm()
@@ -226,10 +229,6 @@ def discover_server(domain=None):
     if not result:
         return render_template("server_discover.html", form=form)
     metadata, server_type = result
-
-    # The client and the tokens belong to the previous provider.
-    if g.server_config.issuer_url and g.server_config.issuer_url != issuer_url:
-        clear_server_session()
 
     g.server_config = ServerConfig(
         metadata=metadata,
@@ -353,7 +352,7 @@ def manual_client():
         userinfo_alg=client_form.userinfo_signed_response_alg.data,
     )
     flash(_("OAuth configuration completed successfully"), "success")
-    return redirect(url_for("routes.tokens"))
+    return redirect(url_for("routes.request_tokens"))
 
 
 @bp.route("/client/change", methods=["POST"])

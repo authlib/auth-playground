@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 import pytest
 
 from tests.fake_provider import server_session
@@ -141,3 +143,58 @@ def test_a_post_to_a_fixed_path_is_not_a_provider_url(unconfigured_test_client):
     res = unconfigured_test_client.post("/en/server/static")
 
     assert res.status_code == 405
+
+
+def test_a_stale_registration_form_keeps_the_configured_client(
+    unconfigured_test_client, csrf_token
+):
+    """Test the dynamic registration form from another tab does not replace the client."""
+    server_session(unconfigured_test_client, {"client_id": "c", "client_secret": "s"})
+
+    with patch("requests.post") as mock_post:
+        res = unconfigured_test_client.post(
+            "/client/dynamic-registration",
+            data={"csrf_token": csrf_token(unconfigured_test_client)},
+        )
+
+    mock_post.assert_not_called()
+    assert res.location.endswith("/en/client")
+
+
+def test_a_stale_discovery_form_keeps_the_provider(unconfigured_test_client):
+    """Test the discovery form from another tab does not replace the provider."""
+    server_session(unconfigured_test_client, {"client_id": "c", "client_secret": "s"})
+
+    res = unconfigured_test_client.post(
+        "/en/server/discover", data={"issuer_url": "https://other.example.com"}
+    )
+
+    assert res.location.endswith("/en/server")
+    with unconfigured_test_client.session_transaction() as sess:
+        assert sess["issuer_url"] == "https://test.example.com"
+
+
+def test_the_index_leads_to_the_request_or_the_tokens(unconfigured_test_client):
+    """Test the home page leads to the grant types, then to the tokens."""
+    server_session(unconfigured_test_client, {"client_id": "c", "client_secret": "s"})
+
+    res = unconfigured_test_client.get("/en/")
+    assert res.location.endswith("/en/request")
+
+    with unconfigured_test_client.session_transaction() as sess:
+        sess["token"] = {"access_token": "a"}
+    res = unconfigured_test_client.get("/en/")
+    assert res.location.endswith("/en/tokens")
+
+
+def test_a_done_request_step_keeps_the_grant_of_the_tokens(unconfigured_test_client):
+    """Test the request step names the grant of the tokens, not the grant viewed."""
+    server_session(unconfigured_test_client, {"client_id": "c", "client_secret": "s"})
+    with unconfigured_test_client.session_transaction() as sess:
+        sess["token"] = {"access_token": "a"}
+        sess["token_info"] = {"grant": "client_credentials"}
+
+    res = unconfigured_test_client.get("/en/request/password")
+
+    assert "<small>Client credentials</small>" in res.text
+    assert "<small>Password (ROPC)</small>" not in res.text

@@ -1,5 +1,6 @@
 {% extends "layout.html" %}
 {% set current_step = 3 %}
+{% from "_grant_description.html" import grant_description %}
 
 {% block title %}{% trans %}Request tokens{% endtrans %}{% endblock %}
 
@@ -11,24 +12,19 @@
 
     {% include "_rejected_response.html" %}
 
-    {% for group, intro in grant_groups %}
+    {% for key, label, intro in grant_groups %}
         <section>
             <hgroup>
-                <h3>{{ group }}</h3>
+                <h3>{{ label }}</h3>
                 <p>{{ intro }}</p>
             </hgroup>
             <div class="grant-choices">
-                {% for grant in grants|selectattr("group", "sameas", group) %}
+                {% for grant in grants|selectattr("group", "equalto", key) %}
                     <article>
                         <header>
                             <h4>{{ grant.label }}</h4>
                         </header>
-                        <p>
-                            {{ grant.description }}
-                            {% for label, url in grant.references %}
-                                <a href="{{ url }}" target="_blank" rel="noopener noreferrer">{{ label }}</a>{% if not loop.last %} ·{% endif %}
-                            {% endfor %}
-                        </p>
+                        {{ grant_description(grant) }}
                         {% if grant.marks %}
                             <p><small class="marks">{{ grant.marks|join(" · ") }}</small></p>
                         {% endif %}

@@ -88,9 +88,9 @@ def request_step(client):
     return Step(3, _("Request"), str(tokens_grant().label), url, done=True)
 
 
-def tokens_step(request):
+def tokens_step(requested):
     """Return the step that shows the tokens."""
-    if not request.done:
+    if not requested.done:
         return Step(4, _("Tokens"), _("Available once you have tokens"), None)
 
     url = url_for("routes.tokens")
@@ -110,5 +110,5 @@ def setup_steps():
     """Return the provider, client, request and tokens steps."""
     provider = provider_step()
     client = client_step(provider)
-    request = request_step(client)
-    return [provider, client, request, tokens_step(request)]
+    requested = request_step(client)
+    return [provider, client, requested, tokens_step(requested)]

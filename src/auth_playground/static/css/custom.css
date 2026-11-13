@@ -174,13 +174,17 @@ fieldset > ul:has(input[type="checkbox"], input[type="radio"]) {
 
 fieldset > ul:has(input[type="checkbox"], input[type="radio"]) > li {
     display: flex;
-    align-items: baseline;
+    align-items: flex-start;
     list-style: none;
 }
 
-/* A long label, like a URN, wraps next to its box instead of below it. */
+/*
+ * A long label, like a URN, wraps next to its box instead of below it.
+ * The box is centred on the first line of the label.
+ */
 fieldset > ul:has(input[type="checkbox"], input[type="radio"]) > li > input {
     flex: none;
+    margin-top: calc((1lh - 1.25em) / 2);
 }
 
 fieldset > ul:has(input[type="checkbox"], input[type="radio"]) > li > label {

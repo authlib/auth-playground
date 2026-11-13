@@ -30,18 +30,20 @@ def registered_grant_types():
     return auth_playground.get_oauth_config(current_app).get("grant_types")
 
 
-REDIRECT = _("Redirect")
-DIRECT = _("Direct")
+REDIRECT = "redirect"
+DIRECT = "direct"
 
 GRANT_GROUPS = (
     (
         REDIRECT,
+        _("Redirect"),
         _(
             "The user signs in at the provider, which sends them back to the playground."
         ),
     ),
     (
         DIRECT,
+        _("Direct"),
         _(
             "The playground calls the token endpoint itself, without a browser "
             "redirection."

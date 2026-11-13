@@ -1,9 +1,5 @@
-<p class="grant-description">
-    {{ grant.description }}
-    {% for label, url in grant.references %}
-        <a href="{{ url }}" target="_blank" rel="noopener noreferrer">{{ label }}</a>{% if not loop.last %} ·{% endif %}
-    {% endfor %}
-</p>
+{% from "_grant_description.html" import grant_description %}
+{{ grant_description(grant) }}
 
 {% if not grant.advertised %}
     <article class="notice" data-type="warning">

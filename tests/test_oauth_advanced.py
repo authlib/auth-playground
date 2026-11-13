@@ -42,7 +42,7 @@ def test_dynamic_registration_success(iam_server, unconfigured_testapp):
     res = res.forms["dynamic-registration-form"].submit("register")
 
     assert res.status_int == 302
-    assert "/en/tokens" in res.location
+    assert "/en/request" in res.location
 
 
 def test_dynamic_registration_rejects_missing_csrf_token(unconfigured_test_client):
